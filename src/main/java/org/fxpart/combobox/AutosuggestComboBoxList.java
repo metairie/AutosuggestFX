@@ -41,10 +41,12 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
     private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
     private static final String USUAL_CLASS = "usual-dropdown";
 
-    private String searchString;
+    private String searchString="";
 
     private Function<String, List<KeyValueString>> searchFunction;
     private Function<String, List<KeyValueString>> dataSource;
+
+    private boolean lazyMode = true;
 
     public AutosuggestComboBoxList() {
         setEditable(true);
@@ -66,6 +68,11 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
         dataSource = datas;
         searchFunction = term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList());
         setTextFieldFormatter(textFieldFormatter);
+        ObservableList<T> list = null;
+        if (lazyMode == false) {
+            list = FXCollections.observableArrayList((Collection<? extends T>) searchFunction.apply(null));
+        }
+        setItems(list);
     }
 
     protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -206,5 +213,13 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                 return getValue();
             }
         });
+    }
+
+    public void setLazyMode(boolean lazyMode){
+        this.lazyMode = lazyMode;
+    }
+
+    public boolean getLazyMode(){
+        return lazyMode;
     }
 }

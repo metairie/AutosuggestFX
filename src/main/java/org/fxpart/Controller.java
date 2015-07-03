@@ -34,6 +34,7 @@ public class Controller implements Initializable {
         final List<KeyValueString> itemsLocation = new org.fxpart.mockserver.MockDatas().loadLocation();
 
         //pavel
+        autosuggestComboBoxList.setLazyMode(false);
         autosuggestComboBoxList.init(o -> new MockDatas().loadLocation(), textFieldFormatter);
     }
 
