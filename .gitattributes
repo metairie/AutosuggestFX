@@ -1,0 +1,5 @@
+# Declare files that will always have LF line endings on checkout. (unix files)
+*.sh eol=lf
+*.pp eol=lf
+*.rb eol=lf
+*.erb eol=lf

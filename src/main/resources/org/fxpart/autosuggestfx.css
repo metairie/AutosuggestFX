@@ -1,0 +1,7 @@
+.highlighted-dropdown{
+    -fx-font-weight: bold;
+}
+
+.usual-dropdown{
+    -fx-font-weight: normal;
+}
