@@ -61,10 +61,10 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
     public void init(Function<String, List<KeyValueString>> datas, Function<T, String> textFieldFormatter) {
         setVisibleRowCount(10);
         setCustomCellFactory();
-        addEventHandler(KeyEvent.KEY_PRESSED, t -> this.hide());
+        addEventHandler(KeyEvent.KEY_PRESSED, t -> hide());
         addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
-        this.dataSource = datas;
-        this.searchFunction = term -> this.getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList());
+        dataSource = datas;
+        searchFunction = term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList());
         setTextFieldFormatter(textFieldFormatter);
     }
 
@@ -75,7 +75,7 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
 
             @Override
             public void handle(KeyEvent event) {
-                String term = AutosuggestComboBoxList.this.getEditor().getText();
+                String term = getEditor().getText();
                 int termLength = 0;
 
                 if (term != null) {
@@ -87,45 +87,45 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                     moveCaret(termLength);
                     return;
                 } else if (DOWN.match(event)) {
-                    if (!AutosuggestComboBoxList.this.isShowing()) {
-                        AutosuggestComboBoxList.this.show();
+                    if (!isShowing()) {
+                       show();
                     }
                     caretPos = -1;
                     moveCaret(termLength);
                     return;
                 } else if (BACK_SPACE.match(event)) {
                     moveCaretToPos = true;
-                    caretPos = AutosuggestComboBoxList.this.getEditor().getCaretPosition();
+                    caretPos = getEditor().getCaretPosition();
                 } else if (DELETE.match(event)) {
                     moveCaretToPos = true;
-                    caretPos = AutosuggestComboBoxList.this.getEditor().getCaretPosition();
+                    caretPos = getEditor().getCaretPosition();
                 }
 
                 if (RIGHT.match(event) || LEFT.match(event) || event.isControlDown() || HOME.match(event) || END.match(event) || TAB.match(event)) {
                     return;
                 }
 
-                searchString = AutosuggestComboBoxList.this.getEditor().getText();
+                searchString = getEditor().getText();
                 int searchStringLength = searchString.length();
 
                 // dataSource filtering
                 ObservableList<T> list = FXCollections.observableArrayList((Collection<? extends T>) searchFunction.apply(searchString));
-                AutosuggestComboBoxList.this.setItems(list);
+                setItems(list);
 
                 if (!moveCaretToPos) {
                     caretPos = -1;
                 }
                 moveCaret(searchStringLength);
                 if (!list.isEmpty()) {
-                    AutosuggestComboBoxList.this.show();
+                    show();
                 }
             }
 
             private void moveCaret(int textLength) {
                 if (caretPos == -1) {
-                    AutosuggestComboBoxList.this.getEditor().positionCaret(textLength);
+                    getEditor().positionCaret(textLength);
                 } else {
-                    AutosuggestComboBoxList.this.getEditor().positionCaret(caretPos);
+                    getEditor().positionCaret(caretPos);
                 }
                 moveCaretToPos = false;
             }
@@ -203,7 +203,7 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
 
             @Override
             public T fromString(String string) {
-                return AutosuggestComboBoxList.this.getValue();
+                return getValue();
             }
         });
     }
