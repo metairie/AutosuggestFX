@@ -9,6 +9,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
@@ -152,6 +153,8 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                                            setText(null);
                                            setGraphic(null);
                                        } else {
+                                           setText(null);
+                                           HBox styledText = new HBox();
                                            String keyString = (String) ((KeyValueStringLabel) item).getKey();
                                            String valueString = ((KeyValueStringLabel) item).getValue();
                                            String itemString = keyString + " - " + valueString;
@@ -164,34 +167,30 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                                                    String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + searchString.length());
                                                    String endString = valueString.substring(searchStringPosition + searchString.length());
 
-                                                   TextFlow cellTextFlow = new TextFlow();
-
                                                    Text separator = new Text(keyString + " - ");
                                                    separator.getStyleClass().add(USUAL_CLASS);
-                                                   cellTextFlow.getChildren().add(separator);
+                                                   styledText.getChildren().add(separator);
 
-                                                   // If I remove this check - the wrong symbol is highlighted. Looks like bug in Text or TextFlow.
-                                                   if (beginString.length() > 0) {
                                                        final Text begin = new Text(beginString);
                                                        begin.getStyleClass().add(USUAL_CLASS);
-                                                       cellTextFlow.getChildren().add(begin);
-                                                   }
+                                                       styledText.getChildren().add(begin);
 
                                                    final Text highlighted = new Text(highlightedString);
                                                    highlighted.getStyleClass().add(HIGHLIGHTED_CLASS);
-                                                   cellTextFlow.getChildren().add(highlighted);
+                                                   styledText.getChildren().add(highlighted);
 
                                                    final Text end = new Text(endString);
                                                    end.getStyleClass().add(USUAL_CLASS);
-                                                   cellTextFlow.getChildren().add(end);
+                                                   styledText.getChildren().add(end);
 
-                                                   setGraphic(cellTextFlow);
+
                                                } else {
-                                                   setText(itemString);
+                                                   styledText.getChildren().add(new Text(itemString));
                                                }
                                            } else {
-                                               setText(itemString);
+                                               styledText.getChildren().add(new Text(itemString));
                                            }
+                                           setGraphic(styledText);
                                        }
                                    }
                                };
