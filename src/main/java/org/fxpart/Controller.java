@@ -35,6 +35,7 @@ public class Controller implements Initializable {
 
         //pavel
         //autosuggestComboBoxList.setLazyMode(false);
+        autosuggestComboBoxList.setTimer(2000);
         autosuggestComboBoxList.init(o -> new MockDatas().loadLocation(), textFieldFormatter);
     }
 

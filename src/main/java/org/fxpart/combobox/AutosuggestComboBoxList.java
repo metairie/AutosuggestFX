@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -47,7 +49,62 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
     private Function<String, List<KeyValueString>> searchFunction;
     private Function<String, List<KeyValueString>> dataSource;
 
+    /**
+     * Lazy mode on startup lazyMode
+     */
     private boolean lazyMode = true;
+
+    /**
+     * Display load indicator @param loadingIndicator
+     */
+    private boolean loadingIndicator = false;
+
+    /**
+     * Delay(ms) before autosuggest search start
+     * @param timer
+     */
+    Integer timer=1000;
+    private Boolean waitFlag;
+
+    public void setSearchString(String searchString){
+        this.searchString = searchString;
+    }
+
+    public Function<String, List<KeyValueString>> getSearchFunction(){
+        return searchFunction;
+    }
+
+    protected Boolean getWaitFlag() {
+        return waitFlag;
+    }
+
+    protected void setWaitFlag(Boolean waitFlag) {
+        this.waitFlag = waitFlag;
+    }
+
+    public Integer getTimer() {
+        return timer;
+    }
+
+    public void setTimer(Integer timer) {
+        this.timer = timer;
+    }
+
+    public void setLazyMode(boolean lazyMode){
+        this.lazyMode = lazyMode;
+    }
+
+    public boolean getLazyMode(){
+        return lazyMode;
+    }
+
+    public boolean setLoadingIndicator() {
+        return loadingIndicator;
+    }
+
+    public void setLoadingIndicator(boolean loadingIndicator) {
+        this.loadingIndicator = loadingIndicator;
+    }
 
     public AutosuggestComboBoxList() {
         setEditable(true);
@@ -72,8 +129,11 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
         ObservableList<T> list = null;
         if (lazyMode == false) {
             list = FXCollections.observableArrayList((Collection<? extends T>) searchFunction.apply(null));
+        }else{
+            list = FXCollections.observableArrayList();
         }
         setItems(list);
+        waitFlag = true;
     }
 
     protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -113,24 +173,19 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                     return;
                 }
 
-                searchString = getEditor().getText();
-                int searchStringLength = searchString.length();
-
-                // dataSource filtering
-                ObservableList<T> list = FXCollections.observableArrayList((Collection<? extends T>) searchFunction.apply(searchString));
-                setItems(list);
-
-                if (getValue()==null){
-                    getEditor().setText(searchString);
+                if (getValue() != null) {
+                    setWaitFlag(true);
                 }
+
+                DelayedSearchTask delayedSearchTask = new DelayedSearchTask(
+                        AutosuggestComboBoxList.this, timer);
+                Thread delayedSearchThread = new Thread(delayedSearchTask);
+                delayedSearchThread.start();
 
                 if (!moveCaretToPos) {
                     caretPos = -1;
                 }
-                moveCaret(searchStringLength);
-                if (!list.isEmpty()) {
-                    show();
-                }
+                moveCaret(termLength);
             }
 
             private void moveCaret(int textLength) {
@@ -216,13 +271,5 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                 return getValue();
             }
         });
-    }
-
-    public void setLazyMode(boolean lazyMode){
-        this.lazyMode = lazyMode;
-    }
-
-    public boolean getLazyMode(){
-        return lazyMode;
     }
 }
