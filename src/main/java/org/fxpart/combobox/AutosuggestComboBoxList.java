@@ -120,6 +120,10 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                 ObservableList<T> list = FXCollections.observableArrayList((Collection<? extends T>) searchFunction.apply(searchString));
                 setItems(list);
 
+                if (getValue()==null){
+                    getEditor().setText(searchString);
+                }
+
                 if (!moveCaretToPos) {
                     caretPos = -1;
                 }
