@@ -1,20 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
 <?import org.fxpart.combobox.AutosuggestComboBoxList?>
 <GridPane alignment="center" hgap="10" prefHeight="441.0" prefWidth="924.0" stylesheets="@darktheme.css" vgap="10"
           xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="org.fxpart.Controller">
 
-    <Label styleClass="table-view" text="Old ASKeyValue Combo Profession" GridPane.columnIndex="1"
-           GridPane.rowIndex="2"/>
-    <Label styleClass="table-view" text="Old ASSearchRest Profession" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
-    <Label styleClass="table-view" text="Simple Combo FxUtil 1" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
-    <Label styleClass="table-view" text="Simple Combo FxUtil 2" GridPane.columnIndex="4" GridPane.rowIndex="2"/>
-    <Label styleClass="table-view" text="Combo Location" GridPane.columnIndex="5" GridPane.rowIndex="2"/>
+    <Label styleClass="table-view" text="AutosuggestComboBoxList Location" GridPane.columnIndex="1"
+           GridPane.rowIndex="1"/>
 
-    <AutosuggestComboBoxList fx:id="autosuggestComboBoxList" GridPane.columnIndex="5" GridPane.rowIndex="3"
+    <AutosuggestComboBoxList fx:id="autosuggestComboBoxList" GridPane.columnIndex="1" GridPane.rowIndex="2"
                              stylesheets="@autosuggestfx.css"/>
 
     <columnConstraints>

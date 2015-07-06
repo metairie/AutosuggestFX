@@ -1,29 +1,26 @@
 package org.fxpart.combobox;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import javafx.scene.control.ComboBox;
 
 import java.util.Collection;
 
 /**
  * Created by Pavlo on 05.07.2015.
  */
-public class DelayedSearchTask implements Runnable{
-    AutosuggestComboBoxList searchEventSource;
+public class DelayedSearchTask implements Runnable {
+    AutosuggestBase searchEventSource;
     Integer delay;
 
-    public DelayedSearchTask(AutosuggestComboBoxList searchEventSource, Integer delay){
+    public DelayedSearchTask(AutosuggestBase searchEventSource, Integer delay) {
         this.searchEventSource = searchEventSource;
         this.delay = delay;
     }
 
     @Override
     public void run() {
-        if (searchEventSource.getWaitFlag()){
-            synchronized (this){
+        if (searchEventSource.getWaitFlag()) {
+            synchronized (this) {
                 try {
                     wait(delay);
                 } catch (InterruptedException e) {

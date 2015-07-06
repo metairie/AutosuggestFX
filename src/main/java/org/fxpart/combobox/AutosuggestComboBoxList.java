@@ -3,7 +3,6 @@ package org.fxpart.combobox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
@@ -11,15 +10,12 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * Created by Pavlo on 30.06.2015.
  */
-public class AutosuggestComboBoxList<T> extends ComboBox<T> {
+public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
 
@@ -44,99 +40,25 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
     private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
     private static final String USUAL_CLASS = "usual-dropdown";
 
-    private String searchString="";
-
-    private Function<String, List<KeyValueString>> searchFunction;
-    private Function<String, List<KeyValueString>> dataSource;
-
-    /**
-     * Lazy mode on startup lazyMode
-     */
-    private boolean lazyMode = true;
-
-    /**
-     * Display load indicator @param loadingIndicator
-     */
-    private boolean loadingIndicator = false;
-
-    /**
-     * Delay(ms) before autosuggest search start
-     * @param timer
-     */
-    Integer timer=1000;
-    private Boolean waitFlag;
-
-    public void setSearchString(String searchString){
-        this.searchString = searchString;
-    }
-
-    public Function<String, List<KeyValueString>> getSearchFunction(){
-        return searchFunction;
-    }
-
-    protected Boolean getWaitFlag() {
-        return waitFlag;
-    }
-
-    protected void setWaitFlag(Boolean waitFlag) {
-        this.waitFlag = waitFlag;
-    }
-
-    public Integer getTimer() {
-        return timer;
-    }
-
-    public void setTimer(Integer timer) {
-        this.timer = timer;
-    }
-
-    public void setLazyMode(boolean lazyMode){
-        this.lazyMode = lazyMode;
-    }
-
-    public boolean getLazyMode(){
-        return lazyMode;
-    }
-
-    public boolean setLoadingIndicator() {
-        return loadingIndicator;
-    }
-
-    public void setLoadingIndicator(boolean loadingIndicator) {
-        this.loadingIndicator = loadingIndicator;
-    }
-
-    public AutosuggestComboBoxList() {
-        setEditable(true);
-    }
-
-    public void setDataSource(Function<String, List<KeyValueString>> dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    public List<KeyValueString> getDataSource() {
-        return dataSource.apply(null);
-    }
-
+    // TODO : move to abstract
     public void init(Function<String, List<KeyValueString>> datas, Function<T, String> textFieldFormatter) {
-        setVisibleRowCount(10);
         setCustomCellFactory();
         addEventHandler(KeyEvent.KEY_PRESSED, t -> hide());
         addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
-        dataSource = datas;
-        searchFunction = term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList());
+        setDataSource(datas);
+        setSearchFunction(term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
         setTextFieldFormatter(textFieldFormatter);
         ObservableList<T> list = null;
-        if (lazyMode == false) {
-            list = FXCollections.observableArrayList((Collection<? extends T>) searchFunction.apply(null));
-        }else{
+        if (getLazyMode() == false) {
+            list = FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null));
+        } else {
             list = FXCollections.observableArrayList();
         }
         setItems(list);
-        waitFlag = true;
+        setWaitFlag(true);
     }
 
-    protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
+     protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
         return new EventHandler<KeyEvent>() {
             private boolean moveCaretToPos = false;
             private int caretPos;
@@ -156,7 +78,7 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                     return;
                 } else if (DOWN.match(event)) {
                     if (!isShowing()) {
-                       show();
+                        show();
                     }
                     caretPos = -1;
                     moveCaret(termLength);
@@ -177,8 +99,7 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                     setWaitFlag(true);
                 }
 
-                DelayedSearchTask delayedSearchTask = new DelayedSearchTask(
-                        AutosuggestComboBoxList.this, timer);
+                DelayedSearchTask delayedSearchTask = new DelayedSearchTask(AutosuggestComboBoxList.this, getTimer());
                 Thread delayedSearchThread = new Thread(delayedSearchTask);
                 delayedSearchThread.start();
 
@@ -217,22 +138,22 @@ public class AutosuggestComboBoxList<T> extends ComboBox<T> {
                                            String keyString = (String) ((KeyValueStringLabel) item).getKey();
                                            String valueString = ((KeyValueStringLabel) item).getValue();
                                            String itemString = keyString + " - " + valueString;
-                                           if (searchString.length() != 0) {
-                                               Integer searchStringPosition = valueString.indexOf(searchString);
+                                           if (getSearchString().length() != 0) {
+                                               Integer searchStringPosition = valueString.indexOf(getSearchString());
 
                                                // itemString contains searchString. It should be split and searchString should be highLighted
                                                if (searchStringPosition >= 0) {
                                                    String beginString = valueString.substring(0, searchStringPosition);
-                                                   String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + searchString.length());
-                                                   String endString = valueString.substring(searchStringPosition + searchString.length());
+                                                   String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + getSearchString().length());
+                                                   String endString = valueString.substring(searchStringPosition + getSearchString().length());
 
                                                    Text separator = new Text(keyString + " - ");
                                                    separator.getStyleClass().add(USUAL_CLASS);
                                                    styledText.getChildren().add(separator);
 
-                                                       final Text begin = new Text(beginString);
-                                                       begin.getStyleClass().add(USUAL_CLASS);
-                                                       styledText.getChildren().add(begin);
+                                                   final Text begin = new Text(beginString);
+                                                   begin.getStyleClass().add(USUAL_CLASS);
+                                                   styledText.getChildren().add(begin);
 
                                                    final Text highlighted = new Text(highlightedString);
                                                    highlighted.getStyleClass().add(HIGHLIGHTED_CLASS);
