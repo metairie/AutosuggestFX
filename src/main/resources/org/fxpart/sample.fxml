@@ -10,8 +10,8 @@
     <Label styleClass="table-view" text="AutosuggestComboBoxList Location" GridPane.columnIndex="1"
            GridPane.rowIndex="1"/>
 
-    <AutosuggestComboBoxList fx:id="autosuggestComboBoxList" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                             stylesheets="@autosuggestfx.css"/>
+    <AutosuggestComboBoxList fx:id="autosuggestComboBoxList" onShown="#clickOnShow" stylesheets="@autosuggestfx.css"
+                             GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
     <columnConstraints>
         <ColumnConstraints maxWidth="216.0" minWidth="10.0" prefWidth="45.0"/>

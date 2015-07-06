@@ -4,8 +4,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import org.fxpart.combobox.AutosuggestBase;
 import org.fxpart.combobox.AutosuggestComboBoxList;
 import org.fxpart.combobox.KeyValueString;
 import org.fxpart.mockserver.MockDatas;
@@ -34,8 +36,8 @@ public class Controller implements Initializable {
         final List<KeyValueString> itemsLocation = new org.fxpart.mockserver.MockDatas().loadLocation();
 
         //pavel
-        autosuggestComboBoxList.setLazyMode(false);
-        autosuggestComboBoxList.setTimer(2000);
+        autosuggestComboBoxList.setLazyMode(true);
+        autosuggestComboBoxList.setTimer(1000);
         autosuggestComboBoxList.init(o -> new MockDatas().loadLocation(), textFieldFormatter);
     }
 
@@ -50,4 +52,7 @@ public class Controller implements Initializable {
     // label formatter
     private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
 
+    public void clickOnShow(Event event) {
+        autosuggestComboBoxList.doSearch(event);
+    }
 }

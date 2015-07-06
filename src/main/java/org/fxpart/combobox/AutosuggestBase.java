@@ -11,6 +11,7 @@ import java.util.function.Function;
  * Created by metairie on 06-Jul-15.
  */
 public abstract class AutosuggestBase<T> extends ComboBox<T> {
+    private boolean acceptFreeValue = false;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
     private String searchString = "";
@@ -121,5 +122,12 @@ public abstract class AutosuggestBase<T> extends ComboBox<T> {
 
     public void setFixedHeight(double fixedHeight) {
         this.fixedHeight.set(fixedHeight);
+    }
+    public boolean isAcceptFreeValue() {
+        return acceptFreeValue;
+    }
+
+    public void setAcceptFreeValue(boolean acceptFreeValue) {
+        this.acceptFreeValue = acceptFreeValue;
     }
 }

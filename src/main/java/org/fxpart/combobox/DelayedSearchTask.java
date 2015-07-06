@@ -2,6 +2,10 @@ package org.fxpart.combobox;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.scene.input.KeyEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
@@ -9,40 +13,44 @@ import java.util.Collection;
  * Created by Pavlo on 05.07.2015.
  */
 public class DelayedSearchTask implements Runnable {
-    AutosuggestBase searchEventSource;
-    Integer delay;
+    private final static Logger LOG = LoggerFactory.getLogger(DelayedSearchTask.class);
 
-    public DelayedSearchTask(AutosuggestBase searchEventSource, Integer delay) {
-        this.searchEventSource = searchEventSource;
+    AutosuggestBase autosuggest;
+    Integer delay;
+    Event event;
+
+    public DelayedSearchTask(AutosuggestBase autosuggest, Integer delay, Event event) {
+        this.autosuggest = autosuggest;
         this.delay = delay;
+        this.event = event;
     }
 
     @Override
     public void run() {
-        if (searchEventSource.getWaitFlag()) {
+        if (autosuggest.getWaitFlag()) {
             synchronized (this) {
                 try {
                     wait(delay);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                searchEventSource.setWaitFlag(false);
+                autosuggest.setWaitFlag(false);
             }
         }
 
         Platform.runLater(new Runnable() {
             public void run() {
-                String searchString = searchEventSource.getEditor().getText();
-                ObservableList list = searchEventSource.getItems();
+                String searchString = autosuggest.getEditor().getText();
+                ObservableList list = autosuggest.getItems();
                 list.clear();
-                list.setAll((Collection<? extends KeyValueString>) searchEventSource.getSearchFunction().apply(searchString));
-                if (searchEventSource.getValue() == null) {
-                    searchEventSource.getEditor().setText(searchString);
+                list.setAll((Collection<? extends KeyValueString>) autosuggest.getSearchFunction().apply(searchString));
+                if (autosuggest.getValue() == null) {
+                    autosuggest.getEditor().setText(searchString);
                 }
-                searchEventSource.setSearchString(searchString);
-                searchEventSource.getEditor().positionCaret(searchString.length());
-                if (!list.isEmpty()) {
-                    searchEventSource.show();
+                autosuggest.setSearchString(searchString);
+                autosuggest.getEditor().positionCaret(searchString.length());
+                if (KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
+                    autosuggest.show();
                 }
             }
         });

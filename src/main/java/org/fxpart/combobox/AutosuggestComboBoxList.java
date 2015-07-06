@@ -2,6 +2,7 @@ package org.fxpart.combobox;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -51,14 +52,17 @@ public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
         ObservableList<T> list = null;
         if (getLazyMode() == false) {
             list = FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null));
-        } else {
-            list = FXCollections.observableArrayList();
+            setItems(list);
         }
-        setItems(list);
         setWaitFlag(true);
-
         // nb rows are calculated according the height of the TextField embedded
         AutosuggestComboBoxList.this.getEditor().heightProperty().multiply(getVisibleRowsCount());
+    }
+
+    public void doSearch(Event event) {
+        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(AutosuggestComboBoxList.this, getTimer(), event);
+        Thread delayedSearchThread = new Thread(delayedSearchTask);
+        delayedSearchThread.start();
     }
 
     protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -102,9 +106,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
                     setWaitFlag(true);
                 }
 
-                DelayedSearchTask delayedSearchTask = new DelayedSearchTask(AutosuggestComboBoxList.this, getTimer());
-                Thread delayedSearchThread = new Thread(delayedSearchTask);
-                delayedSearchThread.start();
+                // do search and
+                doSearch(event);
 
                 if (!moveCaretToPos) {
                     caretPos = -1;
