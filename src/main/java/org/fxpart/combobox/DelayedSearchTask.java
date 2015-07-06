@@ -35,8 +35,7 @@ public class DelayedSearchTask implements Runnable {
                 String searchString = searchEventSource.getEditor().getText();
                 ObservableList list = searchEventSource.getItems();
                 list.clear();
-                list.setAll((Collection<? extends KeyValueString>) searchEventSource.
-                        getSearchFunction().apply(searchString));
+                list.setAll((Collection<? extends KeyValueString>) searchEventSource.getSearchFunction().apply(searchString));
                 if (searchEventSource.getValue() == null) {
                     searchEventSource.getEditor().setText(searchString);
                 }

@@ -21,7 +21,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Created by Pavlo on 30.06.2015.
+ * Created by Stephane Metairie + Pavlo Morozov on 30.06.2015.
  */
 public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
 
@@ -56,9 +56,12 @@ public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
         }
         setItems(list);
         setWaitFlag(true);
+
+        // nb rows are calculated according the height of the TextField embedded
+        AutosuggestComboBoxList.this.getEditor().heightProperty().multiply(getVisibleRowsCount());
     }
 
-     protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
+    protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
         return new EventHandler<KeyEvent>() {
             private boolean moveCaretToPos = false;
             private int caretPos;
@@ -124,7 +127,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
         setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
                            @Override
                            public ListCell<T> call(ListView<T> param) {
-
+                               param.setPrefHeight(getFixedHeight());
                                final ListCell<T> cell = new ListCell<T>() {
                                    @Override
                                    protected void updateItem(T item, boolean empty) {

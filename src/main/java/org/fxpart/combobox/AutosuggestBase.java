@@ -1,5 +1,7 @@
 package org.fxpart.combobox;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.control.ComboBox;
 
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.function.Function;
  * Created by metairie on 06-Jul-15.
  */
 public abstract class AutosuggestBase<T> extends ComboBox<T> {
+    private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
     private String searchString = "";
     private Function<String, List<KeyValueString>> searchFunction;
@@ -106,5 +109,17 @@ public abstract class AutosuggestBase<T> extends ComboBox<T> {
 
     public void setVisibleRowsCount(int visibleRowsCount) {
         this.visibleRowsCount = visibleRowsCount;
+    }
+
+    public double getFixedHeight() {
+        return fixedHeight.get();
+    }
+
+    public DoubleProperty fixedHeightProperty() {
+        return fixedHeight;
+    }
+
+    public void setFixedHeight(double fixedHeight) {
+        this.fixedHeight.set(fixedHeight);
     }
 }
