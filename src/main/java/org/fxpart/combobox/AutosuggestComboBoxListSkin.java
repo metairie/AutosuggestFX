@@ -77,6 +77,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
         // build control up
         combo = new ComboBox();
+        combo.setEditable(true);
         combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
 
         init();

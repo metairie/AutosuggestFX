@@ -38,19 +38,19 @@ public class Controller implements Initializable {
         //pavel
 //        autosuggest.setLazyMode(true);
 //        autosuggest.setTimer(1000);
-        autosuggest.init(o -> new MockDatas().loadLocation(), textFieldFormatter);
+        autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
     }
 
-    // framework.search function for combo
-    private Function<String, List<KeyValueString>> searchFunctionParam(List<KeyValueString> items) {
-        return term -> items.stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList());
-    }
-
-    // text fields formatter
-    private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
-
-    // label formatter
-    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
+//    // framework.search function for combo
+//    private Function<String, List<KeyValueString>> searchFunctionParam(List<KeyValueString> items) {
+//        return term -> items.stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList());
+//    }
+//
+//    // text fields formatter
+//    private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
+//
+//    // label formatter
+//    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
 
     public void clickOnShow(Event event) {
 //        autosuggestComboBoxList.doSearch(event);
