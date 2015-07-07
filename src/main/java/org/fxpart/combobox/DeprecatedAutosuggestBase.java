@@ -10,7 +10,7 @@ import java.util.function.Function;
 /**
  * Created by metairie on 06-Jul-15.
  */
-public abstract class AutosuggestBase<T> extends ComboBox<T> {
+public abstract class DeprecatedAutosuggestBase<T> extends ComboBox<T> {
     private boolean acceptFreeValue = false;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
@@ -76,7 +76,7 @@ public abstract class AutosuggestBase<T> extends ComboBox<T> {
         this.loadingIndicator = loadingIndicator;
     }
 
-    public AutosuggestBase() {
+    public DeprecatedAutosuggestBase() {
         setEditable(true);
     }
 

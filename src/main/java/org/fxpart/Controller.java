@@ -7,7 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import org.fxpart.combobox.AutosuggestComboBoxList;
+import org.fxpart.combobox.DeprecatedAutosuggestComboBoxList;
 import org.fxpart.combobox.KeyValueString;
 import org.fxpart.mockserver.MockDatas;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ public class Controller implements Initializable {
     private final static Logger LOG = LoggerFactory.getLogger(Controller.class);
 
     @FXML
-    AutosuggestComboBoxList<KeyValueString> autosuggestComboBoxList;
+    DeprecatedAutosuggestComboBoxList<KeyValueString> autosuggestComboBoxList;
 
     private ObjectProperty<KeyValueString> partDecoDataLocationProperty = new SimpleObjectProperty<>();
     private final ObservableList strings = FXCollections.observableArrayList(MockDatas.loadLocationStrings());

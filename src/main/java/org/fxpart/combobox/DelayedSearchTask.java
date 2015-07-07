@@ -15,11 +15,11 @@ import java.util.Collection;
 public class DelayedSearchTask implements Runnable {
     private final static Logger LOG = LoggerFactory.getLogger(DelayedSearchTask.class);
 
-    AutosuggestBase autosuggest;
+    DeprecatedAutosuggestBase autosuggest;
     Integer delay;
     Event event;
 
-    public DelayedSearchTask(AutosuggestBase autosuggest, Integer delay, Event event) {
+    public DelayedSearchTask(DeprecatedAutosuggestBase autosuggest, Integer delay, Event event) {
         this.autosuggest = autosuggest;
         this.delay = delay;
         this.event = event;

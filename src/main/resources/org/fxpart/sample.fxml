@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
-<?import org.fxpart.combobox.AutosuggestComboBoxList?>
+<?import org.fxpart.combobox.DeprecatedAutosuggestComboBoxList?>
 <GridPane alignment="center" hgap="10" prefHeight="441.0" prefWidth="924.0" stylesheets="@darktheme.css" vgap="10"
           xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="org.fxpart.Controller">
@@ -10,7 +10,7 @@
     <Label styleClass="table-view" text="AutosuggestComboBoxList Location" GridPane.columnIndex="1"
            GridPane.rowIndex="1"/>
 
-    <AutosuggestComboBoxList fx:id="autosuggestComboBoxList" onShown="#clickOnShow" stylesheets="@autosuggestfx.css"
+    <DeprecatedAutosuggestComboBoxList fx:id="autosuggestComboBoxList" onShown="#clickOnShow" stylesheets="@autosuggestfx.css"
                              GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
     <Label styleClass="table-view" text="Autosuggest" GridPane.columnIndex="1"

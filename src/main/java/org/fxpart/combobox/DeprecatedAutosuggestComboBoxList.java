@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 /**
  * Created by Stephane Metairie + Pavlo Morozov on 30.06.2015.
  */
-public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
+public class DeprecatedAutosuggestComboBoxList<T> extends DeprecatedAutosuggestBase<T> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DeprecatedAutosuggestComboBoxList.class);
 
     private static final KeyCodeCombination UP = new KeyCodeCombination(KeyCode.UP);
     private static final KeyCodeCombination DOWN = new KeyCodeCombination(KeyCode.DOWN);
@@ -56,11 +56,11 @@ public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
         }
         setWaitFlag(true);
         // nb rows are calculated according the height of the TextField embedded
-        AutosuggestComboBoxList.this.getEditor().heightProperty().multiply(getVisibleRowsCount());
+        DeprecatedAutosuggestComboBoxList.this.getEditor().heightProperty().multiply(getVisibleRowsCount());
     }
 
     public void doSearch(Event event) {
-        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(AutosuggestComboBoxList.this, getTimer(), event);
+        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(DeprecatedAutosuggestComboBoxList.this, getTimer(), event);
         Thread delayedSearchThread = new Thread(delayedSearchTask);
         delayedSearchThread.start();
     }
