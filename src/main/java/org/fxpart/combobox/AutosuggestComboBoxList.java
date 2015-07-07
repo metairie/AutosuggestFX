@@ -32,10 +32,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private String searchString = "";
     private int timer = 100;
     private boolean lazyMode = true;
-    private Function<String, List<KeyValueString>> searchFunction;
-    private Function<String, List<KeyValueString>> dataSource;
-    private Function<KeyValueString, String> textFieldFormatter; //= item -> String.format("%s", item.getValue());
-    private Function<KeyValueString, String> labelItemFormatter; // = item -> String.format("%s - %s", item.getKey(), item.getValue());
+    private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
+    private Function<String, List<KeyValueString>> dataSource = s -> null;
+    private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
+    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
 
 
     /**************************************************************************
@@ -195,14 +195,9 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     }
 
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
-        this.dataSource = datas;
-        this.searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
+        dataSource = datas;
         this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
-        ObservableList<T> list = null;
-        if (getLazyMode() == false) {
-            list = FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null));
-            items.addAll(list);
-        }
+        items.addAll(getLazyMode() ? null : FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null)));
         setWaitFlag(true);
     }
 
