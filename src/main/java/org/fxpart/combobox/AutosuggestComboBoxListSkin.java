@@ -8,14 +8,14 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.util.Callback;
 
 import java.util.Collections;
 
@@ -37,13 +37,16 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
 
+    private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
+    private static final String USUAL_CLASS = "usual-dropdown";
+
     // visuals
-    private final HBox root;
-    private final VBox vBoxText;
-    private final VBox vBoxCombo;
-    private final ComboBox<T> combo;
-    private final TextField selectedItem;
-    private final ProgressBar progressBar;
+    private final HBox root = new HBox();
+    private final VBox vBoxText = new VBox();
+    private final VBox vBoxCombo = new VBox();
+    private final ComboBox<T> combo = new ComboBox<>();
+    private final TextField selectedItem = new TextField();
+    private final ProgressBar progressBar = new ProgressBar();
 
     // data
     private final AutosuggestComboBoxList<T> control;
@@ -65,20 +68,15 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         items = control.getItems();
-        root = new HBox();
-        vBoxCombo = new VBox();
-        vBoxText = new VBox();
-        progressBar = new ProgressBar();
-        selectedItem = new TextField();
 
         // build control up
-        combo = new ComboBox();
-        combo.setEditable(true);
-        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
-
         init();
 
         // visual aspect
+        graphical();
+    }
+
+    private void graphical() {
         root.setStyle("-fx-background-color: #336699;");
         root.setPadding(new Insets(1, 1, 1, 1));
 
@@ -97,11 +95,14 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         root.getChildren().add(vBoxText);
         root.getChildren().add(vBoxCombo);
         getChildren().add(root);
+
     }
 
     private void init() {
+        combo.setEditable(true);
+        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
         control.setCombo(combo);
-        control.setCustomCellFactory();
+        setCustomCellFactory();
         control.setTimer(timer);
         combo.setItems(control.getItems());
     }
@@ -165,6 +166,66 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 moveCaretToPos = false;
             }
         };
+    }
+
+    public void setCustomCellFactory() {
+        combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
+                                 @Override
+                                 public ListCell<T> call(ListView<T> param) {
+                                     //TODO param.setPrefHeight(getFixedHeight());
+                                     final ListCell<T> cell = new ListCell<T>() {
+                                         @Override
+                                         protected void updateItem(T item, boolean empty) {
+                                             super.updateItem(item, empty);
+                                             if (item == null || empty) {
+                                                 setText(null);
+                                                 setGraphic(null);
+                                             } else {
+                                                 setText(null);
+                                                 HBox styledText = new HBox();
+                                                 String keyString = (String) ((KeyValueStringLabel) item).getKey();
+                                                 String valueString = ((KeyValueStringLabel) item).getValue();
+                                                 String itemString = keyString + " - " + valueString;
+                                                 if (control.getSearchString().length() != 0) {
+                                                     Integer searchStringPosition = valueString.indexOf(control.getSearchString());
+
+                                                     // itemString contains searchString. It should be split and searchString should be highLighted
+                                                     if (searchStringPosition >= 0) {
+                                                         String beginString = valueString.substring(0, searchStringPosition);
+                                                         String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + control.getSearchString().length());
+                                                         String endString = valueString.substring(searchStringPosition + control.getSearchString().length());
+
+                                                         Text separator = new Text(keyString + " - ");
+                                                         separator.getStyleClass().add(USUAL_CLASS);
+                                                         styledText.getChildren().add(separator);
+
+                                                         final Text begin = new Text(beginString);
+                                                         begin.getStyleClass().add(USUAL_CLASS);
+                                                         styledText.getChildren().add(begin);
+
+                                                         final Text highlighted = new Text(highlightedString);
+                                                         highlighted.getStyleClass().add(HIGHLIGHTED_CLASS);
+                                                         styledText.getChildren().add(highlighted);
+
+                                                         final Text end = new Text(endString);
+                                                         end.getStyleClass().add(USUAL_CLASS);
+                                                         styledText.getChildren().add(end);
+
+
+                                                     } else {
+                                                         styledText.getChildren().add(new Text(itemString));
+                                                     }
+                                                 } else {
+                                                     styledText.getChildren().add(new Text(itemString));
+                                                 }
+                                                 setGraphic(styledText);
+                                             }
+                                         }
+                                     };
+                                     return cell;
+                                 }
+                             }
+        );
     }
 
     public Integer getTimer() {
