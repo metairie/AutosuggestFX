@@ -61,7 +61,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private boolean lazyMode = true;
     private boolean loadingIndicator = false;
     private boolean editable = true;
-    private int timer = 500;
 
     /**************************************************************************
      * Constructors
@@ -106,7 +105,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         control.setCombo(combo);
         setCustomCellFactory();
         setTextFieldFormatter(control.getTextFieldFormatter());
-        control.setTimer(timer);
+//        control.setTimer(timer);
         combo.setItems(control.getItems());
     }
 
@@ -243,14 +242,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                                  }
                              }
         );
-    }
-
-    public Integer getTimer() {
-        return timer;
-    }
-
-    public void setTimer(Integer timer) {
-        this.timer = timer;
     }
 
     public void setLazyMode(boolean lazyMode) {

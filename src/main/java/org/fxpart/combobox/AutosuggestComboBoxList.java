@@ -25,8 +25,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
     private final ObservableList<T> items;
     private boolean waitFlag = false;
+
     // TODO remove this by skinProperty ?
     private ComboBox<T> combo;
+
     private String searchString = "";
     private int timer = 500;
     private Function<String, List<KeyValueString>> searchFunction;
@@ -136,6 +138,15 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
         this.textFieldFormatter = textFieldFormatter;
     }
+
+    public Function<KeyValueString, String> getLabelItemFormatter() {
+        return labelItemFormatter;
+    }
+
+    public void setLabelItemFormatter(Function<KeyValueString, String> labelItemFormatter) {
+        this.labelItemFormatter = labelItemFormatter;
+    }
+
 
     /**************************************************************************
      * Properties

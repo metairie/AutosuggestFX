@@ -15,43 +15,43 @@ import java.util.Collection;
 public class DelayedSearchTask implements Runnable {
     private final static Logger LOG = LoggerFactory.getLogger(DelayedSearchTask.class);
 
-    AutosuggestComboBoxList autosuggest;
+    AutosuggestComboBoxList control;
     Integer delay;
     Event event;
 
     public DelayedSearchTask(AutosuggestComboBoxList autosuggest, Integer delay, Event event) {
-        this.autosuggest = autosuggest;
+        this.control = autosuggest;
         this.delay = delay;
         this.event = event;
     }
 
     @Override
     public void run() {
-        if (autosuggest.getWaitFlag()) {
+        if (control.getWaitFlag()) {
             synchronized (this) {
                 try {
                     wait(delay);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                autosuggest.setWaitFlag(false);
+                control.setWaitFlag(false);
             }
         }
 
         Platform.runLater(new Runnable() {
             public void run() {
-                String searchString = autosuggest.getEditor().getText();
-                ObservableList list = autosuggest.getItems();
+                String searchString = control.getEditor().getText();
+                ObservableList list = control.getItems();
                 list.clear();
-                list.setAll((Collection<? extends KeyValueString>) autosuggest.getSearchFunction().apply(searchString));
-                if (autosuggest.getValue() == null) {
-                    autosuggest.getEditor().setText(searchString);
+                list.setAll((Collection<? extends KeyValueString>) control.getSearchFunction().apply(searchString));
+                if (control.getValue() == null) {
+                    control.getEditor().setText(searchString);
                 }
-                autosuggest.setSearchString(searchString);
-                autosuggest.getEditor().positionCaret(searchString.length());
+                control.setSearchString(searchString);
+                control.getEditor().positionCaret(searchString.length());
                 // TODO remove this
                 if (KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
-                    autosuggest.getCombo().show();
+                    control.getCombo().show();
                 }
             }
         });

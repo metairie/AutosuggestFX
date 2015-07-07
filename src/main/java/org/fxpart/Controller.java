@@ -34,7 +34,7 @@ public class Controller implements Initializable {
 
         //pavel
 //        autosuggest.setLazyMode(true);
-//        autosuggest.setTimer(1000);
+        autosuggest.setTimer(2000);
         autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
     }
 
