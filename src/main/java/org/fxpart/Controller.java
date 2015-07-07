@@ -33,8 +33,8 @@ public class Controller implements Initializable {
         final List<KeyValueString> itemsLocation = new org.fxpart.mockserver.MockDatas().loadLocation();
 
         //pavel
-//        autosuggest.setLazyMode(true);
-        autosuggest.setTimer(2000);
+        autosuggest.setLazyMode(false);
+//        autosuggest.setTimer(2000);
         autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
     }
 

@@ -30,7 +30,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private ComboBox<T> combo;
 
     private String searchString = "";
-    private int timer = 500;
+    private int timer = 100;
+    private boolean lazyMode = true;
     private Function<String, List<KeyValueString>> searchFunction;
     private Function<String, List<KeyValueString>> dataSource;
     private Function<KeyValueString, String> textFieldFormatter; //= item -> String.format("%s", item.getValue());
@@ -147,6 +148,18 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.labelItemFormatter = labelItemFormatter;
     }
 
+    public void setLazyMode(boolean lazyMode) {
+        this.lazyMode = lazyMode;
+    }
+
+    public boolean getLazyMode() {
+        return lazyMode;
+    }
+
+    public boolean isLazyMode() {
+        return lazyMode;
+    }
+
 
     /**************************************************************************
      * Properties
@@ -185,7 +198,11 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.dataSource = datas;
         this.searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
         this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
-        ObservableList<T> list = FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null));
+        ObservableList<T> list = null;
+        if (getLazyMode() == false) {
+            list = FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null));
+            items.addAll(list);
+        }
         setWaitFlag(true);
     }
 

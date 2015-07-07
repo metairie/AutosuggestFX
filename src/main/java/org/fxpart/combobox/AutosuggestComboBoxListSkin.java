@@ -58,7 +58,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private boolean acceptFreeValue = false;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
-    private boolean lazyMode = true;
     private boolean loadingIndicator = false;
     private boolean editable = true;
 
@@ -105,8 +104,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         control.setCombo(combo);
         setCustomCellFactory();
         setTextFieldFormatter(control.getTextFieldFormatter());
-//        control.setTimer(timer);
-        combo.setItems(control.getItems());
+        combo.setItems(this.items);
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -188,7 +186,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
                                  @Override
                                  public ListCell<T> call(ListView<T> param) {
-                                     //TODO param.setPrefHeight(getFixedHeight());
+                                     param.setPrefHeight(getFixedHeight());
                                      final ListCell<T> cell = new ListCell<T>() {
                                          @Override
                                          protected void updateItem(T item, boolean empty) {
@@ -244,24 +242,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         );
     }
 
-    public void setLazyMode(boolean lazyMode) {
-        this.lazyMode = lazyMode;
-    }
-
-    public boolean getLazyMode() {
-        return lazyMode;
-    }
-
     public boolean setLoadingIndicator() {
         return loadingIndicator;
     }
 
     public void setLoadingIndicator(boolean loadingIndicator) {
         this.loadingIndicator = loadingIndicator;
-    }
-
-    public boolean isLazyMode() {
-        return lazyMode;
     }
 
     public boolean isLoadingIndicator() {
