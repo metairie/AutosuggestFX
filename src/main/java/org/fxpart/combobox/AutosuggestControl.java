@@ -5,7 +5,7 @@ import javafx.scene.control.Control;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestControl extends Control{
+public class AutosuggestControl extends Control {
 
     private String stylesheet;
 
@@ -15,4 +15,5 @@ public class AutosuggestControl extends Control{
         }
         return stylesheet;
     }
+
 }

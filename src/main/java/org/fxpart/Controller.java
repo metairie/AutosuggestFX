@@ -34,11 +34,11 @@ public class Controller implements Initializable {
 
         //pavel
         autosuggest.setLazyMode(false);
-//        autosuggest.setTimer(2000);
+        autosuggest.setTimer(100);
         autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
     }
 
     public void clickOnShow(Event event) {
-//        autosuggestComboBoxList.doSearch(event);
+        autosuggest.doSearch(event);
     }
 }

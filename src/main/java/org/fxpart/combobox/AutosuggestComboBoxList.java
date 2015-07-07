@@ -1,10 +1,13 @@
 package org.fxpart.combobox;
 
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ObjectPropertyBase;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
@@ -19,6 +22,11 @@ import java.util.stream.Collectors;
  * Created by metairie on 07-Jul-15.
  */
 public class AutosuggestComboBoxList<T> extends AutosuggestControl {
+
+    // TODO
+    // this to be link with sub component (Combo or Table?)
+    public static final EventType<Event> ON_SHOWN = new EventType<Event>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
+
     /**************************************************************************
      * Private fields
      **************************************************************************/
@@ -30,7 +38,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private ComboBox<T> combo;
 
     private String searchString = "";
-    private int timer = 100;
+    private int timer = 500;
     private boolean lazyMode = true;
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
@@ -129,7 +137,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     }
 
     public void setTimer(int timer) {
-        this.timer = timer;
+        this.timer = Math.min(100, timer);
     }
 
     public Function<KeyValueString, String> getTextFieldFormatter() {
@@ -164,6 +172,39 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     /**************************************************************************
      * Properties
      **************************************************************************/
+
+    // -- On Shown
+    public final ObjectProperty<EventHandler<Event>> onShownProperty() {
+        return onShown;
+    }
+
+    public final void setOnShown(EventHandler<Event> value) {
+        onShownProperty().set(value);
+    }
+
+    public final EventHandler<Event> getOnShown() {
+        return onShownProperty().get();
+    }
+
+    /**
+     * Called just after the {@link AutosuggestControl} popup/display is shown.
+     */
+    private ObjectProperty<EventHandler<Event>> onShown = new ObjectPropertyBase<EventHandler<Event>>() {
+        @Override
+        protected void invalidated() {
+            setEventHandler(ON_SHOWN, get());
+        }
+
+        @Override
+        public Object getBean() {
+            return this;
+        }
+
+        @Override
+        public String getName() {
+            return "onShown";
+        }
+    };
 
     // --- converter
     private ObjectProperty<StringConverter<T>> converter = new SimpleObjectProperty<StringConverter<T>>(this, "converter");
