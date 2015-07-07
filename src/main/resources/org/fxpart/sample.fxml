@@ -11,7 +11,7 @@
            GridPane.rowIndex="1"/>
 
     <AutosuggestComboBoxList fx:id="autosuggest" stylesheets="@autosuggestfx.css" GridPane.columnIndex="1"
-                             GridPane.rowIndex="2"/>
+                             GridPane.rowIndex="2" prefWidth="300" minWidth="300"/>
 
     <Label styleClass="table-view" text="Autosuggest" GridPane.columnIndex="1"
            GridPane.rowIndex="3"/>

@@ -16,8 +16,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 import java.util.Collections;
+import java.util.function.Function;
 
 /**
  * Created by metairie on 07-Jul-15.
@@ -52,7 +54,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
 
-    // TODO sort this
+    // TODO qualify this properties (data?visual?control?)
     private boolean acceptFreeValue = false;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
@@ -99,15 +101,16 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     }
 
     private void init() {
-        combo.setEditable(true);
+        combo.setEditable(editable);
         combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
         control.setCombo(combo);
         setCustomCellFactory();
+        setTextFieldFormatter(control.getTextFieldFormatter());
         control.setTimer(timer);
         combo.setItems(control.getItems());
     }
 
-    public EventHandler<KeyEvent> createKeyReleaseEventHandler() {
+    private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
         return new EventHandler<KeyEvent>() {
             private boolean moveCaretToPos = false;
             private int caretPos;
@@ -168,7 +171,21 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         };
     }
 
-    public void setCustomCellFactory() {
+    private void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
+        combo.setConverter(new StringConverter<T>() {
+            @Override
+            public String toString(T t) {
+                return t == null ? null : textFieldFormatter.apply((KeyValueString) t);
+            }
+
+            @Override
+            public T fromString(String string) {
+                return combo.getValue();
+            }
+        });
+    }
+
+    private void setCustomCellFactory() {
         combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
                                  @Override
                                  public ListCell<T> call(ListView<T> param) {

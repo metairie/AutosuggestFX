@@ -31,8 +31,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private int timer = 500;
     private Function<String, List<KeyValueString>> searchFunction;
     private Function<String, List<KeyValueString>> dataSource;
-    private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
-    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
+    private Function<KeyValueString, String> textFieldFormatter; //= item -> String.format("%s", item.getValue());
+    private Function<KeyValueString, String> labelItemFormatter; // = item -> String.format("%s - %s", item.getKey(), item.getValue());
 
 
     /**************************************************************************
@@ -129,6 +129,14 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.timer = timer;
     }
 
+    public Function<KeyValueString, String> getTextFieldFormatter() {
+        return textFieldFormatter;
+    }
+
+    public void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
+        this.textFieldFormatter = textFieldFormatter;
+    }
+
     /**************************************************************************
      * Properties
      **************************************************************************/
@@ -165,7 +173,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
         this.dataSource = datas;
         this.searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
-        this.textFieldFormatter = textFieldFormatter;
+        this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
         ObservableList<T> list = FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null));
         setWaitFlag(true);
     }
@@ -180,5 +188,4 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         Thread delayedSearchThread = new Thread(delayedSearchTask);
         delayedSearchThread.start();
     }
-
 }
