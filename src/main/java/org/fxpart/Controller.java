@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import org.fxpart.combobox.AutosuggestComboBoxList;
 import org.fxpart.combobox.DeprecatedAutosuggestComboBoxList;
 import org.fxpart.combobox.KeyValueString;
 import org.fxpart.mockserver.MockDatas;
@@ -23,7 +24,7 @@ public class Controller implements Initializable {
     private final static Logger LOG = LoggerFactory.getLogger(Controller.class);
 
     @FXML
-    DeprecatedAutosuggestComboBoxList<KeyValueString> autosuggestComboBoxList;
+    AutosuggestComboBoxList<KeyValueString> autosuggest;
 
     private ObjectProperty<KeyValueString> partDecoDataLocationProperty = new SimpleObjectProperty<>();
     private final ObservableList strings = FXCollections.observableArrayList(MockDatas.loadLocationStrings());
@@ -35,9 +36,9 @@ public class Controller implements Initializable {
         final List<KeyValueString> itemsLocation = new org.fxpart.mockserver.MockDatas().loadLocation();
 
         //pavel
-        autosuggestComboBoxList.setLazyMode(true);
-        autosuggestComboBoxList.setTimer(1000);
-        autosuggestComboBoxList.init(o -> new MockDatas().loadLocation(), textFieldFormatter);
+//        autosuggest.setLazyMode(true);
+//        autosuggest.setTimer(1000);
+        autosuggest.init(o -> new MockDatas().loadLocation(), textFieldFormatter);
     }
 
     // framework.search function for combo
@@ -52,6 +53,6 @@ public class Controller implements Initializable {
     private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
 
     public void clickOnShow(Event event) {
-        autosuggestComboBoxList.doSearch(event);
+//        autosuggestComboBoxList.doSearch(event);
     }
 }

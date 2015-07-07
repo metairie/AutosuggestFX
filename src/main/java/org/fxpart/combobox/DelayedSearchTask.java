@@ -15,11 +15,11 @@ import java.util.Collection;
 public class DelayedSearchTask implements Runnable {
     private final static Logger LOG = LoggerFactory.getLogger(DelayedSearchTask.class);
 
-    DeprecatedAutosuggestBase autosuggest;
+    AutosuggestComboBoxList autosuggest;
     Integer delay;
     Event event;
 
-    public DelayedSearchTask(DeprecatedAutosuggestBase autosuggest, Integer delay, Event event) {
+    public DelayedSearchTask(AutosuggestComboBoxList autosuggest, Integer delay, Event event) {
         this.autosuggest = autosuggest;
         this.delay = delay;
         this.event = event;
@@ -49,8 +49,9 @@ public class DelayedSearchTask implements Runnable {
                 }
                 autosuggest.setSearchString(searchString);
                 autosuggest.getEditor().positionCaret(searchString.length());
+                // TODO remove this
                 if (KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
-                    autosuggest.show();
+                    autosuggest.getCombo().show();
                 }
             }
         });

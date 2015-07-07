@@ -60,9 +60,9 @@ public class DeprecatedAutosuggestComboBoxList<T> extends DeprecatedAutosuggestB
     }
 
     public void doSearch(Event event) {
-        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(DeprecatedAutosuggestComboBoxList.this, getTimer(), event);
+       /* DelayedSearchTask delayedSearchTask = new DelayedSearchTask(DeprecatedAutosuggestComboBoxList.this, getTimer(), event);
         Thread delayedSearchThread = new Thread(delayedSearchTask);
-        delayedSearchThread.start();
+        delayedSearchThread.start();*/
     }
 
     protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
