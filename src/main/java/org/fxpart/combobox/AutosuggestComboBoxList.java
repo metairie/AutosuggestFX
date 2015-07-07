@@ -4,9 +4,11 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Skin;
-import javafx.scene.control.TextField;
+import javafx.event.Event;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Collection;
@@ -22,11 +24,16 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      * Private fields
      **************************************************************************/
 
+    private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
+    private static final String USUAL_CLASS = "usual-dropdown";
+
+
     private final ObservableList<T> items;
     private boolean waitFlag = false;
     // TODO remove this
     private ComboBox<T> combo;
     private String searchString = "";
+    private int timer = 500;
     private Function<String, List<KeyValueString>> searchFunction;
     private Function<String, List<KeyValueString>> dataSource;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
@@ -115,6 +122,17 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return searchFunction;
     }
 
+    public String getSearchString() {
+        return searchString;
+    }
+
+    public int getTimer() {
+        return this.timer;
+    }
+
+    public void setTimer(int timer) {
+        this.timer = timer;
+    }
 
     /**************************************************************************
      * Properties
@@ -159,10 +177,73 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
 
     /**************************************************************************
-     *
      * Implementation
-     *
      **************************************************************************/
 
+    public void setCustomCellFactory() {
+        combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
+                                 @Override
+                                 public ListCell<T> call(ListView<T> param) {
+                                     //TODO param.setPrefHeight(getFixedHeight());
+                                     final ListCell<T> cell = new ListCell<T>() {
+                                         @Override
+                                         protected void updateItem(T item, boolean empty) {
+                                             super.updateItem(item, empty);
+                                             if (item == null || empty) {
+                                                 setText(null);
+                                                 setGraphic(null);
+                                             } else {
+                                                 setText(null);
+                                                 HBox styledText = new HBox();
+                                                 String keyString = (String) ((KeyValueStringLabel) item).getKey();
+                                                 String valueString = ((KeyValueStringLabel) item).getValue();
+                                                 String itemString = keyString + " - " + valueString;
+                                                 if (getSearchString().length() != 0) {
+                                                     Integer searchStringPosition = valueString.indexOf(getSearchString());
+
+                                                     // itemString contains searchString. It should be split and searchString should be highLighted
+                                                     if (searchStringPosition >= 0) {
+                                                         String beginString = valueString.substring(0, searchStringPosition);
+                                                         String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + getSearchString().length());
+                                                         String endString = valueString.substring(searchStringPosition + getSearchString().length());
+
+                                                         Text separator = new Text(keyString + " - ");
+                                                         separator.getStyleClass().add(USUAL_CLASS);
+                                                         styledText.getChildren().add(separator);
+
+                                                         final Text begin = new Text(beginString);
+                                                         begin.getStyleClass().add(USUAL_CLASS);
+                                                         styledText.getChildren().add(begin);
+
+                                                         final Text highlighted = new Text(highlightedString);
+                                                         highlighted.getStyleClass().add(HIGHLIGHTED_CLASS);
+                                                         styledText.getChildren().add(highlighted);
+
+                                                         final Text end = new Text(endString);
+                                                         end.getStyleClass().add(USUAL_CLASS);
+                                                         styledText.getChildren().add(end);
+
+
+                                                     } else {
+                                                         styledText.getChildren().add(new Text(itemString));
+                                                     }
+                                                 } else {
+                                                     styledText.getChildren().add(new Text(itemString));
+                                                 }
+                                                 setGraphic(styledText);
+                                             }
+                                         }
+                                     };
+                                     return cell;
+                                 }
+                             }
+        );
+    }
+
+    public void doSearch(Event event) {
+        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(this, getTimer(), event);
+        Thread delayedSearchThread = new Thread(delayedSearchTask);
+        delayedSearchThread.start();
+    }
 
 }

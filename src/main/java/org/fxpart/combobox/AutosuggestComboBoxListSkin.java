@@ -6,7 +6,6 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
@@ -38,9 +37,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
 
-    private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
-    private static final String USUAL_CLASS = "usual-dropdown";
-
     // visuals
     private final HBox root;
     private final VBox vBoxText;
@@ -59,8 +55,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private int visibleRowsCount = 10;
     private boolean lazyMode = true;
     private boolean loadingIndicator = false;
-    private int timer = 1000;
     private boolean editable = true;
+    private int timer = 500;
 
     /**************************************************************************
      * Constructors
@@ -94,7 +90,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
         vBoxText.setStyle("-fx-background-color: #AAFFBB;");
         vBoxText.setPadding(new Insets(6, 1, 0, 1));
-        selectedItem.setVisible(true);
+        selectedItem.setVisible(false);
         selectedItem.setMaxHeight(Double.MAX_VALUE);
         vBoxText.getChildren().add(selectedItem);
 
@@ -105,16 +101,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private void init() {
         control.setCombo(combo);
+        control.setCustomCellFactory();
+        control.setTimer(timer);
         combo.setItems(control.getItems());
     }
 
-    public void doSearch(Event event) {
-        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(this.control, getTimer(), event);
-        Thread delayedSearchThread = new Thread(delayedSearchTask);
-        delayedSearchThread.start();
-    }
-
-    protected EventHandler<KeyEvent> createKeyReleaseEventHandler() {
+    public EventHandler<KeyEvent> createKeyReleaseEventHandler() {
         return new EventHandler<KeyEvent>() {
             private boolean moveCaretToPos = false;
             private int caretPos;
@@ -156,7 +148,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 }
 
                 // do search
-                doSearch(event);
+                control.doSearch(event);
 
                 if (!moveCaretToPos) {
                     caretPos = -1;
