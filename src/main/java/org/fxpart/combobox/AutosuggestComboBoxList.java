@@ -106,7 +106,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestBase<T> {
                     setWaitFlag(true);
                 }
 
-                // do search and
+                // do search
                 doSearch(event);
 
                 if (!moveCaretToPos) {
