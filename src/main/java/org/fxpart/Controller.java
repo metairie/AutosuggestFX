@@ -7,7 +7,6 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import org.fxpart.combobox.AutosuggestBase;
 import org.fxpart.combobox.AutosuggestComboBoxList;
 import org.fxpart.combobox.KeyValueString;
 import org.fxpart.mockserver.MockDatas;
