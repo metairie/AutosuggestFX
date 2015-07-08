@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.*?>
 <?import org.fxpart.combobox.AutosuggestComboBoxList?>
 <GridPane alignment="center" hgap="10" prefHeight="441.0" prefWidth="924.0" vgap="10"
           xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1"
           fx:controller="org.fxpart.Controller">
 
-    <Label styleClass="table-view" text="AutosuggestComboBoxList Location" GridPane.columnIndex="1"
+
+    <Label styleClass="table-view" text="your Location" GridPane.columnIndex="1"
            GridPane.rowIndex="1"/>
 
     <AutosuggestComboBoxList fx:id="autosuggest" stylesheets="@autosuggestfx.css" GridPane.columnIndex="1"
@@ -15,6 +17,8 @@
 
     <Label styleClass="table-view" text="Autosuggest" GridPane.columnIndex="1"
            GridPane.rowIndex="3"/>
+
+    <TextField text="Enter here" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
     <columnConstraints>
         <ColumnConstraints maxWidth="216.0" minWidth="10.0" prefWidth="45.0"/>

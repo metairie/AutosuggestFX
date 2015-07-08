@@ -12,6 +12,8 @@ import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
  * Created by metairie on 07-Jul-15.
  */
 public class AutosuggestComboBoxList<T> extends AutosuggestControl {
+    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
 
     // TODO
     // this to be link with sub component (Combo or Table?)
@@ -268,6 +271,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 String searchString = getEditor().getText();
                 ObservableList list = getItems();
                 list.clear();
+                LOG.debug(" *** Hit *** against the server with searching letters : " + searchString);
 
                 list.setAll((Collection<? extends KeyValueString>) getSearchFunction().apply(searchString));
                 if (getValue() == null) {
