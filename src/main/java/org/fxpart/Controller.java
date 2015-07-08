@@ -40,13 +40,12 @@ public class Controller implements Initializable {
     }
 
     public void clickOnShow(Event event) {
-        //autosuggest.doSearch(event);
+        //TODO must shown immediately
     }
 
     public void click(ActionEvent actionEvent) {
-        autosuggest.reSchedule();
+        autosuggest.reSchedule(actionEvent);
     }
-
 
     @Override
     protected void finalize() throws Throwable {

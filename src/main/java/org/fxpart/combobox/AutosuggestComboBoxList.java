@@ -278,14 +278,14 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      **************************************************************************/
 
     public void doSearch(Event event) {
-        /*Thread delayedSearchThread = new Thread(delayedSearchTask);
-        delayedSearchThread.start();*/
         Platform.runLater(new Runnable() {
             public void run() {
                 scheduler.purge();
                 String searchString = getEditor().getText();
                 ObservableList list = getItems();
                 list.clear();
+
+                // TODO remove this
                 System.out.println("Id " + this.hashCode() + " = " + searchString + " ------------------------ there is a Hit against the server there ------------- ");
 
                 list.setAll((Collection<? extends KeyValueString>) getSearchFunction().apply(searchString));
@@ -304,13 +304,13 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         });
     }
 
-    public void reSchedule() {
+    public void reSchedule(Event event) {
         if (scheduler != null) {
             scheduler.purge();
             scheduler.cancel();
         }
         scheduler = new Timer();
-        timerTask = new SearchTimerTask();
+        timerTask = new SearchTimerTask(event);
         // running timer task as daemon thread
         scheduler.scheduleAtFixedRate(timerTask, 1000, 1000);
     }
@@ -321,6 +321,13 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     }
 
     public class SearchTimerTask extends TimerTask {
+        SearchTimerTask() {
+            this(null);
+        }
+
+        SearchTimerTask(Event event) {
+            this.event = event;
+        }
 
         public int getDelay() {
             return delay;
@@ -332,9 +339,11 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         private int delay = 1000;
 
+        private Event event;
+
         @Override
         public void run() {
-            doSearch(null);
+            doSearch(event);
         }
     }
 

@@ -155,7 +155,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 }
 
                 // do a Scheduled search
-                control.reSchedule();
+                control.reSchedule(event);
 
                 if (!moveCaretToPos) {
                     caretPos = -1;
