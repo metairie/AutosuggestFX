@@ -13,7 +13,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -331,19 +334,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         public void run() {
-            System.out.println("Start time:" + new Date());
             doSearch(null);
-            System.out.println("End time:" + new Date());
-        }
-
-        // simulate a time consuming task
-        private void doSomeWork(int delay) {
-            try {
-                Thread.sleep(delay);
-                System.out.println("<- somework end AFTER ->" + delay + " ms ... ");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 
