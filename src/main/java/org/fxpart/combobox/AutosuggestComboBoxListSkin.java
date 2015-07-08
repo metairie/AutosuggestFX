@@ -47,7 +47,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final VBox vBoxText = new VBox();
     private final VBox vBoxCombo = new VBox();
     private final ComboBox<T> combo = new ComboBox<>();
-    private final TextField selectedItem = new TextField();
+    private final Button selectedItem = new Button();
     private final ProgressBar progressBar = new ProgressBar();
 
     // data
@@ -102,6 +102,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         vBoxText.setPadding(new Insets(6, 1, 0, 1));
         selectedItem.setVisible(true);
         selectedItem.setMaxHeight(Double.MAX_VALUE);
+        selectedItem.setText("Point ov View [X]");
         vBoxText.getChildren().add(selectedItem);
 
         root.getChildren().add(vBoxText);
