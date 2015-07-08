@@ -100,7 +100,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
         vBoxText.setStyle("-fx-background-color: #AAFFBB;");
         vBoxText.setPadding(new Insets(6, 1, 0, 1));
-        selectedItem.setVisible(false);
+        selectedItem.setVisible(true);
         selectedItem.setMaxHeight(Double.MAX_VALUE);
         vBoxText.getChildren().add(selectedItem);
 
@@ -150,12 +150,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                     return;
                 }
 
-//                if (combo.getValue() != null) {
+                if (combo.getValue() != null) {
                     control.setWaitFlag(true);
-//                }
+                }
 
-                // do search
-                control.doSearch(event);
+                // do a Scheduled search
+                control.reSchedule();
 
                 if (!moveCaretToPos) {
                     caretPos = -1;
