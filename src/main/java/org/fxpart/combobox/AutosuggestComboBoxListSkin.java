@@ -8,6 +8,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -57,7 +58,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final ObservableList<T> items;
 
     // TODO qualify this properties (data?visual?control?)
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(true);
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
     private boolean editable = true;
@@ -87,10 +88,14 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         combo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             KeyValueString kv = (KeyValueString) newValue;
             if (kv != null) {
+                // TODO change node parent instead of visibility
                 selectedItem.textProperty().setValue(kv.getValue() + " [X]");
                 combo.setVisible(false);
                 selectedItem.setVisible(true);
             }
+        });
+        combo.setOnShown(event -> {
+            reSchedule(event);
         });
 
         selectedItem.setOnAction(event -> {
@@ -103,6 +108,11 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         combo.setItems(this.items);
     }
 
+    private void reSchedule(Event event) {
+        loadingIndicator.setValue(true);
+        control.reSchedule(event);
+    }
+
     private void graphical() {
         // building nodes
 //        root.setStyle("-fx-background-color: #336699;");
@@ -111,7 +121,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 //        vBoxCombo.setStyle("-fx-background-color: #FFFFBB;");
         vBoxCombo.setPadding(new Insets(1, 1, 1, 1));
         progressBar.setMaxWidth(Double.MAX_VALUE);
-        progressBar.setVisible(true);
         vBoxCombo.getChildren().add(progressBar);
         vBoxCombo.getChildren().add(combo);
 
@@ -167,13 +176,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                     return;
                 }
 
-                if (combo.getValue() != null) {
-                    control.setWaitFlag(true);
-                }
-
                 // do a Scheduled search
-                loadingIndicator.setValue(true);
-                control.reSchedule(event);
+                reSchedule(event);
 
                 if (!moveCaretToPos) {
                     caretPos = -1;

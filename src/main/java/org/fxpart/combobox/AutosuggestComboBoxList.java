@@ -42,12 +42,13 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     // TODO remove this by skinProperty ?
     private ComboBox<T> combo;
 
-    public SearchTimerTask timerTask = new SearchTimerTask();
-    public Timer scheduler = new Timer();
+    private SearchTimerTask timerTask = new SearchTimerTask();
+    private Timer scheduler = new Timer();
 
     private String searchString = "";
     private boolean lazyMode = true;
     private boolean acceptFreeValue = false;
+    private int delay = 1000; // delay in ms
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
@@ -108,14 +109,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.combo = combo;
     }
 
-    public boolean getWaitFlag() {
-        return waitFlag;
-    }
-
-    public void setWaitFlag(boolean waitFlag) {
-        this.waitFlag = waitFlag;
-    }
-
     // TODO remove this
     public TextField getEditor() {
         return getCombo().getEditor();
@@ -141,12 +134,12 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return searchString;
     }
 
-    public int getTimer() {
-        return timerTask.getDelay();
+    public int getDelay() {
+        return delay;
     }
 
-    public void setTimer(int timer) {
-        timerTask.setDelay(Math.max(100, Math.min(5000, timer)));
+    public void setDelay(int delay) {
+        this.delay = Math.max(100, Math.min(5000, delay));
     }
 
     public Function<KeyValueString, String> getTextFieldFormatter() {
@@ -254,9 +247,9 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
         dataSource = datas;
         this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
-        items.addAll(getLazyMode() ? FXCollections.observableArrayList() : FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null)));
-        setWaitFlag(true);
-        scheduler.scheduleAtFixedRate(timerTask, 1000, 1000);
+        if (lazyMode) {
+            reSchedule(null);
+        }
     }
 
 
@@ -298,7 +291,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         scheduler = new Timer();
         timerTask = new SearchTimerTask(event);
         // running timer task as daemon thread
-        scheduler.scheduleAtFixedRate(timerTask, 1000, 1000);
+        scheduler.scheduleAtFixedRate(timerTask, this.delay, this.delay);
     }
 
     public void stopScheduler() {
@@ -314,16 +307,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         SearchTimerTask(Event event) {
             this.event = event;
         }
-
-        public int getDelay() {
-            return delay;
-        }
-
-        public void setDelay(int delay) {
-            this.delay = delay;
-        }
-
-        private int delay = 1000;
 
         private Event event;
 
