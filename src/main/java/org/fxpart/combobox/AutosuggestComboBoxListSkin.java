@@ -3,7 +3,9 @@ package org.fxpart.combobox;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -48,13 +50,14 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final VBox vBoxCombo = new VBox();
     private final ComboBox<T> combo = new ComboBox<>();
     private final Button selectedItem = new Button();
-    private final ProgressBar progressBar = new ProgressBar();
+    public final ProgressBar progressBar = new ProgressBar();
 
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
 
     // TODO qualify this properties (data?visual?control?)
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(true);
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
     private boolean editable = true;
@@ -81,6 +84,19 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private void init() {
         combo.setEditable(editable);
         combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
+        combo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            KeyValueString kv = (KeyValueString) newValue;
+            if (kv != null) {
+                selectedItem.textProperty().setValue(kv.getValue() + " [X]");
+                combo.setVisible(false);
+                selectedItem.setVisible(true);
+            }
+        });
+
+        selectedItem.setOnAction(event -> {
+            combo.setVisible(true);
+            selectedItem.setVisible(false);
+        });
         control.setCombo(combo);
         setCustomCellFactory();
         setTextFieldFormatter(control.getTextFieldFormatter());
@@ -89,29 +105,29 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private void graphical() {
         // building nodes
-        root.setStyle("-fx-background-color: #336699;");
+//        root.setStyle("-fx-background-color: #336699;");
         root.setPadding(new Insets(1, 1, 1, 1));
 
-        vBoxCombo.setStyle("-fx-background-color: #FFFFBB;");
+//        vBoxCombo.setStyle("-fx-background-color: #FFFFBB;");
         vBoxCombo.setPadding(new Insets(1, 1, 1, 1));
         progressBar.setMaxWidth(Double.MAX_VALUE);
+        progressBar.setVisible(true);
         vBoxCombo.getChildren().add(progressBar);
         vBoxCombo.getChildren().add(combo);
 
-        vBoxText.setStyle("-fx-background-color: #AAFFBB;");
-        vBoxText.setPadding(new Insets(6, 1, 0, 1));
-        selectedItem.setVisible(true);
+        //vBoxText.setStyle("-fx-background-color: #AAFFBB;");
+        //vBoxText.setPadding(new Insets(6, 1, 0, 1));
+        selectedItem.setVisible(false);
         selectedItem.setMaxHeight(Double.MAX_VALUE);
-        selectedItem.setText("Point ov View [X]");
-        vBoxText.getChildren().add(selectedItem);
+        vBoxCombo.getChildren().add(selectedItem);
 
-        root.getChildren().add(vBoxText);
+        //root.getChildren().add(vBoxText);
         root.getChildren().add(vBoxCombo);
         getChildren().add(root);
     }
 
     private void bind() {
-        progressBar.visibleProperty().bind(control.loadingIndicatorProperty());
+        progressBar.visibleProperty().bind(loadingIndicator);
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -156,6 +172,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 }
 
                 // do a Scheduled search
+                loadingIndicator.setValue(true);
                 control.reSchedule(event);
 
                 if (!moveCaretToPos) {
@@ -268,5 +285,18 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     public void setFixedHeight(double fixedHeight) {
         this.fixedHeight.set(fixedHeight);
     }
+
+    public boolean getLoadingIndicator() {
+        return loadingIndicator.get();
+    }
+
+    public BooleanProperty loadingIndicatorProperty() {
+        return loadingIndicator;
+    }
+
+    public void setLoadingIndicator(boolean loadingIndicator) {
+        this.loadingIndicator.set(loadingIndicator);
+    }
+
 
 }

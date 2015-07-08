@@ -39,9 +39,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     // TODO remove this by skinProperty ?
     private ComboBox<T> combo;
 
-    // TODO remove
-    private DelayedSearchTask delayedSearchTask = new DelayedSearchTask(this, 1000, null);
-
     public SearchTimerTask timerTask = new SearchTimerTask();
     public Timer scheduler = new Timer();
 
@@ -185,19 +182,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.acceptFreeValue = acceptFreeValue;
     }
 
-    public boolean getLoadingIndicator() {
-        return loadingIndicator.get();
-    }
-
-    public BooleanProperty loadingIndicatorProperty() {
-        return loadingIndicator;
-    }
-
-    public void setLoadingIndicator(boolean loadingIndicator) {
-        this.loadingIndicator.set(loadingIndicator);
-    }
-
-
     /**************************************************************************
      * Properties
      **************************************************************************/
@@ -285,9 +269,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 ObservableList list = getItems();
                 list.clear();
 
-                // TODO remove this
-                System.out.println("Id " + this.hashCode() + " = " + searchString + " ------------------------ there is a Hit against the server there ------------- ");
-
                 list.setAll((Collection<? extends KeyValueString>) getSearchFunction().apply(searchString));
                 if (getValue() == null) {
                     getEditor().setText(searchString);
@@ -298,8 +279,9 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 if (event != null && KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
                     getCombo().show();
                 }
-                setLoadingIndicator(false);
                 stopScheduler();
+                AutosuggestComboBoxListSkin skin = ((AutosuggestComboBoxListSkin) getSkin());
+                skin.setLoadingIndicator(false);
             }
         });
     }
