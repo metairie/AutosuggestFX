@@ -1,5 +1,6 @@
 package org.fxpart.combobox;
 
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,10 +10,10 @@ import javafx.event.EventType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,8 +36,13 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     // TODO remove this by skinProperty ?
     private ComboBox<T> combo;
 
+    // TODO remove
+    private DelayedSearchTask delayedSearchTask = new DelayedSearchTask(this, 1000, null);
+
+    public SearchTimerTask timerTask = new SearchTimerTask();
+    public Timer scheduler = new Timer();
+
     private String searchString = "";
-    private int timer = 2000;
     private boolean lazyMode = true;
     private boolean acceptFreeValue = false;
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
@@ -133,11 +139,11 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     }
 
     public int getTimer() {
-        return this.timer;
+        return timerTask.getDelay();
     }
 
     public void setTimer(int timer) {
-        this.timer = Math.max(100,Math.min(5000, timer));
+        timerTask.setDelay(Math.max(100, Math.min(5000, timer)));
     }
 
     public Function<KeyValueString, String> getTextFieldFormatter() {
@@ -260,6 +266,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
         items.addAll(getLazyMode() ? FXCollections.observableArrayList() : FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null)));
         setWaitFlag(true);
+        scheduler.scheduleAtFixedRate(timerTask, 1000, 1000);
     }
 
 
@@ -268,8 +275,76 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      **************************************************************************/
 
     public void doSearch(Event event) {
-        DelayedSearchTask delayedSearchTask = new DelayedSearchTask(this, getTimer(), event);
-        Thread delayedSearchThread = new Thread(delayedSearchTask);
-        delayedSearchThread.start();
+        /*Thread delayedSearchThread = new Thread(delayedSearchTask);
+        delayedSearchThread.start();*/
+        Platform.runLater(new Runnable() {
+            public void run() {
+                scheduler.purge();
+                String searchString = getEditor().getText();
+                ObservableList list = getItems();
+                list.clear();
+                System.out.println("Id " + this.hashCode() + " = " + searchString + " ------------------------ there is a Hit against the server there ------------- ");
+
+                list.setAll((Collection<? extends KeyValueString>) getSearchFunction().apply(searchString));
+                if (getValue() == null) {
+                    getEditor().setText(searchString);
+                }
+                setSearchString(searchString);
+                getEditor().positionCaret(searchString.length());
+                // TODO remove this
+                if (event != null && KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
+                    getCombo().show();
+                }
+                setLoadingIndicator(false);
+                stopScheduler();
+            }
+        });
     }
+
+    public void reSchedule() {
+        if (scheduler != null) {
+            scheduler.purge();
+            scheduler.cancel();
+        }
+        scheduler = new Timer();
+        timerTask = new SearchTimerTask();
+        // running timer task as daemon thread
+        scheduler.scheduleAtFixedRate(timerTask, 1000, 1000);
+    }
+
+    public void stopScheduler() {
+        scheduler.purge();
+        scheduler.cancel();
+    }
+
+    public class SearchTimerTask extends TimerTask {
+
+        public int getDelay() {
+            return delay;
+        }
+
+        public void setDelay(int delay) {
+            this.delay = delay;
+        }
+
+        private int delay = 1000;
+
+        @Override
+        public void run() {
+            System.out.println("Start time:" + new Date());
+            doSearch(null);
+            System.out.println("End time:" + new Date());
+        }
+
+        // simulate a time consuming task
+        private void doSomeWork(int delay) {
+            try {
+                Thread.sleep(delay);
+                System.out.println("<- somework end AFTER ->" + delay + " ms ... ");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

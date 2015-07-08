@@ -150,9 +150,9 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                     return;
                 }
 
-                if (combo.getValue() != null) {
+//                if (combo.getValue() != null) {
                     control.setWaitFlag(true);
-                }
+//                }
 
                 // do search
                 control.doSearch(event);

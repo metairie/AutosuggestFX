@@ -4,6 +4,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -34,11 +35,22 @@ public class Controller implements Initializable {
 
         //pavel
 //        autosuggest.setLazyMode(true);
-        autosuggest.setTimer(2000);
+//        autosuggest.setTimer(2000);
         autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
     }
 
     public void clickOnShow(Event event) {
         //autosuggest.doSearch(event);
+    }
+
+    public void click(ActionEvent actionEvent) {
+        autosuggest.reSchedule();
+    }
+
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        autosuggest.stopScheduler();
     }
 }

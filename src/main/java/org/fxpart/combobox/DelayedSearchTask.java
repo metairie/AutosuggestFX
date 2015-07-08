@@ -44,6 +44,8 @@ public class DelayedSearchTask implements Runnable {
                 String searchString = control.getEditor().getText();
                 ObservableList list = control.getItems();
                 list.clear();
+                System.out.println("Id " + this.hashCode() + " = " + searchString + " ------------------------ there is a Hit against the server there ------------- ");
+
                 list.setAll((Collection<? extends KeyValueString>) control.getSearchFunction().apply(searchString));
                 if (control.getValue() == null) {
                     control.getEditor().setText(searchString);
