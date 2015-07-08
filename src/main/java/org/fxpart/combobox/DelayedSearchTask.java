@@ -30,6 +30,7 @@ public class DelayedSearchTask implements Runnable {
         if (control.getWaitFlag()) {
             synchronized (this) {
                 try {
+                    control.setLoadingIndicator(true);
                     wait(delay);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -53,6 +54,7 @@ public class DelayedSearchTask implements Runnable {
                 if (KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
                     control.getCombo().show();
                 }
+                control.setLoadingIndicator(false);
             }
         });
     }

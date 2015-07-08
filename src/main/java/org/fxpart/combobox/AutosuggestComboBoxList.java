@@ -1,8 +1,6 @@
 package org.fxpart.combobox;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ObjectPropertyBase;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -38,8 +36,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private ComboBox<T> combo;
 
     private String searchString = "";
-    private int timer = 500;
+    private int timer = 2000;
     private boolean lazyMode = true;
+    private boolean acceptFreeValue = false;
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
@@ -137,7 +137,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     }
 
     public void setTimer(int timer) {
-        this.timer = Math.min(100, timer);
+        this.timer = Math.max(100,Math.min(5000, timer));
     }
 
     public Function<KeyValueString, String> getTextFieldFormatter() {
@@ -166,6 +166,26 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
     public boolean isLazyMode() {
         return lazyMode;
+    }
+
+    public boolean isAcceptFreeValue() {
+        return acceptFreeValue;
+    }
+
+    public void setAcceptFreeValue(boolean acceptFreeValue) {
+        this.acceptFreeValue = acceptFreeValue;
+    }
+
+    public boolean getLoadingIndicator() {
+        return loadingIndicator.get();
+    }
+
+    public BooleanProperty loadingIndicatorProperty() {
+        return loadingIndicator;
+    }
+
+    public void setLoadingIndicator(boolean loadingIndicator) {
+        this.loadingIndicator.set(loadingIndicator);
     }
 
 
@@ -238,7 +258,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
         dataSource = datas;
         this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
-        items.addAll(getLazyMode() ? null : FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null)));
+        items.addAll(getLazyMode() ? FXCollections.observableArrayList() : FXCollections.observableArrayList((Collection<? extends T>) getSearchFunction().apply(null)));
         setWaitFlag(true);
     }
 

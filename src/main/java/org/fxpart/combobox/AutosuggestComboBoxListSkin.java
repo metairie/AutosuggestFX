@@ -55,11 +55,10 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final ObservableList<T> items;
 
     // TODO qualify this properties (data?visual?control?)
-    private boolean acceptFreeValue = false;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
-    private boolean loadingIndicator = false;
     private boolean editable = true;
+
 
     /**************************************************************************
      * Constructors
@@ -74,9 +73,22 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
         // visual aspect
         graphical();
+
+        // bindings
+        bind();
+    }
+
+    private void init() {
+        combo.setEditable(editable);
+        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
+        control.setCombo(combo);
+        setCustomCellFactory();
+        setTextFieldFormatter(control.getTextFieldFormatter());
+        combo.setItems(this.items);
     }
 
     private void graphical() {
+        // building nodes
         root.setStyle("-fx-background-color: #336699;");
         root.setPadding(new Insets(1, 1, 1, 1));
 
@@ -95,16 +107,10 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         root.getChildren().add(vBoxText);
         root.getChildren().add(vBoxCombo);
         getChildren().add(root);
-
     }
 
-    private void init() {
-        combo.setEditable(editable);
-        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
-        control.setCombo(combo);
-        setCustomCellFactory();
-        setTextFieldFormatter(control.getTextFieldFormatter());
-        combo.setItems(this.items);
+    private void bind() {
+        progressBar.visibleProperty().bind(control.loadingIndicatorProperty());
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -242,18 +248,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         );
     }
 
-    public boolean setLoadingIndicator() {
-        return loadingIndicator;
-    }
-
-    public void setLoadingIndicator(boolean loadingIndicator) {
-        this.loadingIndicator = loadingIndicator;
-    }
-
-    public boolean isLoadingIndicator() {
-        return loadingIndicator;
-    }
-
     public int getVisibleRowsCount() {
         return visibleRowsCount;
     }
@@ -272,14 +266,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     public void setFixedHeight(double fixedHeight) {
         this.fixedHeight.set(fixedHeight);
-    }
-
-    public boolean isAcceptFreeValue() {
-        return acceptFreeValue;
-    }
-
-    public void setAcceptFreeValue(boolean acceptFreeValue) {
-        this.acceptFreeValue = acceptFreeValue;
     }
 
 }
