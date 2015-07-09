@@ -7,7 +7,6 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
@@ -36,10 +35,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      **************************************************************************/
 
     private final ObservableList<T> items;
-
-    // TODO remove this by skinProperty ?
-    private ComboBox<T> combo;
-
+    private AutosuggestComboBoxListSkin skin;
     private SearchTimerTask timerTask = new SearchTimerTask();
     private Timer scheduler = new Timer();
 
@@ -47,7 +43,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private boolean lazyMode = true;
     private boolean acceptFreeValue = false;
     private int delay = 1000; // delay in ms
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
+    //private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
@@ -89,7 +85,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      */
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new AutosuggestComboBoxListSkin<>(this);
+        skin = new AutosuggestComboBoxListSkin<>(this);
+        return skin;
     }
 
     /**
@@ -99,21 +96,13 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return items;
     }
 
-    public ComboBox<T> getCombo() {
-        return combo;
-    }
-
-    public void setCombo(ComboBox<T> combo) {
-        this.combo = combo;
-    }
-
-    // TODO remove this
+    // TODO implement combo or table
     public TextField getEditor() {
-        return getCombo().getEditor();
+        return skin.getCombo().getEditor();
     }
 
     public T getValue() {
-        return getCombo().getValue();
+        return (T) skin.getCombo().getValue();
     }
 
     public List<KeyValueString> getDataSource() {
@@ -268,11 +257,9 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 getEditor().positionCaret(searchString.length());
                 // TODO remove this
                 if (event != null && KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
-                    getCombo().show();
+                    skin.getCombo().show();
                 }
                 stopScheduler();
-                AutosuggestComboBoxListSkin skin = ((AutosuggestComboBoxListSkin) getSkin());
-                skin.setLoadingIndicator(false);
             }
         });
     }

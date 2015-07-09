@@ -104,14 +104,13 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         selectedItem.setOnAction(event -> {
             switchNode(selectedItem, combo);
         });
-        //control.setCombo(combo);
+
         setCustomCellFactory();
         setTextFieldFormatter(control.getTextFieldFormatter());
         combo.setItems(this.items);
     }
 
     private void reSchedule(Event event) {
-        loadingIndicator.setValue(true);
         control.reSchedule(event);
     }
 
@@ -322,5 +321,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         this.loadingIndicator.set(loadingIndicator);
     }
 
+    public ComboBox<T> getCombo() {
+        return combo;
+    }
 
 }
