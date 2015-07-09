@@ -94,8 +94,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             KeyValueString kv = (KeyValueString) newValue;
             if (kv != null) {
                 selectedItem.textProperty().setValue(kv.getValue());
-                changeParent(selectedItem, vBoxCombo);
-                changeParent(combo, hiddenNode);
+                switchNode(combo, selectedItem);
             }
         });
         combo.setOnShown(event -> {
@@ -103,10 +102,9 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         });
 
         selectedItem.setOnAction(event -> {
-            changeParent(selectedItem, hiddenNode);
-            changeParent(combo, vBoxCombo);
+            switchNode(selectedItem, combo);
         });
-        control.setCombo(combo);
+        //control.setCombo(combo);
         setCustomCellFactory();
         setTextFieldFormatter(control.getTextFieldFormatter());
         combo.setItems(this.items);
@@ -288,8 +286,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     }
 
     private void switchNode(Node nodeToHide, Node nodeToShow) {
-//        changeParent(nodeToShow, vBoxCombo);
         changeParent(nodeToHide, hiddenNode);
+        changeParent(nodeToShow, vBoxCombo);
     }
 
     public int getVisibleRowsCount() {

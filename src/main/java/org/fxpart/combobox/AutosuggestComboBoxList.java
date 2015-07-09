@@ -258,7 +258,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void doSearch(Event event) {
         Platform.runLater(new Runnable() {
             public void run() {
-                //scheduler.purge();
                 String searchString = getEditor().getText();
                 ObservableList list = getItems();
                 list.setAll(getSearchFunction().apply(searchString));
