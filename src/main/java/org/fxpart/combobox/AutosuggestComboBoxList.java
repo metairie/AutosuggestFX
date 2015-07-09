@@ -261,8 +261,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 //scheduler.purge();
                 String searchString = getEditor().getText();
                 ObservableList list = getItems();
-                LOG.debug(" *** Hit *** against the server with searching letters : " + searchString);
-
                 list.setAll(getSearchFunction().apply(searchString));
                 if (getValue() == null) {
                     getEditor().setText(searchString);

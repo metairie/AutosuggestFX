@@ -11,6 +11,8 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -21,6 +23,9 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Function;
 
@@ -47,11 +52,11 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     // visuals
     private final HBox root = new HBox();
-    private final VBox vBoxText = new VBox();
     private final VBox vBoxCombo = new VBox();
     private final ComboBox<T> combo = new ComboBox<>();
     private final Button selectedItem = new Button();
-    public final ProgressBar progressBar = new ProgressBar();
+    private final ProgressBar progressBar = new ProgressBar();
+    private final VBox hiddenNode = new VBox();
 
     // data
     private final AutosuggestComboBoxList<T> control;
@@ -88,12 +93,9 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         combo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             KeyValueString kv = (KeyValueString) newValue;
             if (kv != null) {
-                // TODO change node parent instead of visibility
-                selectedItem.textProperty().setValue(kv.getValue() + " [X]");
-//                combo.setVisible(false);
-                selectedItem.setVisible(true);
-                util.changeParent(selectedItem, vBoxText);
-
+                selectedItem.textProperty().setValue(kv.getValue());
+                changeParent(selectedItem, vBoxCombo);
+                changeParent(combo, hiddenNode);
             }
         });
         combo.setOnShown(event -> {
@@ -101,8 +103,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         });
 
         selectedItem.setOnAction(event -> {
-            combo.setVisible(true);
-            selectedItem.setVisible(false);
+            changeParent(selectedItem, hiddenNode);
+            changeParent(combo, vBoxCombo);
         });
         control.setCombo(combo);
         setCustomCellFactory();
@@ -117,25 +119,15 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private void graphical() {
         // building nodes
-//        root.setStyle("-fx-background-color: #336699;");
         root.setPadding(new Insets(1, 1, 1, 1));
-
-//        vBoxCombo.setStyle("-fx-background-color: #FFFFBB;");
         vBoxCombo.setPadding(new Insets(1, 1, 1, 1));
         progressBar.setMaxWidth(Double.MAX_VALUE);
+        selectedItem.setMaxHeight(Double.MAX_VALUE);
         vBoxCombo.getChildren().add(progressBar);
         vBoxCombo.getChildren().add(combo);
-
-        vBoxText.setStyle("-fx-background-color: #AAFFBB;");
-        vBoxText.setPadding(new Insets(6, 1, 0, 1));
-        selectedItem.setVisible(false);
-        selectedItem.setMaxHeight(Double.MAX_VALUE);
-        vBoxCombo.getChildren().add(selectedItem);
-
-        root.getChildren().add(vBoxText);
+        hiddenNode.getChildren().add(selectedItem);
         root.getChildren().add(vBoxCombo);
         getChildren().add(root);
-        System.out.println(" root : " + root.getId());
     }
 
     private void bind() {
@@ -271,6 +263,33 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                                  }
                              }
         );
+    }
+
+    private void changeParent(Node item, Parent newParent) {
+        Parent oldParent = item.getParent();
+        // Swapping parent
+        try {
+            Method oldNode = oldParent.getClass().getMethod("getChildren");
+            Object ob = oldNode.invoke(oldParent);
+            Collection<Node> cnOld = ((Collection<Node>) ob);
+            cnOld.remove(item);
+
+            Method newNode = newParent.getClass().getMethod("getChildren");
+            Object nb = newNode.invoke(newParent);
+            Collection<Node> cnNew = ((Collection<Node>) nb);
+            cnNew.add(item);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void switchNode(Node nodeToHide, Node nodeToShow) {
+//        changeParent(nodeToShow, vBoxCombo);
+        changeParent(nodeToHide, hiddenNode);
     }
 
     public int getVisibleRowsCount() {
