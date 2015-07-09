@@ -90,9 +90,10 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             if (kv != null) {
                 // TODO change node parent instead of visibility
                 selectedItem.textProperty().setValue(kv.getValue() + " [X]");
-                System.out.println(" placeholder : " + combo.getPlaceholder().getId());
-                combo.setVisible(false);
+//                combo.setVisible(false);
                 selectedItem.setVisible(true);
+                util.changeParent(selectedItem, vBoxText);
+
             }
         });
         combo.setOnShown(event -> {

@@ -36,7 +36,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      **************************************************************************/
 
     private final ObservableList<T> items;
-    private boolean waitFlag = false;
 
     // TODO remove this by skinProperty ?
     private ComboBox<T> combo;
@@ -259,10 +258,9 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void doSearch(Event event) {
         Platform.runLater(new Runnable() {
             public void run() {
-                scheduler.purge();
+                //scheduler.purge();
                 String searchString = getEditor().getText();
                 ObservableList list = getItems();
-                list.clear();
                 LOG.debug(" *** Hit *** against the server with searching letters : " + searchString);
 
                 list.setAll(getSearchFunction().apply(searchString));
