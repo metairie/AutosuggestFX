@@ -90,6 +90,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             if (kv != null) {
                 // TODO change node parent instead of visibility
                 selectedItem.textProperty().setValue(kv.getValue() + " [X]");
+                System.out.println(" placeholder : " + combo.getPlaceholder().getId());
                 combo.setVisible(false);
                 selectedItem.setVisible(true);
             }
@@ -124,15 +125,16 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         vBoxCombo.getChildren().add(progressBar);
         vBoxCombo.getChildren().add(combo);
 
-        //vBoxText.setStyle("-fx-background-color: #AAFFBB;");
-        //vBoxText.setPadding(new Insets(6, 1, 0, 1));
+        vBoxText.setStyle("-fx-background-color: #AAFFBB;");
+        vBoxText.setPadding(new Insets(6, 1, 0, 1));
         selectedItem.setVisible(false);
         selectedItem.setMaxHeight(Double.MAX_VALUE);
         vBoxCombo.getChildren().add(selectedItem);
 
-        //root.getChildren().add(vBoxText);
+        root.getChildren().add(vBoxText);
         root.getChildren().add(vBoxCombo);
         getChildren().add(root);
+        System.out.println(" root : " + root.getId());
     }
 
     private void bind() {

@@ -15,7 +15,6 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -266,7 +265,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 list.clear();
                 LOG.debug(" *** Hit *** against the server with searching letters : " + searchString);
 
-                list.setAll((Collection<? extends KeyValueString>) getSearchFunction().apply(searchString));
+                list.setAll(getSearchFunction().apply(searchString));
                 if (getValue() == null) {
                     getEditor().setText(searchString);
                 }
