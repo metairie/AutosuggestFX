@@ -98,7 +98,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             }
         });
         combo.setOnShown(event -> {
-            reSchedule(event);
+// TODO this call two times when Model (control) asks to open up the Combo List
+//            reSchedule(event);
         });
 
         selectedItem.setOnAction(event -> {

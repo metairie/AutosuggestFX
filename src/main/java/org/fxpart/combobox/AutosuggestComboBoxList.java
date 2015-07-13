@@ -1,9 +1,11 @@
 package org.fxpart.combobox;
 
-import javafx.application.Platform;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ObjectPropertyBase;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
@@ -14,9 +16,12 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,6 +30,8 @@ import java.util.stream.Collectors;
  */
 public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
+
+    private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
 
     // TODO
     // this to be link with sub component (Combo or Table?)
@@ -244,26 +251,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      * Implementation
      **************************************************************************/
 
-    public void doSearch(Event event) {
-        Platform.runLater(new Runnable() {
-            public void run() {
-                String searchString = getEditor().getText();
-                ObservableList list = getItems();
-                list.setAll(getSearchFunction().apply(searchString));
-                if (getValue() == null) {
-                    getEditor().setText(searchString);
-                }
-                setSearchString(searchString);
-                getEditor().positionCaret(searchString.length());
-                // TODO remove this
-                if (event != null && KeyEvent.KEY_RELEASED == event.getEventType() && !list.isEmpty()) {
-                    skin.getCombo().show();
-                }
-                stopScheduler();
-            }
-        });
-    }
-
     public void reSchedule(Event event) {
         if (scheduler != null) {
             scheduler.purge();
@@ -272,7 +259,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         scheduler = new Timer();
         timerTask = new SearchTimerTask(event);
         // running timer task as daemon thread
-        scheduler.scheduleAtFixedRate(timerTask, this.delay, this.delay);
+        scheduler.schedule(timerTask, this.delay, this.delay);
     }
 
     public void stopScheduler() {
@@ -293,7 +280,40 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         public void run() {
-            doSearch(event);
+            stopScheduler();
+            SearchTask<T> searchTask = new SearchTask<>(this.event);
+            searchExecutor.submit(searchTask);
+        }
+    }
+
+    public class SearchTask<T> extends Task<T> {
+        private Event event;
+
+        SearchTask() {
+            this(null);
+        }
+
+        SearchTask(Event event) {
+            this.event = event;
+            setOnCancelled(t -> LOG.debug(String.valueOf(getException())));
+            setOnSucceeded(t -> {
+                String searchString = getEditor().getText();
+                LOG.debug(" SearchTask() called and onSuccess " + hashCode() + " code= \"" + searchString + "\" - event(" + this.event + ") ");
+                ObservableList<T> list = (ObservableList<T>) getItems();
+                list.setAll((Collection<? extends T>) t.getSource().getValue());
+                getEditor().setText(searchString);
+                setSearchString(searchString);
+                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType()) {
+                    // TODO there is a bug , sometimes, show does not work
+                    skin.getCombo().show();
+                }
+                getEditor().positionCaret(searchString.length());
+            });
+        }
+
+        @Override
+        protected T call() throws Exception {
+            return (T) getSearchFunction().apply(getEditor().getText());
         }
     }
 
