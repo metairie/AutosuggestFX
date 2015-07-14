@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -29,9 +28,6 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-        // datas
-        final List<KeyValueString> itemsLocation = new org.fxpart.mockserver.MockDatas().loadLocation();
 
         //pavel
         autosuggest.setLazyMode(false); // if no item is selected, lazy is useless

@@ -96,13 +96,13 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         combo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             KeyValueString kv = (KeyValueString) newValue;
             if (kv != null) {
-                selectedItem.textProperty().setValue(kv.getValue());
                 switchNode(combo, selectedItem);
             }
         });
         combo.setOnShown(event -> {
-// TODO this call two times when Model (control) asks to open up the Combo List
-//            reSchedule(event);
+            if (!selectedItem.disabledProperty().getValue()) {
+                reSchedule(event);
+            }
         });
 
         selectedItem.setOnAction(event -> {
@@ -138,6 +138,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private void bind() {
         progressBar.visibleProperty().bind(loadingIndicator);
+        selectedItem.textProperty().bind(combo.getEditor().textProperty());
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -332,6 +333,10 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     public ComboBox<T> getCombo() {
         return combo;
+    }
+
+    public Button getSelectedItem() {
+        return selectedItem;
     }
 
 }

@@ -280,6 +280,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         public void run() {
+            skin.getSelectedItem().setDisable(true);
             stopScheduler();
             SearchTask<T> searchTask = new SearchTask<>(this.event);
             searchExecutor.submit(searchTask);
@@ -298,16 +299,18 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
             setOnCancelled(t -> LOG.debug(String.valueOf(getException())));
             setOnSucceeded(t -> {
                 String searchString = getEditor().getText();
-                LOG.debug(" SearchTask() called and onSuccess " + hashCode() + " code= \"" + searchString + "\" - event(" + this.event + ") ");
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
                 getEditor().setText(searchString);
                 setSearchString(searchString);
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType()) {
                     // TODO there is still a bug , sometimes, show does not work
+                    // occurs when an item is selected and , click on button to return to the Combo
+                    
                     skin.getCombo().show();
                 }
                 getEditor().positionCaret(searchString.length());
+                skin.getSelectedItem().setDisable(false);
             });
         }
 
