@@ -3,9 +3,7 @@ package org.fxpart.combobox;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -49,7 +47,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private static final KeyCodeCombination HOME = new KeyCodeCombination(KeyCode.HOME);
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
-    private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
 
     private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
     private static final String USUAL_CLASS = "usual-dropdown";
@@ -67,7 +64,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final ObservableList<T> items;
 
     // TODO qualify this properties (data?visual?control?)
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
+//    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private int visibleRowsCount = 10;
     private boolean editable = true;
@@ -142,7 +139,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     }
 
     private void bind() {
-        progressBar.visibleProperty().bind(loadingIndicator);
+        progressBar.visibleProperty().bind(control.loadingIndicatorProperty());
         selectedItem.textProperty().bind(combo.getEditor().textProperty());
     }
 
@@ -154,7 +151,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             @Override
             public void handle(KeyEvent event) {
                 // nothing to do on this
-                if (RIGHT.match(event) || LEFT.match(event) || event.isControlDown() || HOME.match(event) || END.match(event) || TAB.match(event)) {
+                if (RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()) {
                     return;
                 }
                 // action
@@ -323,18 +320,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     public void setFixedHeight(double fixedHeight) {
         this.fixedHeight.set(fixedHeight);
-    }
-
-    public boolean getLoadingIndicator() {
-        return loadingIndicator.get();
-    }
-
-    public BooleanProperty loadingIndicatorProperty() {
-        return loadingIndicator;
-    }
-
-    public void setLoadingIndicator(boolean loadingIndicator) {
-        this.loadingIndicator.set(loadingIndicator);
     }
 
     public ComboBox<T> getCombo() {

@@ -1,8 +1,6 @@
 package org.fxpart.combobox;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ObjectPropertyBase;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -50,7 +48,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private boolean lazyMode = true;
     private boolean acceptFreeValue = false;
     private int delay = 1000; // delay in ms
-    //private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
@@ -112,6 +110,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return (T) skin.getCombo().getValue();
     }
 
+    /**************************************************************************
+     * Properties
+     **************************************************************************/
+
     public List<KeyValueString> getDataSource() {
         return dataSource.apply(null);
     }
@@ -172,9 +174,17 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.acceptFreeValue = acceptFreeValue;
     }
 
-    /**************************************************************************
-     * Properties
-     **************************************************************************/
+    public boolean getLoadingIndicator() {
+        return loadingIndicator.get();
+    }
+
+    public BooleanProperty loadingIndicatorProperty() {
+        return loadingIndicator;
+    }
+
+    public void setLoadingIndicator(boolean loadingIndicator) {
+        this.loadingIndicator.set(loadingIndicator);
+    }
 
     // -- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
@@ -281,6 +291,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         @Override
         public void run() {
             skin.getSelectedItem().setDisable(true);
+            loadingIndicator.setValue(true);
             stopScheduler();
             SearchTask<T> searchTask = new SearchTask<>(this.event);
             searchExecutor.submit(searchTask);
@@ -296,7 +307,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         SearchTask(Event event) {
             this.event = event;
-            setOnCancelled(t -> LOG.debug(String.valueOf(getException())));
+            setOnCancelled(t -> {
+                loadingIndicator.setValue(false);
+                LOG.debug(String.valueOf(getException()));
+            });
             setOnSucceeded(t -> {
                 String searchString = getEditor().getText();
                 ObservableList<T> list = (ObservableList<T>) getItems();
@@ -310,6 +324,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 }
                 getEditor().positionCaret(searchString.length());
                 skin.getSelectedItem().setDisable(false);
+                loadingIndicator.setValue(false);
             });
         }
 
