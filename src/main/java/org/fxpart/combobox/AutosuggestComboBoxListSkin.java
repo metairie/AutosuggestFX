@@ -49,6 +49,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private static final KeyCodeCombination HOME = new KeyCodeCombination(KeyCode.HOME);
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
+    private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
 
     private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
     private static final String USUAL_CLASS = "usual-dropdown";
@@ -92,13 +93,17 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private void init() {
         combo.setEditable(editable);
-        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
-        combo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            KeyValueString kv = (KeyValueString) newValue;
-            if (kv != null) {
-                switchNode(combo, selectedItem);
+        combo.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            switch (e.getCode()) {
+                case ENTER:
+                    if (!getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
+                        switchNode(combo, selectedItem);
+                    }
+                    e.consume();
             }
         });
+        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
+
         combo.setOnShown(event -> {
             if (!selectedItem.disabledProperty().getValue()) {
                 reSchedule(event);
@@ -148,9 +153,13 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
             @Override
             public void handle(KeyEvent event) {
+                // nothing to do on this
+                if (RIGHT.match(event) || LEFT.match(event) || event.isControlDown() || HOME.match(event) || END.match(event) || TAB.match(event)) {
+                    return;
+                }
+                // action
                 String term = combo.getEditor().getText();
                 int termLength = 0;
-
                 if (term != null) {
                     termLength = term.length();
                 }
@@ -174,13 +183,10 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                     caretPos = combo.getEditor().getCaretPosition();
                 }
 
-                if (RIGHT.match(event) || LEFT.match(event) || event.isControlDown() || HOME.match(event) || END.match(event) || TAB.match(event)) {
-                    return;
-                }
-
                 // do a Scheduled search
-                reSchedule(event);
-
+                if (!selectedItem.disabledProperty().getValue()) {
+                    reSchedule(event);
+                }
                 if (!moveCaretToPos) {
                     caretPos = -1;
                 }

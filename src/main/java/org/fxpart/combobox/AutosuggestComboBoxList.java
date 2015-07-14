@@ -306,7 +306,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType()) {
                     // TODO there is still a bug , sometimes, show does not work
                     // occurs when an item is selected and , click on button to return to the Combo
-                    
                     skin.getCombo().show();
                 }
                 getEditor().positionCaret(searchString.length());
