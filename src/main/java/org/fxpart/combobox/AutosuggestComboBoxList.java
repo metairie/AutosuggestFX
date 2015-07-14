@@ -304,7 +304,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 getEditor().setText(searchString);
                 setSearchString(searchString);
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType()) {
-                    // TODO there is a bug , sometimes, show does not work
+                    // TODO there is still a bug , sometimes, show does not work
                     skin.getCombo().show();
                 }
                 getEditor().positionCaret(searchString.length());
