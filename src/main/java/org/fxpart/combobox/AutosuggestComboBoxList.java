@@ -29,11 +29,16 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
-    private enum STATUS {
+    public enum STATUS_ITEM {
         EMPTY,
         SEARCH,
         FREE_TEXT_ITEM,
         COMBO_TEXT_ITEM
+    }
+
+    public enum STATUS_SKIN {
+        CONTROL_VISIBLE,
+        BUTTON_VISIBLE
     }
 
     /**************************************************************************
@@ -49,12 +54,12 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private int visibleRowsCount = 10;
     private boolean editable = true;
 
-
     /**************************************************************************
      * Properties
      **************************************************************************/
 
-    private STATUS status = STATUS.EMPTY;
+    private STATUS_SKIN statusSkin = STATUS_SKIN.CONTROL_VISIBLE;
+    private STATUS_ITEM statusItem = STATUS_ITEM.EMPTY;
     private boolean lazyMode = true;
     private boolean acceptFreeTextValue = false;
     private int delay = 1000; // delay in ms
@@ -194,6 +199,23 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.editable = editable;
     }
 
+    public STATUS_SKIN getStatusSkin() {
+        return statusSkin;
+    }
+
+    public void setStatusSkin(STATUS_SKIN statusSkin) {
+        this.statusSkin = statusSkin;
+    }
+
+    public STATUS_ITEM getStatusItem() {
+        return statusItem;
+    }
+
+    public void setStatusItem(STATUS_ITEM statusItem) {
+        this.statusItem = statusItem;
+    }
+
+
     // -- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
@@ -321,7 +343,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
                 stopSearch();
-                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && (status == STATUS.EMPTY || status == STATUS.SEARCH)) {
+                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && statusSkin == STATUS_SKIN.CONTROL_VISIBLE) {
                     skin.getCombo().show();
                 }
             });
@@ -332,22 +354,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 //            Thread.sleep(1000);
             return (T) getSearchFunction().apply(getEditorText());
         }
-    }
-
-    public void setStatusEmpty() {
-        status = STATUS.EMPTY;
-    }
-
-    public void setStatusSearch() {
-        status = STATUS.SEARCH;
-    }
-
-    public void setStatusFreeTextItem() {
-        status = STATUS.FREE_TEXT_ITEM;
-    }
-
-    public void setStatusComboTextItem() {
-        status = STATUS.COMBO_TEXT_ITEM;
     }
 
     public void startSearch() {

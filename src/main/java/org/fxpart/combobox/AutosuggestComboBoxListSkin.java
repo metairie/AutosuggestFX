@@ -89,7 +89,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 case ENTER:
                     if (!getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
                         switchNode(combo, selectedItem);
-                        control.setStatusComboTextItem();
+                        // TODO binding?
+                        control.setStatusSkin(AutosuggestComboBoxList.STATUS_SKIN.BUTTON_VISIBLE);
                     }
                     e.consume();
             }
@@ -104,7 +105,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
         selectedItem.setOnAction(event -> {
             switchNode(selectedItem, combo);
-            control.setStatusSearch();
+            // TODO binding?
+            control.setStatusSkin(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE);
         });
 
         setCustomCellFactory();
