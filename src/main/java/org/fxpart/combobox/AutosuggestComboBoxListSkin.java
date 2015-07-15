@@ -3,7 +3,9 @@ package org.fxpart.combobox;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -19,7 +21,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -48,21 +49,22 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
 
-    private static final String HIGHLIGHTED_CLASS = "highlighted-dropdown";
-    private static final String USUAL_CLASS = "usual-dropdown";
+    private static final String HIGHLIGHTED_DROPDOWN_CLASS = "highlighted-dropdown";
+    private static final String USUAL_DROPDOWN_CLASS = "usual-dropdown";
+    private static final String SEARCH_DROPDOWN_CLASS = "search-dropdown";
 
     // visuals
     private final HBox root = new HBox();
-    private final VBox vBoxCombo = new VBox();
+    private final HBox visibleBox = new HBox();
+    private final HBox hiddenBox = new HBox();
     private final ComboBox<T> combo = new ComboBox<>();
-    private final Button selectedItem = new Button();
-    private final ProgressBar progressBar = new ProgressBar();
-    private final VBox hiddenNode = new VBox();
+    private final Button button = new Button();
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
 
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
+    private BooleanProperty searchStatus = new SimpleBooleanProperty();
 
     /**************************************************************************
      * Constructors
@@ -88,25 +90,23 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             switch (e.getCode()) {
                 case ENTER:
                     if (!getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
-                        switchNode(combo, selectedItem);
+                        switchNode(combo, button);
                         // TODO binding?
-                        control.setStatusSkin(AutosuggestComboBoxList.STATUS_SKIN.BUTTON_VISIBLE);
+                        control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.BUTTON_VISIBLE));
                     }
                     e.consume();
             }
         });
         combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
-
         combo.setOnShown(event -> {
-            if (!selectedItem.disabledProperty().getValue()) {
+            if (!button.disabledProperty().getValue()) {
                 reSchedule(event);
             }
         });
-
-        selectedItem.setOnAction(event -> {
-            switchNode(selectedItem, combo);
+        button.setOnAction(event -> {
+            switchNode(button, combo);
             // TODO binding?
-            control.setStatusSkin(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE);
+            control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
         });
 
         setCustomCellFactory();
@@ -121,24 +121,29 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private void graphical() {
         // building nodes
         root.setPadding(new Insets(1, 1, 1, 1));
-        vBoxCombo.setPadding(new Insets(1, 1, 1, 1));
-        progressBar.setMaxWidth(Double.MAX_VALUE);
-        selectedItem.setMaxHeight(Double.MAX_VALUE);
+        visibleBox.setPadding(new Insets(1, 1, 1, 1));
+        button.setMaxHeight(Double.MAX_VALUE);
         Image image = new Image(getClass().getResourceAsStream("/org/fxpart/close.png"));
-        selectedItem.setContentDisplay(ContentDisplay.RIGHT);
-        selectedItem.setAlignment(Pos.BASELINE_RIGHT);
-        selectedItem.setPadding(new Insets(1, 5, 1, 5));
-        selectedItem.setGraphic(new ImageView(image));
-        vBoxCombo.getChildren().add(progressBar);
-        vBoxCombo.getChildren().add(combo);
-        hiddenNode.getChildren().add(selectedItem);
-        root.getChildren().add(vBoxCombo);
+        button.setContentDisplay(ContentDisplay.RIGHT);
+        button.setAlignment(Pos.BASELINE_RIGHT);
+        button.setPadding(new Insets(1, 5, 1, 5));
+        button.setGraphic(new ImageView(image));
+        visibleBox.getChildren().addAll(combo);
+        hiddenBox.getChildren().add(button);
+        root.getChildren().addAll(visibleBox);
         getChildren().add(root);
     }
 
     private void bind() {
-        progressBar.visibleProperty().bind(control.loadingIndicatorProperty());
-        selectedItem.textProperty().bind(combo.getEditor().textProperty());
+        button.textProperty().bind(combo.getEditor().textProperty());
+        searchStatus.bind(control.loadingIndicatorProperty());
+        searchStatus.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                combo.getStyleClass().add(SEARCH_DROPDOWN_CLASS);
+            } else {
+                combo.setStyle("");
+            }
+        });
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
@@ -179,7 +184,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 }
 
                 // do a Scheduled search
-                if (!selectedItem.disabledProperty().getValue()) {
+                if (!button.disabledProperty().getValue()) {
                     reSchedule(event);
                 }
                 if (!moveCaretToPos) {
@@ -241,19 +246,19 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                                                          String endString = valueString.substring(searchStringPosition + control.getEditorText().length());
 
                                                          Text separator = new Text(keyString + " - ");
-                                                         separator.getStyleClass().add(USUAL_CLASS);
+                                                         separator.getStyleClass().add(USUAL_DROPDOWN_CLASS);
                                                          styledText.getChildren().add(separator);
 
                                                          final Text begin = new Text(beginString);
-                                                         begin.getStyleClass().add(USUAL_CLASS);
+                                                         begin.getStyleClass().add(USUAL_DROPDOWN_CLASS);
                                                          styledText.getChildren().add(begin);
 
                                                          final Text highlighted = new Text(highlightedString);
-                                                         highlighted.getStyleClass().add(HIGHLIGHTED_CLASS);
+                                                         highlighted.getStyleClass().add(HIGHLIGHTED_DROPDOWN_CLASS);
                                                          styledText.getChildren().add(highlighted);
 
                                                          final Text end = new Text(endString);
-                                                         end.getStyleClass().add(USUAL_CLASS);
+                                                         end.getStyleClass().add(USUAL_DROPDOWN_CLASS);
                                                          styledText.getChildren().add(end);
 
 
@@ -302,8 +307,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     }
 
     private void switchNode(Node nodeToHide, Node nodeToShow) {
-        changeParent(nodeToHide, hiddenNode);
-        changeParent(nodeToShow, vBoxCombo);
+        changeParent(nodeToHide, hiddenBox);
+        changeParent(nodeToShow, visibleBox);
     }
 
     public double getFixedHeight() {
@@ -322,8 +327,8 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         return combo;
     }
 
-    public Button getSelectedItem() {
-        return selectedItem;
+    public Button getButton() {
+        return button;
     }
 
 }

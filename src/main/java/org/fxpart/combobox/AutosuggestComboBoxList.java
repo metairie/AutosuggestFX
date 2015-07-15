@@ -41,8 +41,15 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         BUTTON_VISIBLE
     }
 
+    public enum STATUS_SEARCH {
+        NOTHING,
+        RUN,
+        SUCCESS,
+        FAIL
+    }
+
     /**************************************************************************
-     * Private fields
+     * Private Properties
      **************************************************************************/
 
     private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
@@ -50,19 +57,19 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private AutosuggestComboBoxListSkin skin;
     private SearchTimerTask timerTask = new SearchTimerTask();
     private Timer scheduler = new Timer();
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
-    private int visibleRowsCount = 10;
-    private boolean editable = true;
 
     /**************************************************************************
-     * Properties
+     * Public Properties
      **************************************************************************/
 
-    private STATUS_SKIN statusSkin = STATUS_SKIN.CONTROL_VISIBLE;
-    private STATUS_ITEM statusItem = STATUS_ITEM.EMPTY;
     private boolean lazyMode = true;
     private boolean acceptFreeTextValue = false;
     private int delay = 1000; // delay in ms
+    private int visibleRowsCount = 10;
+    private boolean editable = true;
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
+    private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
+    private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
@@ -179,6 +186,38 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.acceptFreeTextValue = acceptFreeTextValue;
     }
 
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
+    public String getSearchStatus() {
+        return searchStatus.get();
+    }
+
+    public StringProperty searchStatusProperty() {
+        return searchStatus;
+    }
+
+    public void setSearchStatus(String searchStatus) {
+        this.searchStatus.set(searchStatus);
+    }
+
+    public String getSkinStatus() {
+        return skinStatus.get();
+    }
+
+    public StringProperty skinStatusProperty() {
+        return skinStatus;
+    }
+
+    public void setSkinStatus(String skinStatus) {
+        this.skinStatus.set(skinStatus);
+    }
+
     public boolean getLoadingIndicator() {
         return loadingIndicator.get();
     }
@@ -191,32 +230,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.loadingIndicator.set(loadingIndicator);
     }
 
-    public boolean isEditable() {
-        return editable;
-    }
-
-    public void setEditable(boolean editable) {
-        this.editable = editable;
-    }
-
-    public STATUS_SKIN getStatusSkin() {
-        return statusSkin;
-    }
-
-    public void setStatusSkin(STATUS_SKIN statusSkin) {
-        this.statusSkin = statusSkin;
-    }
-
-    public STATUS_ITEM getStatusItem() {
-        return statusItem;
-    }
-
-    public void setStatusItem(STATUS_ITEM statusItem) {
-        this.statusItem = statusItem;
-    }
-
-
-    // -- On Shown
+    // ----------------------------------------------------------------------- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
     }
@@ -288,7 +302,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
 
     /**************************************************************************
-     * Implementation
+     * Implementation, Public Methods
      **************************************************************************/
 
     public void reSchedule(Event event) {
@@ -300,11 +314,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         timerTask = new SearchTimerTask(event);
         // running timer task as daemon thread
         scheduler.schedule(timerTask, this.delay, this.delay);
-    }
-
-    private void stopScheduler() {
-        scheduler.purge();
-        scheduler.cancel();
     }
 
     public class SearchTimerTask extends TimerTask {
@@ -336,14 +345,16 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         SearchTask(Event event) {
             this.event = event;
             setOnCancelled(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
                 stopSearch();
                 LOG.debug(String.valueOf(getException()));
             });
             setOnSucceeded(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
                 stopSearch();
-                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && statusSkin == STATUS_SKIN.CONTROL_VISIBLE) {
+                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && checkEnumProperty(skinStatusProperty(), STATUS_SKIN.CONTROL_VISIBLE)) {
                     skin.getCombo().show();
                 }
             });
@@ -351,21 +362,33 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         protected T call() throws Exception {
-//            Thread.sleep(1000);
+            Thread.sleep(1000);
             return (T) getSearchFunction().apply(getEditorText());
         }
     }
 
     public void startSearch() {
-        //loadingIndicator.setValue(true);
-        // skin.getSelectedItem().setDisable(true);
+        setLoadingIndicator(true);
+        searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
         stopScheduler();
     }
 
     public void stopSearch() {
         stopScheduler();
         skin.getCombo().getEditor().positionCaret(getEditorText().length());
-        //skin.getSelectedItem().setDisable(false);
-        //loadingIndicator.setValue(false);
+        setLoadingIndicator(false);
+    }
+
+    /**************************************************************************
+     * Private Methods
+     **************************************************************************/
+
+    private void stopScheduler() {
+        scheduler.purge();
+        scheduler.cancel();
+    }
+
+    private boolean checkEnumProperty(StringProperty p, Enum e) {
+        return p.getValue().equalsIgnoreCase(String.valueOf(e));
     }
 }
