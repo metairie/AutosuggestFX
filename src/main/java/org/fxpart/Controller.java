@@ -30,6 +30,7 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
 
         //pavel
+        autosuggest.setAcceptFreeValue(false);
         autosuggest.setLazyMode(false); // if no item is selected, lazy is useless
         autosuggest.setDelay(300);
         autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
@@ -46,6 +47,6 @@ public class Controller implements Initializable {
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        autosuggest.stopScheduler();
+        autosuggest.stopSearch();
     }
 }

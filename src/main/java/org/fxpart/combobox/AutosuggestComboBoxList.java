@@ -29,6 +29,11 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
+    private static enum STATUS {
+        COMBO,
+        TEXT
+    }
+
     /**************************************************************************
      * Private fields
      **************************************************************************/
@@ -44,6 +49,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      * Properties
      **************************************************************************/
 
+    private STATUS status = STATUS.COMBO;
     private boolean lazyMode = true;
     private boolean acceptFreeValue = false;
     private int delay = 1000; // delay in ms
@@ -301,9 +307,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
                 setEditorText(searchString);
-                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType()) {
-                    // TODO there is still a bug , sometimes, show does not work
-                    // occurs when an item is selected and , click on button to return to the Combo
+                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && status == STATUS.COMBO) {
                     skin.getCombo().show();
                 }
                 skin.getCombo().getEditor().positionCaret(searchString.length());
@@ -314,8 +318,29 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         protected T call() throws Exception {
+//            Thread.sleep(1000);
             return (T) getSearchFunction().apply(getEditorText());
         }
     }
 
+    public void setStatusCombo() {
+        status = STATUS.COMBO;
+    }
+
+    public void setStatusText() {
+        status = STATUS.TEXT;
+    }
+
+    public void startSearch() {
+        //loadingIndicator.setValue(true);
+        // skin.getSelectedItem().setDisable(true);
+        stopScheduler();
+    }
+
+    public void stopSearch() {
+        stopScheduler();
+        skin.getCombo().getEditor().positionCaret(getEditorText().length());
+        //skin.getSelectedItem().setDisable(false);
+        //loadingIndicator.setValue(false);
+    }
 }
