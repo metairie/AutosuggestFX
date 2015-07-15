@@ -8,7 +8,6 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.control.Skin;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -28,27 +27,26 @@ import java.util.stream.Collectors;
  */
 public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
-
-    private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-
-    // TODO
-    // this to be link with sub component (Combo or Table?)
-    public static final EventType<Event> ON_SHOWN = new EventType<Event>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
+    public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
     /**************************************************************************
      * Private fields
      **************************************************************************/
 
+    private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
     private final ObservableList<T> items;
     private AutosuggestComboBoxListSkin skin;
     private SearchTimerTask timerTask = new SearchTimerTask();
     private Timer scheduler = new Timer();
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
 
-    private String searchString = "";
+    /**************************************************************************
+     * Properties
+     **************************************************************************/
+
     private boolean lazyMode = true;
     private boolean acceptFreeValue = false;
     private int delay = 1000; // delay in ms
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
@@ -101,33 +99,20 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return items;
     }
 
-    // TODO implement combo or table
-    public TextField getEditor() {
-        return skin.getCombo().getEditor();
+    public void setEditorText(String text) {
+        skin.getCombo().getEditor().setText(text);
     }
 
-    public T getValue() {
-        return (T) skin.getCombo().getValue();
+    public String getEditorText() {
+        return skin.getCombo().getEditor().getText();
     }
-
-    /**************************************************************************
-     * Properties
-     **************************************************************************/
 
     public List<KeyValueString> getDataSource() {
         return dataSource.apply(null);
     }
 
-    public void setSearchString(String searchString) {
-        this.searchString = searchString;
-    }
-
     public Function<String, List<KeyValueString>> getSearchFunction() {
         return searchFunction;
-    }
-
-    public String getSearchString() {
-        return searchString;
     }
 
     public int getDelay() {
@@ -312,17 +297,16 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 LOG.debug(String.valueOf(getException()));
             });
             setOnSucceeded(t -> {
-                String searchString = getEditor().getText();
+                String searchString = getEditorText();
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
-                getEditor().setText(searchString);
-                setSearchString(searchString);
+                setEditorText(searchString);
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType()) {
                     // TODO there is still a bug , sometimes, show does not work
                     // occurs when an item is selected and , click on button to return to the Combo
                     skin.getCombo().show();
                 }
-                getEditor().positionCaret(searchString.length());
+                skin.getCombo().getEditor().positionCaret(searchString.length());
                 skin.getSelectedItem().setDisable(false);
                 loadingIndicator.setValue(false);
             });
@@ -330,7 +314,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         protected T call() throws Exception {
-            return (T) getSearchFunction().apply(getEditor().getText());
+            return (T) getSearchFunction().apply(getEditorText());
         }
     }
 

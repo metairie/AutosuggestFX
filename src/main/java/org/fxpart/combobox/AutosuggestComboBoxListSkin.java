@@ -58,14 +58,13 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final Button selectedItem = new Button();
     private final ProgressBar progressBar = new ProgressBar();
     private final VBox hiddenNode = new VBox();
+    private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
 
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
 
-    // TODO qualify this properties (data?visual?control?)
-//    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
-    private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
+    // TODO must be moved to Model
     private int visibleRowsCount = 10;
     private boolean editable = true;
 
@@ -112,7 +111,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         });
 
         setCustomCellFactory();
-        setTextFieldFormatter(control.getTextFieldFormatter());
+        setTextFieldFormatter((Function<T, String>) control.getTextFieldFormatter());
         combo.setItems(this.items);
     }
 
@@ -201,11 +200,11 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         };
     }
 
-    private void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
+    private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {
         combo.setConverter(new StringConverter<T>() {
             @Override
             public String toString(T t) {
-                return t == null ? null : textFieldFormatter.apply((KeyValueString) t);
+                return t == null ? null : textFieldFormatter.apply((T) t);
             }
 
             @Override
@@ -225,22 +224,22 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                                          protected void updateItem(T item, boolean empty) {
                                              super.updateItem(item, empty);
                                              if (item == null || empty) {
-                                                 setText(null);
+                                                 //setText(null);
                                                  setGraphic(null);
                                              } else {
-                                                 setText(null);
+                                                 //setText(null);
                                                  HBox styledText = new HBox();
                                                  String keyString = (String) ((KeyValueStringLabel) item).getKey();
                                                  String valueString = ((KeyValueStringLabel) item).getValue();
                                                  String itemString = keyString + " - " + valueString;
-                                                 if (control.getSearchString().length() != 0) {
-                                                     Integer searchStringPosition = valueString.indexOf(control.getSearchString());
+                                                 if (control.getEditorText().length() != 0) {
+                                                     Integer searchStringPosition = valueString.indexOf(control.getEditorText());
 
                                                      // itemString contains searchString. It should be split and searchString should be highLighted
                                                      if (searchStringPosition >= 0) {
                                                          String beginString = valueString.substring(0, searchStringPosition);
-                                                         String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + control.getSearchString().length());
-                                                         String endString = valueString.substring(searchStringPosition + control.getSearchString().length());
+                                                         String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + control.getEditorText().length());
+                                                         String endString = valueString.substring(searchStringPosition + control.getEditorText().length());
 
                                                          Text separator = new Text(keyString + " - ");
                                                          separator.getStyleClass().add(USUAL_CLASS);
@@ -275,6 +274,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         );
     }
 
+    /**
+     * Generic method for Swapping node from an old Parent to a new one
+     *
+     * @param item
+     * @param newParent
+     */
     private void changeParent(Node item, Parent newParent) {
         Parent oldParent = item.getParent();
         // Swapping parent
