@@ -29,7 +29,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
-    private static enum STATUS {
+    private enum STATUS {
         COMBO,
         TEXT
     }
@@ -54,7 +54,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
     private STATUS status = STATUS.COMBO;
     private boolean lazyMode = true;
-    private boolean acceptFreeValue = false;
+    private boolean acceptFreeTextValue = false;
     private int delay = 1000; // delay in ms
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
@@ -164,12 +164,12 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return lazyMode;
     }
 
-    public boolean isAcceptFreeValue() {
-        return acceptFreeValue;
+    public boolean isAcceptFreeTextValue() {
+        return acceptFreeTextValue;
     }
 
-    public void setAcceptFreeValue(boolean acceptFreeValue) {
-        this.acceptFreeValue = acceptFreeValue;
+    public void setAcceptFreeTextValue(boolean acceptFreeTextValue) {
+        this.acceptFreeTextValue = acceptFreeTextValue;
     }
 
     public boolean getLoadingIndicator() {

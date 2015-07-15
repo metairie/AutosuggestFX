@@ -31,7 +31,7 @@ public class Controller implements Initializable {
 
         //pavel
         autosuggest.setEditable(true);
-        autosuggest.setAcceptFreeValue(true);
+        autosuggest.setAcceptFreeTextValue(true);
         autosuggest.setLazyMode(false); // if no item is selected, lazy is useless
         autosuggest.setDelay(300);
         autosuggest.init(o -> new MockDatas().loadLocation(), item -> String.format("%s", item.getValue()));
