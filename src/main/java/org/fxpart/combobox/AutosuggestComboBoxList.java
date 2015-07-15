@@ -30,8 +30,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
     private enum STATUS {
-        COMBO,
-        TEXT
+        EMPTY,
+        SEARCH,
+        FREE_TEXT_ITEM,
+        COMBO_TEXT_ITEM
     }
 
     /**************************************************************************
@@ -52,7 +54,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
      * Properties
      **************************************************************************/
 
-    private STATUS status = STATUS.COMBO;
+    private STATUS status = STATUS.EMPTY;
     private boolean lazyMode = true;
     private boolean acceptFreeTextValue = false;
     private int delay = 1000; // delay in ms
@@ -319,7 +321,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
                 stopSearch();
-                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && status == STATUS.COMBO) {
+                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && (status == STATUS.EMPTY || status == STATUS.SEARCH)) {
                     skin.getCombo().show();
                 }
             });
@@ -332,12 +334,20 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         }
     }
 
-    public void setStatusCombo() {
-        status = STATUS.COMBO;
+    public void setStatusEmpty() {
+        status = STATUS.EMPTY;
     }
 
-    public void setStatusText() {
-        status = STATUS.TEXT;
+    public void setStatusSearch() {
+        status = STATUS.SEARCH;
+    }
+
+    public void setStatusFreeTextItem() {
+        status = STATUS.FREE_TEXT_ITEM;
+    }
+
+    public void setStatusComboTextItem() {
+        status = STATUS.COMBO_TEXT_ITEM;
     }
 
     public void startSearch() {
