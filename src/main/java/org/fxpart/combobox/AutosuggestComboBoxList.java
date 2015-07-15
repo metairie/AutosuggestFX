@@ -113,6 +113,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return skin.getCombo().getEditor().getText();
     }
 
+    /**************************************************************************
+     * Public Properties
+     **************************************************************************/
+
     public List<KeyValueString> getDataSource() {
         return dataSource.apply(null);
     }
@@ -242,7 +246,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
         dataSource = datas;
         this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
-        if (lazyMode) {
+        if (!lazyMode) {
             reSchedule(null);
         }
     }
