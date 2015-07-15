@@ -44,6 +44,9 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private SearchTimerTask timerTask = new SearchTimerTask();
     private Timer scheduler = new Timer();
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
+    private int visibleRowsCount = 10;
+    private boolean editable = true;
+
 
     /**************************************************************************
      * Properties
@@ -181,6 +184,14 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.loadingIndicator.set(loadingIndicator);
     }
 
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
     // -- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
@@ -285,7 +296,6 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         public void run() {
-            LOG.debug(" running a search with key =" + getEditorText());
             startSearch();
             SearchTask<T> searchTask = new SearchTask<>(this.event);
             searchExecutor.submit(searchTask);

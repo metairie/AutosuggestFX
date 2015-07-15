@@ -64,11 +64,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
 
-    // TODO must be moved to Model
-    private int visibleRowsCount = 10;
-    private boolean editable = true;
-
-
     /**************************************************************************
      * Constructors
      **************************************************************************/
@@ -88,7 +83,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     }
 
     private void init() {
-        combo.setEditable(editable);
+        combo.setEditable(control.isEditable());
         combo.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             switch (e.getCode()) {
                 case ENTER:
@@ -307,14 +302,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private void switchNode(Node nodeToHide, Node nodeToShow) {
         changeParent(nodeToHide, hiddenNode);
         changeParent(nodeToShow, vBoxCombo);
-    }
-
-    public int getVisibleRowsCount() {
-        return visibleRowsCount;
-    }
-
-    public void setVisibleRowsCount(int visibleRowsCount) {
-        this.visibleRowsCount = visibleRowsCount;
     }
 
     public double getFixedHeight() {
