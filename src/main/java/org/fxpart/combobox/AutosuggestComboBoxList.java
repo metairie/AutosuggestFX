@@ -267,7 +267,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         scheduler.schedule(timerTask, this.delay, this.delay);
     }
 
-    public void stopScheduler() {
+    private void stopScheduler() {
         scheduler.purge();
         scheduler.cancel();
     }
@@ -285,9 +285,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         public void run() {
-            skin.getSelectedItem().setDisable(true);
-            loadingIndicator.setValue(true);
-            stopScheduler();
+            LOG.debug(" running a search with key =" + getEditorText());
+            startSearch();
             SearchTask<T> searchTask = new SearchTask<>(this.event);
             searchExecutor.submit(searchTask);
         }
@@ -303,20 +302,16 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         SearchTask(Event event) {
             this.event = event;
             setOnCancelled(t -> {
-                loadingIndicator.setValue(false);
+                stopSearch();
                 LOG.debug(String.valueOf(getException()));
             });
             setOnSucceeded(t -> {
-                String searchString = getEditorText();
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
-                setEditorText(searchString);
+                stopSearch();
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && status == STATUS.COMBO) {
                     skin.getCombo().show();
                 }
-                skin.getCombo().getEditor().positionCaret(searchString.length());
-                skin.getSelectedItem().setDisable(false);
-                loadingIndicator.setValue(false);
             });
         }
 
