@@ -3,9 +3,7 @@ package org.fxpart.combobox;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -51,7 +49,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private static final String HIGHLIGHTED_DROPDOWN_CLASS = "highlighted-dropdown";
     private static final String USUAL_DROPDOWN_CLASS = "usual-dropdown";
-    private static final String SEARCH_DROPDOWN_CLASS = "search-dropdown";
 
     // visuals
     private final HBox root = new HBox();
@@ -59,12 +56,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private final HBox hiddenBox = new HBox();
     private final ComboBox<T> combo = new ComboBox<>();
     private final Button button = new Button();
+    private final ImageView wait = new ImageView(new Image("org/fxpart/wait.gif"));
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
 
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
-    private BooleanProperty searchStatus = new SimpleBooleanProperty();
 
     /**************************************************************************
      * Constructors
@@ -120,6 +117,9 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
 
     private void graphical() {
         // building nodes
+        wait.setVisible(false);
+        wait.setFitWidth(25);
+        wait.setFitHeight(25);
         root.setPadding(new Insets(1, 1, 1, 1));
         visibleBox.setPadding(new Insets(1, 1, 1, 1));
         button.setMaxHeight(Double.MAX_VALUE);
@@ -130,76 +130,36 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         button.setGraphic(new ImageView(image));
         visibleBox.getChildren().addAll(combo);
         hiddenBox.getChildren().add(button);
+        HBox search = new HBox();
+        search.getChildren().addAll(wait);
         root.getChildren().addAll(visibleBox);
         getChildren().add(root);
     }
 
     private void bind() {
         button.textProperty().bind(combo.getEditor().textProperty());
-        searchStatus.bind(control.loadingIndicatorProperty());
-        searchStatus.addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                combo.getStyleClass().add(SEARCH_DROPDOWN_CLASS);
-            } else {
-                combo.setStyle("");
-            }
-        });
+        wait.visibleProperty().bind(control.loadingIndicatorProperty());
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
         return new EventHandler<KeyEvent>() {
-            private boolean moveCaretToPos = false;
-            private int caretPos;
+            private int caretPos = -1;
 
             @Override
             public void handle(KeyEvent event) {
-                // nothing to do on this
-                if (RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()) {
-                    return;
-                }
-                // action
-                String term = combo.getEditor().getText();
-                int termLength = 0;
-                if (term != null) {
-                    termLength = term.length();
-                }
-
-                if (UP.match(event)) {
-                    caretPos = -1;
-                    moveCaret(termLength);
-                    return;
-                } else if (DOWN.match(event)) {
+                if (DOWN.match(event)) {
                     if (!combo.isShowing()) {
                         combo.show();
                     }
-                    caretPos = -1;
-                    moveCaret(termLength);
                     return;
-                } else if (BACK_SPACE.match(event)) {
-                    moveCaretToPos = true;
-                    caretPos = combo.getEditor().getCaretPosition();
-                } else if (DELETE.match(event)) {
-                    moveCaretToPos = true;
-                    caretPos = combo.getEditor().getCaretPosition();
+                } else if (UP.match(event) || RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()){
+                    return;
                 }
 
-                // do a Scheduled search
-                if (!button.disabledProperty().getValue()) {
+                // search if possible
+               if (combo.visibleProperty().getValue()) {
                     reSchedule(event);
                 }
-                if (!moveCaretToPos) {
-                    caretPos = -1;
-                }
-                moveCaret(termLength);
-            }
-
-            private void moveCaret(int textLength) {
-                if (caretPos == -1) {
-                    combo.getEditor().positionCaret(textLength);
-                } else {
-                    combo.getEditor().positionCaret(caretPos);
-                }
-                moveCaretToPos = false;
             }
         };
     }
@@ -228,13 +188,11 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                                          protected void updateItem(T item, boolean empty) {
                                              super.updateItem(item, empty);
                                              if (item == null || empty) {
-                                                 //setText(null);
                                                  setGraphic(null);
                                              } else {
-                                                 //setText(null);
                                                  HBox styledText = new HBox();
-                                                 String keyString = (String) ((KeyValueStringLabel) item).getKey();
-                                                 String valueString = ((KeyValueStringLabel) item).getValue();
+                                                 String keyString = ((KeyValueString) item).getKey();
+                                                 String valueString = ((KeyValueString) item).getValue();
                                                  String itemString = keyString + " - " + valueString;
                                                  if (control.getEditorText().length() != 0) {
                                                      Integer searchStringPosition = valueString.indexOf(control.getEditorText());

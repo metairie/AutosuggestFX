@@ -362,7 +362,7 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         protected T call() throws Exception {
-            Thread.sleep(1000);
+            Thread.sleep(500);
             return (T) getSearchFunction().apply(getEditorText());
         }
     }
