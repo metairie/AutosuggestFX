@@ -19,6 +19,19 @@
         <mockserver-netty.version>3.9.16</mockserver-netty.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>repository.ebu.ch</id>
+            <name>repository.ebu.ch-releases</name>
+            <url>http://repository.ebu.ch:8081/artifactory/ext-release-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>repository.ebu.ch</id>
+            <name>repository.ebu.ch-snapshots</name>
+            <url>http://repository.ebu.ch:8081/artifactory/ext-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <!-- log -->
         <dependency>
