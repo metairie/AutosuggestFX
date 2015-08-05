@@ -1,9 +1,5 @@
 package org.fxpart;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -27,15 +23,8 @@ public class Controller implements Initializable {
     @FXML
     ComboBox cb;
 
-
-    private ObjectProperty<KeyValueString> partDecoDataLocationProperty = new SimpleObjectProperty<>();
-    private final ObservableList strings = FXCollections.observableArrayList(MockDatas.loadLocationStrings());
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-        //pavel
-        //autosuggest.setLoadingIndicator(true);
         autosuggest.setEditable(true);
         autosuggest.setAcceptFreeTextValue(true);
         autosuggest.setLazyMode(false); // if no item is selected, lazy is useless
