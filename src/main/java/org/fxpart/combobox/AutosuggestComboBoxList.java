@@ -138,6 +138,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         return dataSource.apply(null);
     }
 
+    public void setDataSource(Function<String, List<KeyValueString>> dataSource) {
+        this.dataSource = dataSource;
+    }
+
     public Function<String, List<KeyValueString>> getSearchFunction() {
         return searchFunction;
     }
@@ -230,6 +234,10 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         this.loadingIndicator.set(loadingIndicator);
     }
 
+    public final T getValue() {
+        return (T) skin.getCombo().getValue();
+    }
+
     // ----------------------------------------------------------------------- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
@@ -293,8 +301,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     }
 
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
-        dataSource = datas;
-        this.textFieldFormatter = kvs -> String.format("%s", kvs.getValue());
+        this.dataSource = datas;
+        this.textFieldFormatter = textFieldFormatter;
         if (!lazyMode) {
             reSchedule(null);
         }
@@ -362,7 +370,8 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
 
         @Override
         protected T call() throws Exception {
-// TODO remove on production            Thread.sleep(500);
+            // TODO remove on production
+            // Thread.sleep(500);
             return (T) getSearchFunction().apply(getEditorText());
         }
     }
