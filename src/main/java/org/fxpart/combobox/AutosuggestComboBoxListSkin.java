@@ -122,6 +122,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         wait.setFitHeight(25);
         root.setPadding(new Insets(1, 1, 1, 1));
         visibleBox.setPadding(new Insets(1, 1, 1, 1));
+        combo.getStylesheets().add("org/fxpart/autosuggestfx.css");
         button.setMaxHeight(Double.MAX_VALUE);
         Image image = new Image(getClass().getResourceAsStream("/org/fxpart/close.png"));
         button.setContentDisplay(ContentDisplay.RIGHT);
@@ -152,12 +153,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                         combo.show();
                     }
                     return;
-                } else if (UP.match(event) || RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()){
+                } else if (UP.match(event) || RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()) {
                     return;
                 }
 
                 // search if possible
-               if (combo.visibleProperty().getValue()) {
+                if (combo.visibleProperty().getValue()) {
                     reSchedule(event);
                 }
             }
