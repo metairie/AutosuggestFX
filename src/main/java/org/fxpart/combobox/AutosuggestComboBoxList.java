@@ -1,5 +1,6 @@
 package org.fxpart.combobox;
 
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,13 +29,6 @@ import java.util.stream.Collectors;
 public class AutosuggestComboBoxList<T> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
-
-    public enum STATUS_ITEM {
-        EMPTY,
-        SEARCH,
-        FREE_TEXT_ITEM,
-        COMBO_TEXT_ITEM
-    }
 
     public enum STATUS_SKIN {
         CONTROL_VISIBLE,
@@ -386,6 +380,17 @@ public class AutosuggestComboBoxList<T> extends AutosuggestControl {
         stopScheduler();
         skin.getCombo().getEditor().positionCaret(getEditorText().length());
         setLoadingIndicator(false);
+    }
+
+    @Override
+    public void requestFocus() {
+        Platform.runLater(() -> {
+            if (skinStatusProperty().getValue().equalsIgnoreCase(STATUS_SKIN.BUTTON_VISIBLE.toString())) {
+                skin.getButton().requestFocus();
+            } else {
+                skin.getCombo().requestFocus();
+            }
+        });
     }
 
     /**************************************************************************

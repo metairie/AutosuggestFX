@@ -3,6 +3,7 @@ package org.fxpart.combobox;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
@@ -265,9 +266,16 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         }
     }
 
+    /**
+     * Swap between Button and Combo
+     *
+     * @param nodeToHide
+     * @param nodeToShow
+     */
     private void switchNode(Node nodeToHide, Node nodeToShow) {
         changeParent(nodeToHide, hiddenBox);
         changeParent(nodeToShow, visibleBox);
+        control.requestFocus();
     }
 
     public double getFixedHeight() {
