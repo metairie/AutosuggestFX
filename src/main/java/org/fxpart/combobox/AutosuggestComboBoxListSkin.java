@@ -3,7 +3,6 @@ package org.fxpart.combobox;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
-import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
@@ -42,8 +41,7 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     private static final KeyCodeCombination DOWN = new KeyCodeCombination(KeyCode.DOWN);
     private static final KeyCodeCombination LEFT = new KeyCodeCombination(KeyCode.LEFT);
     private static final KeyCodeCombination RIGHT = new KeyCodeCombination(KeyCode.RIGHT);
-    private static final KeyCodeCombination BACK_SPACE = new KeyCodeCombination(KeyCode.BACK_SPACE);
-    private static final KeyCodeCombination DELETE = new KeyCodeCombination(KeyCode.DELETE);
+    private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
     private static final KeyCodeCombination HOME = new KeyCodeCombination(KeyCode.HOME);
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
@@ -106,6 +104,15 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             // TODO binding?
             control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
         });
+        button.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            switch (e.getCode()) {
+                case ENTER:
+                    switchNode(button, combo);
+                    // TODO binding?
+                    control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
+                    e.consume();
+            }
+        });
 
         setCustomCellFactory();
         setTextFieldFormatter((Function<T, String>) control.getTextFieldFormatter());
@@ -144,24 +151,19 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
-        return new EventHandler<KeyEvent>() {
-            private int caretPos = -1;
-
-            @Override
-            public void handle(KeyEvent event) {
-                if (DOWN.match(event)) {
-                    if (!combo.isShowing()) {
-                        combo.show();
-                    }
-                    return;
-                } else if (UP.match(event) || RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()) {
-                    return;
+        return event -> {
+            if (DOWN.match(event)) {
+                if (!combo.isShowing()) {
+                    combo.show();
                 }
+                return;
+            } else if (UP.match(event) || RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()) {
+                return;
+            }
 
-                // search if possible
-                if (combo.visibleProperty().getValue()) {
-                    reSchedule(event);
-                }
+            // search if possible
+            if (combo.visibleProperty().getValue()) {
+                reSchedule(event);
             }
         };
     }
