@@ -10,7 +10,6 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.control.Skin;
 import javafx.scene.input.KeyEvent;
-import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -264,35 +263,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
             return "onShown";
         }
     };
-
-    // --- converter
-    private ObjectProperty<StringConverter<T>> converter = new SimpleObjectProperty<StringConverter<T>>(this, "converter");
-
-    /**
-     * A {@link StringConverter} that, given an object of type T, will
-     * return a String that can be used to represent the object visually.
-     */
-    public final ObjectProperty<StringConverter<T>> converterProperty() {
-        return converter;
-    }
-
-    /**
-     * Sets the {@link StringConverter} to be used in the control.
-     *
-     * @param value A {@link StringConverter} that, given an object of type T, will
-     *              return a String that can be used to represent the object visually.
-     */
-    public final void setConverter(StringConverter<T> value) {
-        converterProperty().set(value);
-    }
-
-    /**
-     * A {@link StringConverter} that, given an object of type T, will
-     * return a String that can be used to represent the object visually.
-     */
-    public final StringConverter<T> getConverter() {
-        return converterProperty().get();
-    }
 
     public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
         this.dataSource = datas;
