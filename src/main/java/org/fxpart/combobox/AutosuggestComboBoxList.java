@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestComboBoxList<T> extends AutosuggestControl {
+public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 

@@ -32,7 +32,7 @@ import java.util.function.Function;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<AutosuggestComboBoxList<T>, BehaviorBase<AutosuggestComboBoxList<T>>> {
+public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSkinBase<AutosuggestComboBoxList<T>, BehaviorBase<AutosuggestComboBoxList<T>>> {
 
     /**************************************************************************
      * fields
@@ -87,7 +87,6 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
                 case ENTER:
                     if (!getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
                         switchNode(combo, button);
-                        // TODO binding?
                         control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.BUTTON_VISIBLE));
                     }
                     e.consume();
@@ -101,14 +100,12 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
         });
         button.setOnAction(event -> {
             switchNode(button, combo);
-            // TODO binding?
             control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
         });
         button.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             switch (e.getCode()) {
                 case ENTER:
                     switchNode(button, combo);
-                    // TODO binding?
                     control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
                     e.consume();
             }
@@ -181,6 +178,22 @@ public class AutosuggestComboBoxListSkin<T> extends BehaviorSkinBase<Autosuggest
             }
         });
     }
+
+    // TODO kept this commented code, answering if I remove custom Button and use instead on embedded Button?
+    /*private void setCustomButtonFactory() {
+        combo.setButtonCell(new ListCell<T>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText("");
+                } else {
+                    // TODO refactor
+                    setText(item.getValue().toString());
+                }
+            }
+        });
+    }*/
 
     private void setCustomCellFactory() {
         combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
