@@ -66,7 +66,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
-    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
+    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s . %s", item.getKey(), item.getValue());
 
 
     /**************************************************************************
@@ -147,21 +147,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.delay = Math.max(100, Math.min(5000, delay));
     }
 
-    public Function<KeyValueString, String> getTextFieldFormatter() {
-        return textFieldFormatter;
-    }
-
-    public void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
-        this.textFieldFormatter = textFieldFormatter;
-    }
-
-    public Function<KeyValueString, String> getLabelItemFormatter() {
-        return labelItemFormatter;
-    }
-
-    public void setLabelItemFormatter(Function<KeyValueString, String> labelItemFormatter) {
-        this.labelItemFormatter = labelItemFormatter;
-    }
 
     public void setLazyMode(boolean lazyMode) {
         this.lazyMode = lazyMode;
@@ -231,6 +216,22 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         return (T) skin.getCombo().getValue();
     }
 
+    public Function<KeyValueString, String> getTextFieldFormatter() {
+        return textFieldFormatter;
+    }
+
+    public void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
+        this.textFieldFormatter = textFieldFormatter;
+    }
+
+    public Function<KeyValueString, String> getLabelItemFormatter() {
+        return labelItemFormatter;
+    }
+
+    public void setLabelItemFormatter(Function<KeyValueString, String> labelItemFormatter) {
+        this.labelItemFormatter = labelItemFormatter;
+    }
+
     // ----------------------------------------------------------------------- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
@@ -264,14 +265,18 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         }
     };
 
-    public void init(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter) {
-        this.dataSource = datas;
-        this.textFieldFormatter = textFieldFormatter;
+    public void setupAndStart(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter, Function<KeyValueString, String> labelItemFormatter) {
+        setDataSource(datas);
+        setTextFieldFormatter(textFieldFormatter);
+        setLabelItemFormatter(labelItemFormatter);
+        start();
+    }
+
+    public void start() {
         if (!lazyMode) {
             reSchedule(null);
         }
     }
-
 
     /**************************************************************************
      * Implementation, Public Methods
