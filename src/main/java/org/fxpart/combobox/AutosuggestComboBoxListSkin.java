@@ -46,8 +46,10 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
 
+    // apply style
     private static final String HIGHLIGHTED_DROPDOWN_CLASS = "highlighted-dropdown";
     private static final String USUAL_DROPDOWN_CLASS = "usual-dropdown";
+
 
     // visuals
     private final HBox root = new HBox();
@@ -57,10 +59,12 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private final Button button = new Button();
     private final ImageView wait = new ImageView(new Image("org/fxpart/wait.gif"));
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
+    private boolean columnSeparatorVisible = true;
 
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
+    private String columnSeparator = " - ";
 
     /**************************************************************************
      * Constructors
@@ -210,7 +214,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                                  HBox styledText = new HBox();
                                                  String keyString = ((KeyValueString) item).getKey();
                                                  String valueString = ((KeyValueString) item).getValue();
-                                                 String itemString = keyString + " - " + valueString;
+                                                 String itemString = keyString + columnSeparator + valueString;
                                                  if (control.getEditorText().length() != 0) {
                                                      Integer searchStringPosition = valueString.indexOf(control.getEditorText());
 
@@ -220,7 +224,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                                          String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + control.getEditorText().length());
                                                          String endString = valueString.substring(searchStringPosition + control.getEditorText().length());
 
-                                                         Text separator = new Text(keyString + " - ");
+                                                         Text separator = new Text(keyString + columnSeparator);
                                                          separator.getStyleClass().add(USUAL_DROPDOWN_CLASS);
                                                          styledText.getChildren().add(separator);
 
@@ -313,4 +317,19 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         return button;
     }
 
+    public String getColumnSeparator() {
+        return columnSeparator;
+    }
+
+    public void setColumnSeparator(String columnSeparator) {
+        this.columnSeparator = columnSeparator;
+    }
+
+    public boolean isColumnSeparatorVisible() {
+        return columnSeparatorVisible;
+    }
+
+    public void setColumnSeparatorVisible(boolean columnSeparatorVisible) {
+        this.columnSeparatorVisible = columnSeparatorVisible;
+    }
 }

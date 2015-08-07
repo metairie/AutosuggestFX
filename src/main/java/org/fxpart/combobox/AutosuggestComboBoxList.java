@@ -13,6 +13,7 @@ import javafx.scene.input.KeyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.callback.Callback;
 import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
@@ -47,7 +48,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
     private final ObservableList<T> items;
-    private AutosuggestComboBoxListSkin skin;
     private SearchTimerTask timerTask = new SearchTimerTask();
     private Timer scheduler = new Timer();
 
@@ -65,9 +65,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
     private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
     private Function<String, List<KeyValueString>> dataSource = s -> null;
-    private Function<KeyValueString, String> textFieldFormatter = item -> String.format("%s", item.getValue());
-    private Function<KeyValueString, String> labelItemFormatter = item -> String.format("%s . %s", item.getKey(), item.getValue());
-
+    private Function<KeyValueString, String> textFieldFormatter = null;
+    //item -> String.format("%s", item.getValue());
+    private Function<KeyValueString, String> labelItemFormatter = null;
+    //item -> String.format("%s" + skin.getColumnSeparator() + "%s", item.getKey(), item.getValue());
 
     /**************************************************************************
      *
@@ -88,7 +89,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      * @param items The items to display.
      */
     public AutosuggestComboBoxList(final ObservableList<T> items) {
-        final int initialSize = items == null ? 32 : items.size();
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
 
@@ -104,23 +104,28 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      */
     @Override
     protected Skin<?> createDefaultSkin() {
-        skin = new AutosuggestComboBoxListSkin<>(this);
-        return skin;
+        return new AutosuggestComboBoxListSkin<>(this);
     }
 
-    /**
-     * Represents the list of items.
-     */
+    @Override
+    public void endControlInitialization() {
+
+    }
+
+    private AutosuggestComboBoxListSkin<T> getSkinControl() {
+        return (AutosuggestComboBoxListSkin) getSkin();
+    }
+
     public ObservableList<T> getItems() {
         return items;
     }
 
     public void setEditorText(String text) {
-        skin.getCombo().getEditor().setText(text);
+        getSkinControl().getCombo().getEditor().setText(text);
     }
 
     public String getEditorText() {
-        return skin.getCombo().getEditor().getText();
+        return getSkinControl().getCombo().getEditor().getText();
     }
 
     /**************************************************************************
@@ -213,7 +218,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     }
 
     public final T getValue() {
-        return (T) skin.getCombo().getValue();
+        return (T) getSkinControl().getCombo().getValue();
     }
 
     public Function<KeyValueString, String> getTextFieldFormatter() {
@@ -230,6 +235,22 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     public void setLabelItemFormatter(Function<KeyValueString, String> labelItemFormatter) {
         this.labelItemFormatter = labelItemFormatter;
+    }
+
+    public void setColumnSeparator(String columnSeparator) {
+        getSkinControl().setColumnSeparator(columnSeparator);
+    }
+
+    public String getColumnSeparator() {
+        return getSkinControl().getColumnSeparator();
+    }
+
+    public boolean isColumnSeparatorVisible() {
+        return getSkinControl().isColumnSeparatorVisible();
+    }
+
+    public void setColumnSeparatorVisible(boolean columnSeparatorVisible) {
+        getSkinControl().setColumnSeparatorVisible(columnSeparatorVisible);
     }
 
     // ----------------------------------------------------------------------- On Shown
@@ -332,15 +353,13 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
                 list.setAll((Collection<? extends T>) t.getSource().getValue());
                 stopSearch();
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && checkEnumProperty(skinStatusProperty(), STATUS_SKIN.CONTROL_VISIBLE)) {
-                    skin.getCombo().show();
+                    getSkinControl().getCombo().show();
                 }
             });
         }
 
         @Override
         protected T call() throws Exception {
-            // TODO remove on production
-            // Thread.sleep(500);
             return (T) getSearchFunction().apply(getEditorText());
         }
     }
@@ -353,7 +372,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     public void stopSearch() {
         stopScheduler();
-        skin.getCombo().getEditor().positionCaret(getEditorText().length());
+        getSkinControl().getCombo().getEditor().positionCaret(getEditorText().length());
         setLoadingIndicator(false);
     }
 
@@ -361,9 +380,9 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     public void requestFocus() {
         Platform.runLater(() -> {
             if (skinStatusProperty().getValue().equalsIgnoreCase(STATUS_SKIN.BUTTON_VISIBLE.toString())) {
-                skin.getButton().requestFocus();
+                getSkinControl().getButton().requestFocus();
             } else {
-                skin.getCombo().requestFocus();
+                getSkinControl().getCombo().requestFocus();
             }
         });
     }
