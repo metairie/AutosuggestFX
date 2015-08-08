@@ -82,6 +82,9 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
 
         // bindings
         bind();
+
+        // TODO callback
+        control.endControlInitialization();
     }
 
     private void init() {
@@ -183,7 +186,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         });
     }
 
-    // TODO kept this commented code, answering if I remove custom Button and use instead on embedded Button?
+    // TODO keep this comment. I wonder if I remove custom Button and use instead on the embedded ComboBox Button?
     /*private void setCustomButtonFactory() {
         combo.setButtonCell(new ListCell<T>() {
             @Override

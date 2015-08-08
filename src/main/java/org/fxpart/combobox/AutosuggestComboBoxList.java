@@ -13,7 +13,6 @@ import javafx.scene.input.KeyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.callback.Callback;
 import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
@@ -60,15 +59,14 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private int delay = 1000; // delay in ms
     private int visibleRowsCount = 10;
     private boolean editable = true;
+    private boolean isFullSearch = false;
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
-    private Function<String, List<KeyValueString>> searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
+    private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> textFieldFormatter = null;
-    //item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> labelItemFormatter = null;
-    //item -> String.format("%s" + skin.getColumnSeparator() + "%s", item.getKey(), item.getValue());
 
     /**************************************************************************
      *
@@ -109,7 +107,11 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     @Override
     public void endControlInitialization() {
-
+        // (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
+        // item -> String.format("%s", item.getValue());
+        // item -> String.format("%s" + skin.getColumnSeparator() + "%s", item.getKey(), item.getValue());
+        //searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
+        searchFunction = (term -> getDataSource().stream().filter(item -> ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term)).collect(Collectors.toList()));
     }
 
     private AutosuggestComboBoxListSkin<T> getSkinControl() {
@@ -151,7 +153,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     public void setDelay(int delay) {
         this.delay = Math.max(100, Math.min(5000, delay));
     }
-
 
     public void setLazyMode(boolean lazyMode) {
         this.lazyMode = lazyMode;
@@ -251,6 +252,14 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     public void setColumnSeparatorVisible(boolean columnSeparatorVisible) {
         getSkinControl().setColumnSeparatorVisible(columnSeparatorVisible);
+    }
+
+    public boolean isFullSearch() {
+        return isFullSearch;
+    }
+
+    public void setIsFullSearch(boolean isFullSearch) {
+        this.isFullSearch = isFullSearch;
     }
 
     // ----------------------------------------------------------------------- On Shown
