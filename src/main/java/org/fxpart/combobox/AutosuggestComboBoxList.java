@@ -20,6 +20,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -60,6 +61,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private int visibleRowsCount = 10;
     private boolean editable = true;
     private boolean isFullSearch = false;
+    private boolean ignoreCase = false;
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
@@ -110,7 +112,18 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         // (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
         // item -> String.format("%s", item.getValue());
         // item -> String.format("%s" + skin.getColumnSeparator() + "%s", item.getKey(), item.getValue());
-        searchFunction = (term -> getDataSource().stream().filter(item -> ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term)).collect(Collectors.toList()));
+        searchFunction = (term -> {
+            return getDataSource().stream().filter(new Predicate<KeyValueString>() {
+                @Override
+                public boolean test(KeyValueString item) {
+                    if (isIgnoreCase()) {
+                        return ((isFullSearch ? item.getKey().toLowerCase() : "") + item.getValue().toLowerCase()).contains(term == null ? "" : term.toLowerCase());
+                    } else {
+                        return ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term);
+                    }
+                }
+            }).collect(Collectors.toList());
+        });
     }
 
     private AutosuggestComboBoxListSkin<T> getSkinControl() {
@@ -245,6 +258,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.isFullSearch = isFullSearch;
     }
 
+    // TODO getSkinControl() could generate null exception , if called before skin is created. Implement a callback to indicate the end of initialisation
     public void setColumnSeparator(String columnSeparator) {
         getSkinControl().setColumnSeparator(columnSeparator);
     }
@@ -267,6 +281,14 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     public String getKeyValueSeparator() {
         return getSkinControl().getKeyValueSeparator();
+    }
+
+    public boolean isIgnoreCase() {
+        return ignoreCase;
+    }
+
+    public void setIgnoreCase(boolean ignoreCase) {
+        this.ignoreCase = ignoreCase;
     }
 
     // ----------------------------------------------------------------------- On Shown

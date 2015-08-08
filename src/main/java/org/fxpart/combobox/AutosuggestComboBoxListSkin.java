@@ -50,7 +50,6 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private static final String HIGHLIGHTED_DROPDOWN_CLASS = "highlighted-dropdown";
     private static final String USUAL_DROPDOWN_CLASS = "usual-dropdown";
 
-
     // visuals
     private final HBox root = new HBox();
     private final HBox visibleBox = new HBox();
@@ -64,8 +63,8 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
-    private String columnSeparator = " - ";
-    private String keyValueSeparator = "|";
+    private String columnSeparator = "|";
+    private String keyValueSeparator = " - ";
 
     /**************************************************************************
      * Constructors
@@ -221,7 +220,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
 
                                                  // key
                                                  if (control.isFullSearch()) {
-                                                     styledText = createStyledText(keyString, guess, styledText);
+                                                     styledText = createStyledText(keyString, guess, styledText, control.isIgnoreCase());
                                                  } else {
                                                      styledText.getChildren().add(new Text(keyString));
                                                  }
@@ -230,7 +229,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                                  styledText.getChildren().add(new Text(keyValueSeparator));
 
                                                  // value
-                                                 styledText = createStyledText(valueString, guess, styledText);
+                                                 styledText = createStyledText(valueString, guess, styledText, control.isIgnoreCase());
 
                                                  // render
                                                  setGraphic(styledText);
@@ -251,17 +250,18 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
      * @param styledText
      * @return
      */
-    private HBox createStyledText(String searched, String guess, HBox styledText) {
-        int index = searched.indexOf(guess);
+    private HBox createStyledText(String searched, String guess, HBox styledText, boolean isIgnoreCase) {
+        int index = (isIgnoreCase ? searched.toLowerCase().indexOf(guess.toLowerCase()) : searched.indexOf(guess));
         if (index >= 0) {
 
             String beginString = searched.substring(0, index);
+            String highlightedString = (isIgnoreCase ? searched.substring(index, index + guess.length()) : guess);
             String endString = searched.substring(index + guess.length());
 
             final Text begin = new Text(beginString);
             styledText.getChildren().add(begin);
 
-            final Text highlighted = new Text(guess);
+            final Text highlighted = new Text(highlightedString);
             highlighted.getStyleClass().add(HIGHLIGHTED_DROPDOWN_CLASS);
             styledText.getChildren().add(highlighted);
 
