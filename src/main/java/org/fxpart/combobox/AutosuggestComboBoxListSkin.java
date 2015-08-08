@@ -118,7 +118,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
             }
         });
 
-        setCustomCellFactory();
+        setCustomCellFactory((Function<T, String>) control.getLabelItemFormatter());
         setTextFieldFormatter((Function<T, String>) control.getTextFieldFormatter());
         combo.setItems(this.items);
     }
@@ -201,7 +201,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         });
     }*/
 
-    private void setCustomCellFactory() {
+    private void setCustomCellFactory(Function<T, String> labelItemFormatter) {
         combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
                                  @Override
                                  public ListCell<T> call(ListView<T> param) {
@@ -214,22 +214,27 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                                  setGraphic(null);
                                              } else {
                                                  HBox styledText = new HBox();
-                                                 String keyString = ((KeyValueString) item).getKey();
-                                                 String valueString = ((KeyValueString) item).getValue();
-                                                 String guess = control.getEditorText();
+                                                 if (labelItemFormatter == null) {
+                                                     String keyString = ((KeyValueString) item).getKey();
+                                                     String valueString = ((KeyValueString) item).getValue();
+                                                     String guess = control.getEditorText();
 
-                                                 // key
-                                                 if (control.isFullSearch()) {
-                                                     styledText = createStyledText(keyString, guess, styledText, control.isIgnoreCase());
+                                                     // key
+                                                     if (control.isFullSearch()) {
+                                                         styledText = createStyledText(keyString, guess, styledText, control.isIgnoreCase());
+                                                     } else {
+                                                         styledText.getChildren().add(new Text(keyString));
+                                                     }
+
+                                                     // kv separator
+                                                     styledText.getChildren().add(new Text(keyValueSeparator));
+
+                                                     // value
+                                                     styledText = createStyledText(valueString, guess, styledText, control.isIgnoreCase());
                                                  } else {
-                                                     styledText.getChildren().add(new Text(keyString));
+                                                     String defaultLabel = labelItemFormatter.apply(item);
+                                                     styledText.getChildren().add(new Text(defaultLabel));
                                                  }
-
-                                                 // kv separator
-                                                 styledText.getChildren().add(new Text(keyValueSeparator));
-
-                                                 // value
-                                                 styledText = createStyledText(valueString, guess, styledText, control.isIgnoreCase());
 
                                                  // render
                                                  setGraphic(styledText);

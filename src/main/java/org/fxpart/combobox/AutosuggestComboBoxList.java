@@ -109,9 +109,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     @Override
     public void endControlInitialization() {
-        // (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
-        // item -> String.format("%s", item.getValue());
-        // item -> String.format("%s" + skin.getColumnSeparator() + "%s", item.getKey(), item.getValue());
         searchFunction = (term -> {
             return getDataSource().stream().filter(new Predicate<KeyValueString>() {
                 @Override
