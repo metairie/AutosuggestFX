@@ -110,7 +110,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         // (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
         // item -> String.format("%s", item.getValue());
         // item -> String.format("%s" + skin.getColumnSeparator() + "%s", item.getKey(), item.getValue());
-        //searchFunction = (term -> getDataSource().stream().filter(item -> item.getValue().contains(term == null ? "" : term)).collect(Collectors.toList()));
         searchFunction = (term -> getDataSource().stream().filter(item -> ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term)).collect(Collectors.toList()));
     }
 
@@ -238,6 +237,14 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.labelItemFormatter = labelItemFormatter;
     }
 
+    public boolean isFullSearch() {
+        return isFullSearch;
+    }
+
+    public void setIsFullSearch(boolean isFullSearch) {
+        this.isFullSearch = isFullSearch;
+    }
+
     public void setColumnSeparator(String columnSeparator) {
         getSkinControl().setColumnSeparator(columnSeparator);
     }
@@ -254,12 +261,12 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         getSkinControl().setColumnSeparatorVisible(columnSeparatorVisible);
     }
 
-    public boolean isFullSearch() {
-        return isFullSearch;
+    public void setKeyValueSeparator(String keyValueSeparator) {
+        getSkinControl().setKeyValueSeparator(keyValueSeparator);
     }
 
-    public void setIsFullSearch(boolean isFullSearch) {
-        this.isFullSearch = isFullSearch;
+    public String getKeyValueSeparator() {
+        return getSkinControl().getKeyValueSeparator();
     }
 
     // ----------------------------------------------------------------------- On Shown

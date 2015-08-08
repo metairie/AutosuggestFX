@@ -59,12 +59,13 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private final Button button = new Button();
     private final ImageView wait = new ImageView(new Image("org/fxpart/wait.gif"));
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
-    private boolean columnSeparatorVisible = true;
+    private boolean columnSeparatorVisible = false;
 
     // data
     private final AutosuggestComboBoxList<T> control;
     private final ObservableList<T> items;
     private String columnSeparator = " - ";
+    private String keyValueSeparator = "|";
 
     /**************************************************************************
      * Constructors
@@ -195,7 +196,6 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                 if (empty) {
                     setText("");
                 } else {
-                    // TODO refactor
                     setText(item.getValue().toString());
                 }
             }
@@ -217,39 +217,22 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                                  HBox styledText = new HBox();
                                                  String keyString = ((KeyValueString) item).getKey();
                                                  String valueString = ((KeyValueString) item).getValue();
-                                                 String itemString = keyString + columnSeparator + valueString;
-                                                 if (control.getEditorText().length() != 0) {
-                                                     Integer searchStringPosition = valueString.indexOf(control.getEditorText());
+                                                 String guess = control.getEditorText();
 
-                                                     // itemString contains searchString. It should be split and searchString should be highLighted
-                                                     if (searchStringPosition >= 0) {
-                                                         String beginString = valueString.substring(0, searchStringPosition);
-                                                         String highlightedString = valueString.substring(searchStringPosition, searchStringPosition + control.getEditorText().length());
-                                                         String endString = valueString.substring(searchStringPosition + control.getEditorText().length());
-
-                                                         Text separator = new Text(keyString + columnSeparator);
-                                                         separator.getStyleClass().add(USUAL_DROPDOWN_CLASS);
-                                                         styledText.getChildren().add(separator);
-
-                                                         final Text begin = new Text(beginString);
-                                                         begin.getStyleClass().add(USUAL_DROPDOWN_CLASS);
-                                                         styledText.getChildren().add(begin);
-
-                                                         final Text highlighted = new Text(highlightedString);
-                                                         highlighted.getStyleClass().add(HIGHLIGHTED_DROPDOWN_CLASS);
-                                                         styledText.getChildren().add(highlighted);
-
-                                                         final Text end = new Text(endString);
-                                                         end.getStyleClass().add(USUAL_DROPDOWN_CLASS);
-                                                         styledText.getChildren().add(end);
-
-
-                                                     } else {
-                                                         styledText.getChildren().add(new Text(itemString));
-                                                     }
+                                                 // key
+                                                 if (control.isFullSearch()) {
+                                                     styledText = createStyledText(keyString, guess, styledText);
                                                  } else {
-                                                     styledText.getChildren().add(new Text(itemString));
+                                                     styledText.getChildren().add(new Text(keyString));
                                                  }
+
+                                                 // kv separator
+                                                 styledText.getChildren().add(new Text(keyValueSeparator));
+
+                                                 // value
+                                                 styledText = createStyledText(valueString, guess, styledText);
+
+                                                 // render
                                                  setGraphic(styledText);
                                              }
                                          }
@@ -258,6 +241,38 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                  }
                              }
         );
+    }
+
+    /**
+     * create a Text Style Field
+     *
+     * @param searched
+     * @param guess
+     * @param styledText
+     * @return
+     */
+    private HBox createStyledText(String searched, String guess, HBox styledText) {
+        int index = searched.indexOf(guess);
+        if (index >= 0) {
+
+            String beginString = searched.substring(0, index);
+            String endString = searched.substring(index + guess.length());
+
+            final Text begin = new Text(beginString);
+            styledText.getChildren().add(begin);
+
+            final Text highlighted = new Text(guess);
+            highlighted.getStyleClass().add(HIGHLIGHTED_DROPDOWN_CLASS);
+            styledText.getChildren().add(highlighted);
+
+            final Text end = new Text(endString);
+            end.getStyleClass().add(USUAL_DROPDOWN_CLASS);
+            styledText.getChildren().add(end);
+
+        } else {
+            styledText.getChildren().add(new Text(searched));
+        }
+        return styledText;
     }
 
     /**
@@ -334,5 +349,13 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
 
     public void setColumnSeparatorVisible(boolean columnSeparatorVisible) {
         this.columnSeparatorVisible = columnSeparatorVisible;
+    }
+
+    public String getKeyValueSeparator() {
+        return keyValueSeparator;
+    }
+
+    public void setKeyValueSeparator(String keyValueSeparator) {
+        this.keyValueSeparator = keyValueSeparator;
     }
 }
