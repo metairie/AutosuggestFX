@@ -117,9 +117,12 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                     e.consume();
             }
         });
-
-        setCustomCellFactory((Function<T, String>) control.getLabelItemFormatter());
-        setTextFieldFormatter((Function<T, String>) control.getTextFieldFormatter());
+        if (control.getStringItemFormatter() != null) {
+            setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
+        } else {
+            setNodeCellFactory((Function<T, Node>) control.getNodeItemFormatter());
+        }
+        setTextFieldFormatter((Function<T, String>) control.getStringTextFormatter());
         combo.setItems(this.items);
     }
 
@@ -186,22 +189,30 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         });
     }
 
-    // TODO keep this comment. I wonder if I remove custom Button and use instead on the embedded ComboBox Button?
-    /*private void setCustomButtonFactory() {
-        combo.setButtonCell(new ListCell<T>() {
-            @Override
-            protected void updateItem(T item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setText("");
-                } else {
-                    setText(item.getValue().toString());
-                }
-            }
-        });
-    }*/
+    private void setStringCellFactory(Function<T, String> itemFormatter) {
+        combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
+                                 @Override
+                                 public ListCell<T> call(ListView<T> param) {
+                                     param.setPrefHeight(getFixedHeight());
+                                     final ListCell<T> cell = new ListCell<T>() {
+                                         @Override
+                                         protected void updateItem(T item, boolean empty) {
+                                             super.updateItem(item, empty);
+                                             if (item == null || empty) {
+                                                 setText(null);
+                                             } else {
+                                                 // render
+                                                 setText(itemFormatter.apply(item));
+                                             }
+                                         }
+                                     };
+                                     return cell;
+                                 }
+                             }
+        );
+    }
 
-    private void setCustomCellFactory(Function<T, String> labelItemFormatter) {
+    private void setNodeCellFactory(Function<T, Node> itemFormatter) {
         combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
                                  @Override
                                  public ListCell<T> call(ListView<T> param) {
@@ -214,27 +225,22 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                                                  setGraphic(null);
                                              } else {
                                                  HBox styledText = new HBox();
-                                                 if (labelItemFormatter == null) {
-                                                     String keyString = ((KeyValueString) item).getKey();
-                                                     String valueString = ((KeyValueString) item).getValue();
-                                                     String guess = control.getEditorText();
+                                                 String keyString = ((KeyValueString) item).getKey();
+                                                 String valueString = ((KeyValueString) item).getValue();
+                                                 String guess = control.getEditorText();
 
-                                                     // key
-                                                     if (control.isFullSearch()) {
-                                                         styledText = createStyledText(keyString, guess, styledText, control.isIgnoreCase());
-                                                     } else {
-                                                         styledText.getChildren().add(new Text(keyString));
-                                                     }
-
-                                                     // kv separator
-                                                     styledText.getChildren().add(new Text(keyValueSeparator));
-
-                                                     // value
-                                                     styledText = createStyledText(valueString, guess, styledText, control.isIgnoreCase());
+                                                 // key
+                                                 if (control.isFullSearch()) {
+                                                     styledText = createStyledText(keyString, guess, styledText, control.isIgnoreCase());
                                                  } else {
-                                                     String defaultLabel = labelItemFormatter.apply(item);
-                                                     styledText.getChildren().add(new Text(defaultLabel));
+                                                     styledText.getChildren().add(new Text(keyString));
                                                  }
+
+                                                 // kv separator
+                                                 styledText.getChildren().add(new Text(keyValueSeparator));
+
+                                                 // value
+                                                 styledText = createStyledText(valueString, guess, styledText, control.isIgnoreCase());
 
                                                  // render
                                                  setGraphic(styledText);

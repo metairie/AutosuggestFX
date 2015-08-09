@@ -8,6 +8,7 @@ import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.scene.input.KeyEvent;
 import org.slf4j.Logger;
@@ -67,8 +68,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
     private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
-    private Function<KeyValueString, String> textFieldFormatter = null;
-    private Function<KeyValueString, String> labelItemFormatter = null;
+    private Function<KeyValueString, String> stringTextFormatter = null;
+    private Function<KeyValueString, String> stringItemFormatter = null;
+    private Function<KeyValueString, Node> nodeItemFormatter = null;
+
 
     /**************************************************************************
      *
@@ -231,20 +234,20 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         return (T) getSkinControl().getCombo().getValue();
     }
 
-    public Function<KeyValueString, String> getTextFieldFormatter() {
-        return textFieldFormatter;
+    public Function<KeyValueString, String> getStringTextFormatter() {
+        return stringTextFormatter;
     }
 
-    public void setTextFieldFormatter(Function<KeyValueString, String> textFieldFormatter) {
-        this.textFieldFormatter = textFieldFormatter;
+    public void setStringTextFormatter(Function<KeyValueString, String> stringTextFormatter) {
+        this.stringTextFormatter = stringTextFormatter;
     }
 
-    public Function<KeyValueString, String> getLabelItemFormatter() {
-        return labelItemFormatter;
+    public Function<KeyValueString, String> getStringItemFormatter() {
+        return stringItemFormatter;
     }
 
-    public void setLabelItemFormatter(Function<KeyValueString, String> labelItemFormatter) {
-        this.labelItemFormatter = labelItemFormatter;
+    public void setStringItemFormatter(Function<KeyValueString, String> stringItemFormatter) {
+        this.stringItemFormatter = stringItemFormatter;
     }
 
     public boolean isFullSearch() {
@@ -288,6 +291,14 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.ignoreCase = ignoreCase;
     }
 
+    public Function<KeyValueString, Node> getNodeItemFormatter() {
+        return nodeItemFormatter;
+    }
+
+    public void setNodeItemFormatter(Function<KeyValueString, Node> nodeItemFormatter) {
+        this.nodeItemFormatter = nodeItemFormatter;
+    }
+
     // ----------------------------------------------------------------------- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
@@ -321,10 +332,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         }
     };
 
-    public void setupAndStart(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> textFieldFormatter, Function<KeyValueString, String> labelItemFormatter) {
+    public void setupAndStart(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> stringTextFormatter, Function<KeyValueString, String> stringItemFormatter) {
         setDataSource(datas);
-        setTextFieldFormatter(textFieldFormatter);
-        setLabelItemFormatter(labelItemFormatter);
+        setStringTextFormatter(stringTextFormatter);
+        setStringItemFormatter(stringItemFormatter);
         start();
     }
 
