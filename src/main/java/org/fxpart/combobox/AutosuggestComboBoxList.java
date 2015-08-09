@@ -126,7 +126,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         });
     }
 
-    private AutosuggestComboBoxListSkin<T> getSkinControl() {
+    public AutosuggestComboBoxListSkin<T> getSkinControl() {
         return (AutosuggestComboBoxListSkin) getSkin();
     }
 

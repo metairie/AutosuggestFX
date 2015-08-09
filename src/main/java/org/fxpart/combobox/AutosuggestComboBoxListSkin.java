@@ -170,6 +170,11 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
 
             // search if possible
             if (combo.visibleProperty().getValue()) {
+                // TODO REMOVE
+                if (combo.getSelectionModel().isEmpty()) {
+
+                }
+
                 reSchedule(event);
             }
         };
@@ -287,20 +292,18 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     }
 
     /**
-     * Generic method for Swapping node from an old Parent to a new one
+     * Method for Swapping belonging to a Node
      *
      * @param item
      * @param newParent
      */
     private void changeParent(Node item, Parent newParent) {
         Parent oldParent = item.getParent();
-        // Swapping parent
         try {
             Method oldNode = oldParent.getClass().getMethod("getChildren");
             Object ob = oldNode.invoke(oldParent);
             Collection<Node> cnOld = ((Collection<Node>) ob);
             cnOld.remove(item);
-
             Method newNode = newParent.getClass().getMethod("getChildren");
             Object nb = newNode.invoke(newParent);
             Collection<Node> cnNew = ((Collection<Node>) nb);
