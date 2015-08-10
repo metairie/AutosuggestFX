@@ -117,6 +117,8 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                     e.consume();
             }
         });
+
+        // set factories
         if (control.getStringItemFormatter() != null) {
             setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
         } else {

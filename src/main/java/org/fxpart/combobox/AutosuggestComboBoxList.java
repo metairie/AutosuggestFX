@@ -68,7 +68,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
     private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
-    private Function<KeyValueString, String> stringTextFormatter = null;
+    private Function<KeyValueString, String> stringTextFormatter =  item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> stringItemFormatter = null;
     private Function<KeyValueString, Node> nodeItemFormatter = null;
 
