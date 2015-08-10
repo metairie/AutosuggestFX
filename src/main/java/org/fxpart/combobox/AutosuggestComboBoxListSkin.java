@@ -56,7 +56,6 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private final HBox hiddenBox = new HBox();
     private final ComboBox<T> combo = new ComboBox<>();
     private final Button button = new Button();
-    private final ImageView wait = new ImageView(new Image("org/fxpart/wait.gif"));
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
 
@@ -83,8 +82,8 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         // bindings
         bind();
 
-        // TODO callback
-        control.endControlInitialization();
+//        // TODO callback
+//        control.endControlInitialization();
     }
 
     private void init() {
@@ -134,14 +133,11 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
 
     private void graphical() {
         // building nodes
-        wait.setVisible(false);
-        wait.setFitWidth(25);
-        wait.setFitHeight(25);
         root.setPadding(new Insets(1, 1, 1, 1));
         visibleBox.setPadding(new Insets(1, 1, 1, 1));
-        combo.getStylesheets().add("org/fxpart/autosuggestfx.css");
+        combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
         button.setMaxHeight(Double.MAX_VALUE);
-        Image image = new Image(getClass().getResourceAsStream("/org/fxpart/close.png"));
+        Image image = new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close.png"));
         button.setContentDisplay(ContentDisplay.RIGHT);
         button.setAlignment(Pos.BASELINE_RIGHT);
         button.setPadding(new Insets(1, 5, 1, 5));
@@ -149,14 +145,12 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         visibleBox.getChildren().addAll(combo);
         hiddenBox.getChildren().add(button);
         HBox search = new HBox();
-        search.getChildren().addAll(wait);
         root.getChildren().addAll(visibleBox);
         getChildren().add(root);
     }
 
     private void bind() {
         button.textProperty().bind(combo.getEditor().textProperty());
-        wait.visibleProperty().bind(control.loadingIndicatorProperty());
     }
 
     private EventHandler<KeyEvent> createKeyReleaseEventHandler() {

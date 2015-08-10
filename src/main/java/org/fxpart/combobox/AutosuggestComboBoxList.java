@@ -11,6 +11,7 @@ import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.scene.input.KeyEvent;
+import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
     private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
-    private Function<KeyValueString, String> stringTextFormatter =  item -> String.format("%s", item.getValue());
+    private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> stringItemFormatter = null;
     private Function<KeyValueString, Node> nodeItemFormatter = null;
 
@@ -84,6 +85,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      */
     public AutosuggestComboBoxList() {
         this(null);
+        Version.getInstance();
     }
 
     /**
@@ -107,7 +109,9 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      */
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new AutosuggestComboBoxListSkin<>(this);
+        AutosuggestComboBoxListSkin<T> skin = new AutosuggestComboBoxListSkin<>(this);
+        endControlInitialization();
+        return skin;
     }
 
     @Override
@@ -424,6 +428,9 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     @Override
     public void requestFocus() {
+        if (getSkinControl() == null) {
+            return;
+        }
         Platform.runLater(() -> {
             if (skinStatusProperty().getValue().equalsIgnoreCase(STATUS_SKIN.BUTTON_VISIBLE.toString())) {
                 getSkinControl().getButton().requestFocus();
