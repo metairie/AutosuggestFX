@@ -22,7 +22,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -116,18 +115,13 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     @Override
     public void endControlInitialization() {
-        searchFunction = (term -> {
-            return getDataSource().stream().filter(new Predicate<KeyValueString>() {
-                @Override
-                public boolean test(KeyValueString item) {
-                    if (isIgnoreCase()) {
-                        return ((isFullSearch ? item.getKey().toLowerCase() : "") + item.getValue().toLowerCase()).contains(term == null ? "" : term.toLowerCase());
-                    } else {
-                        return ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term);
-                    }
-                }
-            }).collect(Collectors.toList());
-        });
+        searchFunction = term -> getDataSource().stream().filter(item -> {
+            if (isIgnoreCase()) {
+                return ((isFullSearch ? item.getKey().toLowerCase() : "") + item.getValue().toLowerCase()).contains(term == null ? "" : term.toLowerCase());
+            } else {
+                return ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term);
+            }
+        }).collect(Collectors.toList());
     }
 
     public AutosuggestComboBoxListSkin<T> getSkinControl() {
@@ -400,7 +394,9 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
             setOnSucceeded(t -> {
                 searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
                 ObservableList<T> list = (ObservableList<T>) getItems();
-                list.setAll((Collection<? extends T>) t.getSource().getValue());
+                String inputUser = getEditorText();
+                list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
+                setEditorText(inputUser);
                 stopSearch();
                 if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && checkEnumProperty(skinStatusProperty(), STATUS_SKIN.CONTROL_VISIBLE)) {
                     getSkinControl().getCombo().show();
