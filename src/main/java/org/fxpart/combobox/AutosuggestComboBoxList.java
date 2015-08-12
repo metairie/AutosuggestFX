@@ -153,7 +153,15 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      */
     @Override
     protected Skin<?> createDefaultSkin() {
-        AutosuggestComboBoxListSkin<T> skin = new AutosuggestComboBoxListSkin<>(this);
+        AutosuggestComboBoxListSkin<T> skin;
+        // if an item is loaded, button is shown
+        if (item != null) {
+            setControlShown(false);
+            skin = new AutosuggestComboBoxListSkin<>(this, item);
+        } else {
+            skin = new AutosuggestComboBoxListSkin<>(this);
+        }
+
         // TODO callback
         endControlInitialization();
         return skin;
@@ -161,6 +169,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     @Override
     public void endControlInitialization() {
+        // default search
         searchFunction = term -> getDataSource().stream().filter(item -> {
             if (isIgnoreCase()) {
                 return ((isFullSearch ? item.getKey().toLowerCase() : "") + item.getValue().toLowerCase()).contains(term == null ? "" : term.toLowerCase());
