@@ -31,6 +31,12 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
+    public enum AUTOSUGGESTFX_MODE {
+        CACHE_DATA,
+        LIVE_DATA,
+        SEARCH_ENGINE
+    }
+
     public enum STATUS_SKIN {
         CONTROL_VISIBLE,
         BUTTON_VISIBLE
@@ -72,7 +78,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private Function<KeyValueString, String> stringItemFormatter = null;
     private Function<KeyValueString, Node> nodeItemFormatter = null;
 
-
     /**************************************************************************
      *
      * Constructors
@@ -96,6 +101,54 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
 
+
+    /**************************************************************************
+     * Helper
+     **************************************************************************/
+    private void configure(AUTOSUGGESTFX_MODE autosuggestfx_mode) {
+        switch (autosuggestfx_mode) {
+            case CACHE_DATA:
+                isFullSearch = false;
+                ignoreCase = false;
+                lazyMode = false;
+                delay = 100;
+                visibleRowsCount = 0;
+                acceptFreeTextValue = false;
+                break;
+            case LIVE_DATA:
+                isFullSearch = true;
+                ignoreCase = true;
+                lazyMode = true;
+                delay = 500;
+                visibleRowsCount = 10;
+                acceptFreeTextValue = false;
+                break;
+            case SEARCH_ENGINE:
+                isFullSearch = true;
+                ignoreCase = true;
+                lazyMode = true;
+                delay = 500;
+                visibleRowsCount = 10;
+                acceptFreeTextValue = true;
+                break;
+        }
+    }
+
+    public void setCacheDataMode() {
+        this.configure(AUTOSUGGESTFX_MODE.CACHE_DATA);
+    }
+
+    public void setLiveDataMode() {
+        this.configure(AUTOSUGGESTFX_MODE.LIVE_DATA);
+    }
+
+    ;
+
+    public void setSearchEngineMode() {
+        this.configure(AUTOSUGGESTFX_MODE.SEARCH_ENGINE);
+    }
+
+    ;
 
     /**************************************************************************
      *
@@ -398,9 +451,9 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
                 list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
                 setEditorText(inputUser);
                 stopSearch();
-                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && checkEnumProperty(skinStatusProperty(), STATUS_SKIN.CONTROL_VISIBLE)) {
-                    getSkinControl().getCombo().show();
-                }
+//                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && checkEnumProperty(skinStatusProperty(), STATUS_SKIN.CONTROL_VISIBLE)) {
+//                    getSkinControl().getCombo().show();
+//                }
             });
         }
 

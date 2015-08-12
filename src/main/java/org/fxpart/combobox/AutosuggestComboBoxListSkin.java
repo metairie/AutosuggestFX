@@ -83,7 +83,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         bind();
 
 //        // TODO callback
-//        control.endControlInitialization();
+        control.endControlInitialization();
     }
 
     private void init() {
@@ -166,12 +166,11 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
 
             // search if possible
             if (combo.visibleProperty().getValue()) {
-                // TODO REMOVE
-                if (combo.getSelectionModel().isEmpty()) {
-
-                }
-
                 reSchedule(event);
+            }
+
+            if (!combo.isShowing()) {
+                combo.show();
             }
         };
     }
