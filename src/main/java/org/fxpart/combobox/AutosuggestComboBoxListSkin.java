@@ -83,7 +83,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         bind();
 
 //        // TODO callback
-        control.endControlInitialization();
+//        control.endControlInitialization();
     }
 
     private void init() {
@@ -93,7 +93,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
                 case ENTER:
                     if (!getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
                         switchNode(combo, button);
-                        control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.BUTTON_VISIBLE));
+                        control.setControlShown(true);
                     }
                     e.consume();
             }
@@ -106,13 +106,13 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         });
         button.setOnAction(event -> {
             switchNode(button, combo);
-            control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
+            control.setControlShown(true);
         });
         button.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             switch (e.getCode()) {
                 case ENTER:
                     switchNode(button, combo);
-                    control.setSkinStatus(String.valueOf(AutosuggestComboBoxList.STATUS_SKIN.CONTROL_VISIBLE));
+                    control.setControlShown(true);
                     e.consume();
             }
         });
@@ -142,9 +142,13 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         button.setAlignment(Pos.BASELINE_RIGHT);
         button.setPadding(new Insets(1, 5, 1, 5));
         button.setGraphic(new ImageView(image));
-        visibleBox.getChildren().addAll(combo);
-        hiddenBox.getChildren().add(button);
-        HBox search = new HBox();
+        if (control.isControlShown()) {
+            visibleBox.getChildren().addAll(combo);
+            hiddenBox.getChildren().add(button);
+        } else {
+            visibleBox.getChildren().addAll(button);
+            hiddenBox.getChildren().add(combo);
+        }
         root.getChildren().addAll(visibleBox);
         getChildren().add(root);
     }
@@ -321,7 +325,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private void switchNode(Node nodeToHide, Node nodeToShow) {
         changeParent(nodeToHide, hiddenBox);
         changeParent(nodeToShow, visibleBox);
-        control.requestFocus();
+        nodeToShow.requestFocus();
     }
 
     public double getFixedHeight() {

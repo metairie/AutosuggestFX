@@ -10,7 +10,6 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
-import javafx.scene.input.KeyEvent;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +34,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         CACHE_DATA,
         LIVE_DATA,
         SEARCH_ENGINE
-    }
-
-    public enum STATUS_SKIN {
-        CONTROL_VISIBLE,
-        BUTTON_VISIBLE
     }
 
     public enum STATUS_SEARCH {
@@ -69,9 +63,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private boolean editable = true;
     private boolean isFullSearch = false;
     private boolean ignoreCase = false;
+    private T item = null;
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
-    private StringProperty skinStatus = new SimpleStringProperty(String.valueOf(STATUS_SKIN.CONTROL_VISIBLE));
+    private BooleanProperty controlShown = new SimpleBooleanProperty(true);
     private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
@@ -142,13 +137,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.configure(AUTOSUGGESTFX_MODE.LIVE_DATA);
     }
 
-    ;
-
     public void setSearchEngineMode() {
         this.configure(AUTOSUGGESTFX_MODE.SEARCH_ENGINE);
     }
 
-    ;
 
     /**************************************************************************
      *
@@ -162,6 +154,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     @Override
     protected Skin<?> createDefaultSkin() {
         AutosuggestComboBoxListSkin<T> skin = new AutosuggestComboBoxListSkin<>(this);
+        // TODO callback
         endControlInitialization();
         return skin;
     }
@@ -257,16 +250,16 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.searchStatus.set(searchStatus);
     }
 
-    public String getSkinStatus() {
-        return skinStatus.get();
+    public boolean isControlShown() {
+        return controlShown.get();
     }
 
-    public StringProperty skinStatusProperty() {
-        return skinStatus;
+    public BooleanProperty controlShownProperty() {
+        return controlShown;
     }
 
-    public void setSkinStatus(String skinStatus) {
-        this.skinStatus.set(skinStatus);
+    public void setControlShown(boolean controlShown) {
+        this.controlShown.set(controlShown);
     }
 
     public boolean getLoadingIndicator() {
@@ -348,6 +341,14 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
 
     public void setNodeItemFormatter(Function<KeyValueString, Node> nodeItemFormatter) {
         this.nodeItemFormatter = nodeItemFormatter;
+    }
+
+    public T getItem() {
+        return item;
+    }
+
+    public void setItem(T item) {
+        this.item = item;
     }
 
     // ----------------------------------------------------------------------- On Shown
@@ -481,10 +482,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
             return;
         }
         Platform.runLater(() -> {
-            if (skinStatusProperty().getValue().equalsIgnoreCase(STATUS_SKIN.BUTTON_VISIBLE.toString())) {
-                getSkinControl().getButton().requestFocus();
-            } else {
+            if (controlShown.getValue()) {
                 getSkinControl().getCombo().requestFocus();
+            } else {
+                getSkinControl().getButton().requestFocus();
             }
         });
     }
