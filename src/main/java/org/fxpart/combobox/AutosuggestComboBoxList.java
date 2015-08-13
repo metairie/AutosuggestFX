@@ -63,7 +63,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private boolean editable = true;
     private boolean isFullSearch = false;
     private boolean ignoreCase = false;
-    private T item = null;
+    private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
@@ -155,7 +155,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     protected Skin<?> createDefaultSkin() {
         AutosuggestComboBoxListSkin<T> skin;
         // if an item is loaded, button is shown
-        if (item != null) {
+        if (itemProperty().getValue() != null) {
             setControlShown(false);
             skin = new AutosuggestComboBoxListSkin<>(this, item);
         } else {
@@ -179,6 +179,10 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         }).collect(Collectors.toList());
     }
 
+    /**************************************************************************
+     * Public Properties
+     **************************************************************************/
+
     public AutosuggestComboBoxListSkin<T> getSkinControl() {
         return (AutosuggestComboBoxListSkin) getSkin();
     }
@@ -194,10 +198,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     public String getEditorText() {
         return getSkinControl().getCombo().getEditor().getText();
     }
-
-    /**************************************************************************
-     * Public Properties
-     **************************************************************************/
 
     public List<KeyValueString> getDataSource() {
         return dataSource.apply(null);
@@ -353,11 +353,15 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     }
 
     public T getItem() {
+        return item.get();
+    }
+
+    public ObjectProperty<T> itemProperty() {
         return item;
     }
 
     public void setItem(T item) {
-        this.item = item;
+        this.item.set(item);
     }
 
     // ----------------------------------------------------------------------- On Shown
@@ -461,9 +465,6 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
                 list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
                 setEditorText(inputUser);
                 stopSearch();
-//                if (this.event != null && KeyEvent.KEY_RELEASED == this.event.getEventType() && checkEnumProperty(skinStatusProperty(), STATUS_SKIN.CONTROL_VISIBLE)) {
-//                    getSkinControl().getCombo().show();
-//                }
             });
         }
 

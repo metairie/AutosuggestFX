@@ -5,6 +5,7 @@ import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -74,14 +75,21 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         initSkin();
+
+        // visual aspect
+        graphical();
     }
 
-    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<T> control, T item) {
+    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<T> control, ObjectProperty<T> item) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
-        this.isSelectedItem = item != null;
-        combo.getEditor().setText(isSelectedItem ? item.getValue().toString() : "");
         initSkin();
+
+        // loading with an item
+        refresh(item);
+
+        // visual aspect
+        graphical();
     }
 
     private void initSkin() {
@@ -124,10 +132,11 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         setTextFieldFormatter((Function<T, String>) control.getStringTextFormatter());
         combo.setItems(this.items);
 
-        // visual aspect
-        graphical();
         // bindings
         bind();
+
+        // selected item
+        this.control.itemProperty().addListener((observable) -> refresh((ObjectProperty) observable));
     }
 
     /**************************************************************************
@@ -141,6 +150,14 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     public void showButton() {
         control.setControlShown(false);
         exchangeNode(combo, button);
+    }
+
+    public void refresh(ObjectProperty item) {
+        this.isSelectedItem = item.getValue() != null;
+        if (item.getValue() == null && !control.isControlShown()) {
+            showCombo();
+        }
+        combo.getEditor().setText(isSelectedItem ? String.valueOf(((T) item.getValue()).getValue()) : "");
     }
 
     private void reSchedule(Event event) {
@@ -339,7 +356,6 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
      * @param nodeToShow
      */
     private void exchangeNode(Node nodeToHide, Node nodeToShow) {
-        //control.requestFocus();
         changeParent(nodeToHide, hiddenBox);
         changeParent(nodeToShow, visibleBox);
         Platform.runLater(() -> {
