@@ -43,7 +43,6 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private static final KeyCodeCombination DOWN = new KeyCodeCombination(KeyCode.DOWN);
     private static final KeyCodeCombination LEFT = new KeyCodeCombination(KeyCode.LEFT);
     private static final KeyCodeCombination RIGHT = new KeyCodeCombination(KeyCode.RIGHT);
-    private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
     private static final KeyCodeCombination HOME = new KeyCodeCombination(KeyCode.HOME);
     private static final KeyCodeCombination TAB = new KeyCodeCombination(KeyCode.TAB);
     private static final KeyCodeCombination END = new KeyCodeCombination(KeyCode.END);
@@ -100,7 +99,13 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         combo.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             switch (e.getCode()) {
                 case ENTER:
-                    if (!getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
+                    if (getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
+                        return;
+                    }
+                    if (!control.isAcceptFreeTextValue() && combo.getSelectionModel().getSelectedIndex() < -1) {
+                        return;
+                    }
+                    if (combo.getSelectionModel().getSelectedIndex() > -1 || control.isAcceptFreeTextValue()) {
                         showButton();
                     }
                     e.consume();
@@ -356,9 +361,9 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
      * @param nodeToShow
      */
     private void exchangeNode(Node nodeToHide, Node nodeToShow) {
-        changeParent(nodeToHide, hiddenBox);
-        changeParent(nodeToShow, visibleBox);
         Platform.runLater(() -> {
+            changeParent(nodeToHide, hiddenBox);
+            changeParent(nodeToShow, visibleBox);
             nodeToShow.requestFocus();
         });
     }
@@ -406,5 +411,4 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     public void setKeyValueSeparator(String keyValueSeparator) {
         this.keyValueSeparator = keyValueSeparator;
     }
-
 }
