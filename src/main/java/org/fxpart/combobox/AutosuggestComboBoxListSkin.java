@@ -150,15 +150,18 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     public void showCombo() {
         control.setControlShown(true);
         exchangeNode(button, combo);
+        Platform.runLater(() -> combo.requestFocus());
     }
 
     public void showButton() {
         control.setControlShown(false);
         exchangeNode(combo, button);
+        Platform.runLater(() -> button.requestFocus());
     }
 
     public void refresh(ObjectProperty item) {
         this.isSelectedItem = item.getValue() != null;
+        // no item is selected then show the combo
         if (item.getValue() == null && !control.isControlShown()) {
             showCombo();
         }
@@ -361,11 +364,8 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
      * @param nodeToShow
      */
     private void exchangeNode(Node nodeToHide, Node nodeToShow) {
-        Platform.runLater(() -> {
-            changeParent(nodeToHide, hiddenBox);
-            changeParent(nodeToShow, visibleBox);
-            nodeToShow.requestFocus();
-        });
+        changeParent(nodeToHide, hiddenBox);
+        changeParent(nodeToShow, visibleBox);
     }
 
     public double getFixedHeight() {
