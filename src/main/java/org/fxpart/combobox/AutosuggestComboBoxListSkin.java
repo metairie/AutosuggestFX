@@ -34,7 +34,7 @@ import java.util.function.Function;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSkinBase<AutosuggestComboBoxList<T>, BehaviorBase<AutosuggestComboBoxList<T>>> {
+public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends BehaviorSkinBase<AutosuggestComboBoxList<B, T>, BehaviorBase<AutosuggestComboBoxList<B, T>>> {
 
     /**************************************************************************
      * fields
@@ -61,7 +61,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     private boolean columnSeparatorVisible = false;
 
     // data
-    private final AutosuggestComboBoxList<T> control;
+    private final AutosuggestComboBoxList<B, T> control;
     private ObservableList<T> items = null;
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
@@ -70,7 +70,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
     /**************************************************************************
      * Constructors
      **************************************************************************/
-    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<T> control) {
+    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<B, T> control) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         initSkin();
@@ -79,7 +79,7 @@ public class AutosuggestComboBoxListSkin<T extends KeyValue> extends BehaviorSki
         graphical();
     }
 
-    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<T> control, ObjectProperty<T> item) {
+    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<B, T> control, ObjectProperty<T> item) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         initSkin();

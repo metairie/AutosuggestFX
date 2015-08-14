@@ -1,6 +1,5 @@
 package org.fxpart.combobox;
 
-import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestControl {
+public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestControl {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
@@ -64,6 +63,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
     private boolean isFullSearch = false;
     private boolean ignoreCase = false;
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
+    private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
@@ -153,7 +153,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      */
     @Override
     protected Skin<?> createDefaultSkin() {
-        AutosuggestComboBoxListSkin<T> skin;
+        AutosuggestComboBoxListSkin<B, T> skin;
         // if an item is loaded, button is shown
         if (itemProperty().getValue() != null) {
             setControlShown(false);
@@ -183,7 +183,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
      * Public Properties
      **************************************************************************/
 
-    public AutosuggestComboBoxListSkin<T> getSkinControl() {
+    public AutosuggestComboBoxListSkin<B, T> getSkinControl() {
         return (AutosuggestComboBoxListSkin) getSkin();
     }
 
@@ -364,6 +364,18 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         this.item.set(item);
     }
 
+    public B getBean() {
+        return bean.get();
+    }
+
+    public ObjectProperty<B> beanProperty() {
+        return bean;
+    }
+
+    public void setBean(B bean) {
+        this.bean.set(bean);
+    }
+
     // ----------------------------------------------------------------------- On Shown
     public final ObjectProperty<EventHandler<Event>> onShownProperty() {
         return onShown;
@@ -486,7 +498,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
         setLoadingIndicator(false);
     }
 
-    @Override
+    /*@Override
     public void requestFocus() {
         if (getSkinControl() == null) {
             return;
@@ -498,7 +510,7 @@ public class AutosuggestComboBoxList<T extends KeyValue> extends AutosuggestCont
                 getSkinControl().getButton().requestFocus();
             }
         });
-    }
+    }*/
 
     /**************************************************************************
      * Private Methods
