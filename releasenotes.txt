@@ -1,0 +1,20 @@
+0.44.8-SNAPHOT
+ in progress
+
+0.44.7
+JIRA AUTOSFX-11 Load a value
+ improve loading item
+ fix null value pb
+ review of graphical aspect
+ requestfocus() : pb with switch node fixed
+ manage isAcceptFreeValue
+ add test suite runner
+ tests all
+
+0.44.6
+JIRA AUTOSFX-11 Load a value, status = selected
+ add test
+ fix requestFocus() problem
+ add Autosuggest set up helper
+ add first TestFx automatic test
+JIRA ITAPPSNEOS-1520 resolved
