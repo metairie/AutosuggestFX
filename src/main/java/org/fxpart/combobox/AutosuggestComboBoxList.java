@@ -1,5 +1,7 @@
 package org.fxpart.combobox;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,6 +14,7 @@ import javafx.scene.control.Skin;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collection;
 import java.util.List;
@@ -67,11 +70,18 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
+
+    // TODO these Function should be <T, ...
     private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> stringItemFormatter = null;
     private Function<KeyValueString, Node> nodeItemFormatter = null;
+
+    // Observable o (there is the B bean inside) ==> T item converter
+    private Function<Observable, T> beanToItemMapping = o -> {
+        throw new NotImplementedException();
+    };
 
     /**************************************************************************
      *
@@ -94,6 +104,16 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      */
     public AutosuggestComboBoxList(final ObservableList<T> items) {
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
+
+        // apply user mapping
+        /*bean.addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable o) {
+                System.out.println(" ------------- FORMATTER ");
+                KeyValue kv = beanToItemMapping.apply(o);
+                itemProperty().setValue((T) kv);
+            }
+        });*/
     }
 
 
@@ -365,15 +385,23 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     }
 
     public B getBean() {
-        return bean.get();
+        return beanProperty().getValue();
     }
 
     public ObjectProperty<B> beanProperty() {
         return bean;
     }
 
-    public void setBean(B bean) {
-        this.bean.set(bean);
+    public void setBean(B b) {
+        beanProperty().setValue(b);
+    }
+
+    public Function<Observable, T> getBeanToItemMapping() {
+        return beanToItemMapping;
+    }
+
+    public void setBeanToItemMapping(Function<Observable, T> beanToItemMapping) {
+        this.beanToItemMapping = beanToItemMapping;
     }
 
     // ----------------------------------------------------------------------- On Shown
@@ -497,20 +525,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         getSkinControl().getCombo().getEditor().positionCaret(getEditorText().length());
         setLoadingIndicator(false);
     }
-
-    /*@Override
-    public void requestFocus() {
-        if (getSkinControl() == null) {
-            return;
-        }
-        Platform.runLater(() -> {
-            if (controlShown.getValue()) {
-                getSkinControl().getCombo().requestFocus();
-            } else {
-                getSkinControl().getButton().requestFocus();
-            }
-        });
-    }*/
 
     /**************************************************************************
      * Private Methods
