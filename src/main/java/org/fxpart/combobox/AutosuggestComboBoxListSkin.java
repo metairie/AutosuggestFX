@@ -7,9 +7,10 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -24,6 +25,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,10 +38,14 @@ import java.util.function.Function;
  * Created by metairie on 07-Jul-15.
  */
 public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends BehaviorSkinBase<AutosuggestComboBoxList<B, T>, BehaviorBase<AutosuggestComboBoxList<B, T>>> {
+    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxListSkin.class);
 
     /**************************************************************************
      * fields
      **************************************************************************/
+    private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
+    private static final KeyCodeCombination ESCAPE = new KeyCodeCombination(KeyCode.ESCAPE);
+    private static final KeyCodeCombination BACKSPACE = new KeyCodeCombination(KeyCode.BACK_SPACE);
     private static final KeyCodeCombination UP = new KeyCodeCombination(KeyCode.UP);
     private static final KeyCodeCombination DOWN = new KeyCodeCombination(KeyCode.DOWN);
     private static final KeyCodeCombination LEFT = new KeyCodeCombination(KeyCode.LEFT);
@@ -85,7 +92,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         initSkin();
 
         // loading with an item
-        refresh(item);
+        refreshIsSelected();
 
         // visual aspect
         graphical();
@@ -96,35 +103,52 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
 
         // build control up
         combo.setEditable(control.isEditable());
-        combo.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            switch (e.getCode()) {
-                case ENTER:
-                    if (getCombo().getEditor().textProperty().get().equalsIgnoreCase("")) {
-                        return;
-                    }
-                    if (!control.isAcceptFreeTextValue() && combo.getSelectionModel().getSelectedIndex() < -1) {
-                        return;
-                    }
-                    if (combo.getSelectionModel().getSelectedIndex() > -1 || control.isAcceptFreeTextValue()) {
-                        showButton();
-                    }
-                    e.consume();
+        combo.addEventFilter(KeyEvent.KEY_RELEASED, e -> {
+            e.consume();
+            if (DOWN.match(e)) {
+                if (!combo.isShowing()) {
+                    combo.show();
+                }
+                return;
+            } else if (ESCAPE.match(e) || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.isControlDown()) {
+                return;
+            } else if (ENTER.match(e)) {
+                debug();
+                if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
+                    return;
+                }
+                if (control.isAcceptFreeTextValue()) {
+                    control.itemProperty().setValue(combo.valueProperty().getValue());
+                    refreshIsSelected();
+                    return;
+                }
+                if (combo.valueProperty().getValue() != null) {
+                    control.itemProperty().setValue(combo.valueProperty().getValue());
+                    refreshIsSelected();
+                    return;
+                }
+            }
+
+            // search if possible
+            if (combo.visibleProperty().getValue()) {
+                reSchedule(e);
+                combo.show();
             }
         });
-        combo.addEventHandler(KeyEvent.KEY_RELEASED, createKeyReleaseEventHandler());
         combo.setOnShown(event -> {
-            if (!button.disabledProperty().getValue()) {
-                reSchedule(event);
-            }
+            reSchedule(event);
         });
+
         button.setOnAction(event -> {
+            event.consume();
             showCombo();
         });
-        button.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+        button.addEventFilter(KeyEvent.KEY_RELEASED, e -> {
             switch (e.getCode()) {
                 case ENTER:
-                    showCombo();
+                    debug();
                     e.consume();
+                    showCombo();
             }
         });
 
@@ -139,9 +163,25 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
 
         // bindings
         bind();
+    }
 
-        // selected item
-        this.control.itemProperty().addListener((observable) -> refresh((ObjectProperty) observable));
+    private void debug() {
+        LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        LOG.debug(" --- combo T VALUE                  : " + combo.valueProperty().getValue());
+        LOG.debug(" --- combo Editor txt               : " + combo.getEditor().textProperty().getValue());
+        LOG.debug(" --- combo Index selected           : " + combo.getSelectionModel().getSelectedIndex());
+        LOG.debug(" ------------------------------------");
+        LOG.debug(" --- button text                    : " + button.textProperty().getValue());
+        LOG.debug(" ------------------------------------");
+        LOG.debug(" --- control isSelected             : " + isSelectedItem);
+        LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
+        LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
+        LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
+        LOG.debug(" --- control  isAcceptFreeTextValue : " + control.isAcceptFreeTextValue());
+        LOG.debug(" --- control  isFullSearch          : " + control.isFullSearch());
+        LOG.debug(" --- control  isIgnoreCase          : " + control.isIgnoreCase());
+        LOG.debug(" --- control  isLazyMode            : " + control.isLazyMode());
+        LOG.debug(" --- <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ");
     }
 
     /**************************************************************************
@@ -149,23 +189,23 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
      **************************************************************************/
     public void showCombo() {
         control.setControlShown(true);
-        exchangeNode(button, combo);
-        Platform.runLater(() -> combo.requestFocus());
+        Platform.runLater(() -> {
+            exchangeNode(button, combo);
+            combo.requestFocus();
+        });
     }
 
     public void showButton() {
         control.setControlShown(false);
-        exchangeNode(combo, button);
-        Platform.runLater(() -> button.requestFocus());
+        Platform.runLater(() -> {
+            exchangeNode(combo, button);
+            button.requestFocus();
+        });
     }
 
-    public void refresh(ObjectProperty item) {
-        this.isSelectedItem = item.getValue() != null;
-        // no item is selected then show the combo
-        if (item.getValue() == null && !control.isControlShown()) {
-            showCombo();
-        }
-        combo.getEditor().setText(isSelectedItem ? String.valueOf(((T) item.getValue()).getValue()) : "");
+    public void refreshIsSelected() {
+        isSelectedItem = control.itemProperty().getValue() != null;
+        showButton();
     }
 
     private void reSchedule(Event event) {
@@ -195,29 +235,14 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     private void bind() {
-        button.textProperty().bind(combo.getEditor().textProperty());
-    }
-
-    private EventHandler<KeyEvent> createKeyReleaseEventHandler() {
-        return event -> {
-            if (DOWN.match(event)) {
-                if (!combo.isShowing()) {
-                    combo.show();
-                }
-                return;
-            } else if (UP.match(event) || RIGHT.match(event) || LEFT.match(event) || HOME.match(event) || END.match(event) || TAB.match(event) || event.isControlDown()) {
-                return;
+        //button.textProperty().bind(combo.getEditor().textProperty());
+        combo.getEditor().textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                LOG.debug(" ------------------------------------");
+                LOG.debug(" --- combo text                    : " +  oldValue + " > " + newValue);
             }
-
-            // search if possible
-            if (combo.visibleProperty().getValue()) {
-                reSchedule(event);
-            }
-
-            if (!combo.isShowing()) {
-                combo.show();
-            }
-        };
+        });
     }
 
     private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {

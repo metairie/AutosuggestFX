@@ -1,6 +1,5 @@
 package org.fxpart.combobox;
 
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -29,6 +28,7 @@ import java.util.stream.Collectors;
  * Created by metairie on 07-Jul-15.
  */
 public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestControl {
+
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
@@ -60,7 +60,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     private boolean lazyMode = true;
     private boolean acceptFreeTextValue = false;
-    private int delay = 1000; // delay in ms
+    private int delay = 300; // delay in ms
     private int visibleRowsCount = 10;
     private boolean editable = true;
     private boolean isFullSearch = false;
