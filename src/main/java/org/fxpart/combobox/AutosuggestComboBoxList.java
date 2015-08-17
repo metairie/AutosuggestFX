@@ -72,8 +72,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
 
     // TODO these Function should be <T, ...
-    private Function<String, List<KeyValueString>> searchFunction = null;
-    private Function<String, List<KeyValueString>> dataSource = s -> null;
+    private Function<String, List<T>> searchFunction = null;
+    private Function<String, List<T>> dataSource = s -> null;
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<T, String> stringItemFormatter = null;
     private Function<T, Node> nodeItemFormatter = null;
@@ -203,14 +203,17 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     @Override
     public void endControlInitialization() {
-        // default search
-        searchFunction = term -> getDataSource().stream().filter(item -> {
-            if (isIgnoreCase()) {
-                return ((isFullSearch ? item.getKey().toLowerCase() : "") + item.getValue().toLowerCase()).contains(term == null ? "" : term.toLowerCase());
-            } else {
-                return ((isFullSearch ? item.getKey() : "") + item.getValue()).contains(term == null ? "" : term);
-            }
-        }).collect(Collectors.toList());
+        searchFunction = term -> {
+            return getDataSource().stream().filter(t -> {
+                String k = String.valueOf(t.getKey());
+                String v = String.valueOf(t.getValue());
+                if (AutosuggestComboBoxList.this.isIgnoreCase()) {
+                    return ((isFullSearch ? k.toLowerCase() : "") + v.toLowerCase()).contains(term == null ? "" : term.toLowerCase());
+                } else {
+                    return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
+                }
+            }).collect(Collectors.toList());
+        };
     }
 
     /**************************************************************************
@@ -233,15 +236,15 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         return getSkinControl().getCombo().getEditor().getText();
     }
 
-    public List<KeyValueString> getDataSource() {
+    public List<T> getDataSource() {
         return dataSource.apply(null);
     }
 
-    public void setDataSource(Function<String, List<KeyValueString>> dataSource) {
+    public void setDataSource(Function<String, List<T>> dataSource) {
         this.dataSource = dataSource;
     }
 
-    public Function<String, List<KeyValueString>> getSearchFunction() {
+    public Function<String, List<T>> getSearchFunction() {
         return searchFunction;
     }
 
@@ -459,7 +462,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         }
     };
 
-    public void setupAndStart(Function<String, List<KeyValueString>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+    public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
         setDataSource(datas);
         setStringTextFormatter(stringTextFormatter);
         setStringItemFormatter(stringItemFormatter);
