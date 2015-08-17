@@ -7,8 +7,6 @@ import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -77,6 +75,17 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     /**************************************************************************
      * Constructors
      **************************************************************************/
+
+    /**
+     * Default constructor
+     * </p>
+     * It's an empty control no Item (or value) are set at this level
+     * Possible usage :
+     * - in a Search Form
+     * - when displaying a new Entity Form
+     *
+     * @param control
+     */
     public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<B, T> control) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
@@ -86,16 +95,29 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         graphical();
     }
 
+    /**
+     * Constructor with an T Item passed
+     * </p>
+     * this.control.item is already feeded by developer
+     * Possible usage :
+     * - when you want to display an Entity Form with data retrieved from a service
+     *
+     * @param control
+     * @param item
+     */
     public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<B, T> control, ObjectProperty<T> item) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         initSkin();
 
-        // loading with an item
-        refreshIsSelected();
-
         // visual aspect
         graphical();
+        
+        // TODO apply formater
+        // loading with an item
+        isSelectedItem = true;
+        this.combo.getEditor().setText(this.control.itemProperty().getValue().getValue().toString());
+        showButton();
     }
 
     private void initSkin() {
@@ -132,7 +154,9 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             // search if possible
             if (combo.visibleProperty().getValue()) {
                 reSchedule(e);
-                combo.show();
+                if (!combo.isShowing()) {
+                    combo.show();
+                }
             }
         });
         combo.setOnShown(event -> {
@@ -168,6 +192,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private void debug() {
         LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
         LOG.debug(" --- combo T VALUE                  : " + combo.valueProperty().getValue());
+        LOG.debug(" --- combo T VALUE getValue         : " + (combo.valueProperty().getValue() == null ? "" : combo.valueProperty().getValue().getValue()));
         LOG.debug(" --- combo Editor txt               : " + combo.getEditor().textProperty().getValue());
         LOG.debug(" --- combo Index selected           : " + combo.getSelectionModel().getSelectedIndex());
         LOG.debug(" ------------------------------------");
@@ -175,6 +200,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         LOG.debug(" ------------------------------------");
         LOG.debug(" --- control isSelected             : " + isSelectedItem);
         LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
+        LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
         LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
         LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
         LOG.debug(" --- control  isAcceptFreeTextValue : " + control.isAcceptFreeTextValue());
@@ -235,14 +261,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     private void bind() {
-        //button.textProperty().bind(combo.getEditor().textProperty());
-        combo.getEditor().textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                LOG.debug(" ------------------------------------");
-                LOG.debug(" --- combo text                    : " +  oldValue + " > " + newValue);
-            }
-        });
+        button.textProperty().bind(combo.getEditor().textProperty());
     }
 
     private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {
