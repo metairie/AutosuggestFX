@@ -74,8 +74,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     // TODO these Function should be <T, ...
     private Function<String, List<KeyValueString>> searchFunction = null;
     private Function<String, List<KeyValueString>> dataSource = s -> null;
-    private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
-    private Function<KeyValueString, String> stringItemFormatter = null;
+    private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
+    private Function<T, String> stringItemFormatter = null;
     private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanl = observable -> beanProperty();
 
@@ -321,19 +321,19 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         return (T) getSkinControl().getCombo().getValue();
     }
 
-    public Function<KeyValueString, String> getStringTextFormatter() {
+    public Function<T, String> getStringTextFormatter() {
         return stringTextFormatter;
     }
 
-    public void setStringTextFormatter(Function<KeyValueString, String> stringTextFormatter) {
+    public void setStringTextFormatter(Function<T, String> stringTextFormatter) {
         this.stringTextFormatter = stringTextFormatter;
     }
 
-    public Function<KeyValueString, String> getStringItemFormatter() {
+    public Function<T, String> getStringItemFormatter() {
         return stringItemFormatter;
     }
 
-    public void setStringItemFormatter(Function<KeyValueString, String> stringItemFormatter) {
+    public void setStringItemFormatter(Function<T, String> stringItemFormatter) {
         this.stringItemFormatter = stringItemFormatter;
     }
 
@@ -459,7 +459,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         }
     };
 
-    public void setupAndStart(Function<String, List<KeyValueString>> datas, Function<KeyValueString, String> stringTextFormatter, Function<KeyValueString, String> stringItemFormatter) {
+    public void setupAndStart(Function<String, List<KeyValueString>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
         setDataSource(datas);
         setStringTextFormatter(stringTextFormatter);
         setStringItemFormatter(stringItemFormatter);
