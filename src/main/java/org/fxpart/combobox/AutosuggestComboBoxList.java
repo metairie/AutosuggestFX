@@ -58,20 +58,20 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      * Public Properties
      **************************************************************************/
 
-    private boolean lazyMode = true;
-    private boolean acceptFreeTextValue = false;
     private int delay = 300; // delay in ms
     private int visibleRowsCount = 10;
+
+    private boolean lazyMode = true;
+    private boolean acceptFreeTextValue = false;
     private boolean editable = true;
     private boolean isFullSearch = false;
     private boolean ignoreCase = false;
+
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
-
-    // TODO these Function should be <T, ...
     private Function<String, List<T>> searchFunction = null;
     private Function<String, List<T>> dataSource = s -> null;
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
@@ -79,11 +79,11 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanListener = observable -> beanProperty();
 
-    // Observable o (there is the B bean inside) ==> T item converter
-    private Function<Observable, T> beanToItemMapping = o -> null;
+    // B bean ==> T item mapping
+    private Function<Observable, T> beanToItemMapping = observeKV -> null;
 
-    // T bean inside ==> B value converter
-    private Function<Observable, B> itemToBeanMapping = item -> null;
+    // T item ==> B bean mapping
+    private Function<Observable, B> itemToBeanMapping = observerItem -> null;
 
     /**************************************************************************
      *
