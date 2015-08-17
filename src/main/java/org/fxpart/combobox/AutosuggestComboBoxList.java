@@ -14,7 +14,6 @@ import javafx.scene.control.Skin;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collection;
 import java.util.List;
@@ -78,21 +77,13 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> stringItemFormatter = null;
     private Function<KeyValueString, Node> nodeItemFormatter = null;
-
-    private InvalidationListener beanl;
-    //private InvalidationListener iteml;
+    private InvalidationListener beanl = observable -> beanProperty();
 
     // Observable o (there is the B bean inside) ==> T item converter
-    private Function<Observable, T> beanToItemMapping = o -> {
-        return null;
-//        throw new NotImplementedException();
-    };
+    private Function<Observable, T> beanToItemMapping = o -> null;
 
     // T bean inside ==> B value converter
-    private Function<Observable, B> itemToBeanMapping = item -> {
-        return null;
-        //throw new NotImplementedException();
-    };
+    private Function<Observable, B> itemToBeanMapping = item -> null;
 
     /**************************************************************************
      *
@@ -132,16 +123,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
                 LOG.debug("                BEAN FORMATTER <-------------");
             }
         };
-//        iteml = new InvalidationListener() {
-//            @Override
-//            public void invalidated(Observable o) {
-//                LOG.debug(" -------------> item FORMATTER               ");
-//                B theBean = itemToBeamMapping.apply(o);
-//                beanProperty().setValue(theBean);
-//                LOG.debug("                item FORMATTER <-------------");
-//            }
-//        };
-
         bean.addListener(beanl);
     }
 
