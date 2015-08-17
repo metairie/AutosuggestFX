@@ -76,7 +76,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> stringItemFormatter = null;
-    private Function<KeyValueString, Node> nodeItemFormatter = null;
+    private Function<KeyValue, Node> nodeItemFormatter = null;
     private InvalidationListener beanl = observable -> beanProperty();
 
     // Observable o (there is the B bean inside) ==> T item converter
@@ -111,7 +111,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         beanl = new InvalidationListener() {
             @Override
             public void invalidated(Observable bean) {
-                LOG.debug(" -------------> BEAN FORMATTER               ");
                 T kv = beanToItemMapping.apply(bean);
                 KeyValue kvi = new KeyValueStringImpl(String.valueOf(kv.getKey()), String.valueOf(kv.getValue()));
                 itemProperty().setValue((T) kvi);
@@ -120,7 +119,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
                     getSkinControl().setUserInput(String.valueOf(kvi.getValue()));
                     getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
                 }
-                LOG.debug("                BEAN FORMATTER <-------------");
             }
         };
         bean.addListener(beanl);
@@ -128,10 +126,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     public void updateBean(Observable item) {
         bean.removeListener(beanl);
-        LOG.debug(" -------------> item FORMATTER               ");
         B theBean = itemToBeanMapping.apply(item);
         beanProperty().setValue(theBean);
-        LOG.debug("                item FORMATTER <-------------");
         bean.addListener(beanl);
     }
 
@@ -382,11 +378,11 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         this.ignoreCase = ignoreCase;
     }
 
-    public Function<KeyValueString, Node> getNodeItemFormatter() {
+    public Function<KeyValue, Node> getNodeItemFormatter() {
         return nodeItemFormatter;
     }
 
-    public void setNodeItemFormatter(Function<KeyValueString, Node> nodeItemFormatter) {
+    public void setNodeItemFormatter(Function<KeyValue, Node> nodeItemFormatter) {
         this.nodeItemFormatter = nodeItemFormatter;
     }
 
