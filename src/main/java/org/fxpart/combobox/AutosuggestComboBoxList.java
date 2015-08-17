@@ -76,7 +76,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<String, List<KeyValueString>> dataSource = s -> null;
     private Function<KeyValueString, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<KeyValueString, String> stringItemFormatter = null;
-    private Function<KeyValue, Node> nodeItemFormatter = null;
+    private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanl = observable -> beanProperty();
 
     // Observable o (there is the B bean inside) ==> T item converter
@@ -378,11 +378,11 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         this.ignoreCase = ignoreCase;
     }
 
-    public Function<KeyValue, Node> getNodeItemFormatter() {
+    public Function<T, Node> getNodeItemFormatter() {
         return nodeItemFormatter;
     }
 
-    public void setNodeItemFormatter(Function<KeyValue, Node> nodeItemFormatter) {
+    public void setNodeItemFormatter(Function<T, Node> nodeItemFormatter) {
         this.nodeItemFormatter = nodeItemFormatter;
     }
 
