@@ -1,5 +1,6 @@
 package org.fxpart.combobox;
 
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -78,9 +79,19 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<KeyValueString, String> stringItemFormatter = null;
     private Function<KeyValueString, Node> nodeItemFormatter = null;
 
+    private InvalidationListener beanl;
+    //private InvalidationListener iteml;
+
     // Observable o (there is the B bean inside) ==> T item converter
     private Function<Observable, T> beanToItemMapping = o -> {
-        throw new NotImplementedException();
+        return null;
+//        throw new NotImplementedException();
+    };
+
+    // T bean inside ==> B value converter
+    private Function<Observable, B> itemToBeanMapping = item -> {
+        return null;
+        //throw new NotImplementedException();
     };
 
     /**************************************************************************
@@ -106,16 +117,42 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
 
         // apply user mapping
-        /*bean.addListener(new InvalidationListener() {
+        beanl = new InvalidationListener() {
             @Override
-            public void invalidated(Observable o) {
-                System.out.println(" ------------- FORMATTER ");
-                KeyValue kv = beanToItemMapping.apply(o);
-                itemProperty().setValue((T) kv);
+            public void invalidated(Observable bean) {
+                LOG.debug(" -------------> BEAN FORMATTER               ");
+                T kv = beanToItemMapping.apply(bean);
+                KeyValue kvi = new KeyValueStringImpl(String.valueOf(kv.getKey()), String.valueOf(kv.getValue()));
+                itemProperty().setValue((T) kvi);
+                if (getSkinControl() != null) {
+                    getSkinControl().getCombo().valueProperty().setValue((T) kvi);
+                    getSkinControl().setUserInput(String.valueOf(kvi.getValue()));
+                    getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
+                }
+                LOG.debug("                BEAN FORMATTER <-------------");
             }
-        });*/
+        };
+//        iteml = new InvalidationListener() {
+//            @Override
+//            public void invalidated(Observable o) {
+//                LOG.debug(" -------------> item FORMATTER               ");
+//                B theBean = itemToBeamMapping.apply(o);
+//                beanProperty().setValue(theBean);
+//                LOG.debug("                item FORMATTER <-------------");
+//            }
+//        };
+
+        bean.addListener(beanl);
     }
 
+    public void updateBean(Observable item) {
+        bean.removeListener(beanl);
+        LOG.debug(" -------------> item FORMATTER               ");
+        B theBean = itemToBeanMapping.apply(item);
+        beanProperty().setValue(theBean);
+        LOG.debug("                item FORMATTER <-------------");
+        bean.addListener(beanl);
+    }
 
     /**************************************************************************
      * Helper
@@ -402,6 +439,14 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     public void setBeanToItemMapping(Function<Observable, T> beanToItemMapping) {
         this.beanToItemMapping = beanToItemMapping;
+    }
+
+    public Function<Observable, B> getItemToBeamMapping() {
+        return itemToBeanMapping;
+    }
+
+    public void setItemToBeamMapping(Function<Observable, B> itemToBeamMapping) {
+        this.itemToBeanMapping = itemToBeamMapping;
     }
 
     // ----------------------------------------------------------------------- On Shown
