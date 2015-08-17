@@ -77,7 +77,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<T, String> stringItemFormatter = null;
     private Function<T, Node> nodeItemFormatter = null;
-    private InvalidationListener beanl = observable -> beanProperty();
+    private InvalidationListener beanListener = observable -> beanProperty();
 
     // Observable o (there is the B bean inside) ==> T item converter
     private Function<Observable, T> beanToItemMapping = o -> null;
@@ -106,29 +106,26 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      */
     public AutosuggestComboBoxList(final ObservableList<T> items) {
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
-
         // apply user mapping
-        beanl = new InvalidationListener() {
+        beanListener = new InvalidationListener() {
             @Override
             public void invalidated(Observable bean) {
                 T kv = beanToItemMapping.apply(bean);
-                KeyValue kvi = new KeyValueStringImpl(String.valueOf(kv.getKey()), String.valueOf(kv.getValue()));
-                itemProperty().setValue((T) kvi);
+                itemProperty().setValue(kv);
                 if (getSkinControl() != null) {
-                    getSkinControl().getCombo().valueProperty().setValue((T) kvi);
-                    getSkinControl().setUserInput(String.valueOf(kvi.getValue()));
+                    getSkinControl().getCombo().valueProperty().setValue(kv);
+                    getSkinControl().setUserInput(String.valueOf(kv.getValue()));
                     getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
                 }
             }
         };
-        bean.addListener(beanl);
+        bean.addListener(beanListener);
     }
 
     public void updateBean(Observable item) {
-        bean.removeListener(beanl);
-        B theBean = itemToBeanMapping.apply(item);
-        beanProperty().setValue(theBean);
-        bean.addListener(beanl);
+        bean.removeListener(beanListener);
+        beanProperty().setValue(itemToBeanMapping.apply(item));
+        bean.addListener(beanListener);
     }
 
     /**************************************************************************
