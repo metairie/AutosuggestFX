@@ -71,6 +71,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
     private boolean isSelectedItem = false;
+    private String txt = ""; // sometimes txt editor is reset, must be saved here
 
     /**************************************************************************
      * Constructors
@@ -112,12 +113,10 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
 
         // visual aspect
         graphical();
-        
-        // TODO apply formater
-        // loading with an item
-        isSelectedItem = true;
-        this.combo.getEditor().setText(this.control.itemProperty().getValue().getValue().toString());
-        showButton();
+
+        txt = item.getValue().getValue().toString();
+        combo.valueProperty().setValue(item.getValue());
+        refreshIsSelected();
     }
 
     private void initSkin() {
@@ -135,20 +134,26 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             } else if (ESCAPE.match(e) || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.isControlDown()) {
                 return;
             } else if (ENTER.match(e)) {
-                debug();
+                if (combo.getEditor().getText().equalsIgnoreCase("")){
+                    return;
+                }
                 if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
                     return;
                 }
                 if (control.isAcceptFreeTextValue()) {
-                    control.itemProperty().setValue(combo.valueProperty().getValue());
+                    txt = combo.getEditor().getText();
+                    control.itemProperty().setValue(null);
                     refreshIsSelected();
                     return;
                 }
                 if (combo.valueProperty().getValue() != null) {
+                    txt = combo.getEditor().getText();
                     control.itemProperty().setValue(combo.valueProperty().getValue());
                     refreshIsSelected();
                     return;
                 }
+            } else {
+                combo.valueProperty().setValue(null);
             }
 
             // search if possible
@@ -166,13 +171,14 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         button.setOnAction(event -> {
             event.consume();
             showCombo();
+            combo.getEditor().setText(txt);
         });
         button.addEventFilter(KeyEvent.KEY_RELEASED, e -> {
             switch (e.getCode()) {
                 case ENTER:
-                    debug();
                     e.consume();
                     showCombo();
+                    combo.getEditor().setText(txt);
             }
         });
 
@@ -186,22 +192,25 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         combo.setItems(this.items);
 
         // bindings
-        bind();
+        // TODO does not work properly, occurs : set empty value on Editor, then Button is empty
+        // button.textProperty().bind(combo.getEditor().textProperty());
     }
 
-    private void debug() {
+    public void debug(String title) {
         LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        LOG.debug(" --- >>>>       " + title);
+        LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        LOG.debug(" --- combo Editor txt               : " + combo.getEditor().textProperty().getValue());
         LOG.debug(" --- combo T VALUE                  : " + combo.valueProperty().getValue());
         LOG.debug(" --- combo T VALUE getValue         : " + (combo.valueProperty().getValue() == null ? "" : combo.valueProperty().getValue().getValue()));
-        LOG.debug(" --- combo Editor txt               : " + combo.getEditor().textProperty().getValue());
         LOG.debug(" --- combo Index selected           : " + combo.getSelectionModel().getSelectedIndex());
         LOG.debug(" ------------------------------------");
         LOG.debug(" --- button text                    : " + button.textProperty().getValue());
         LOG.debug(" ------------------------------------");
-        LOG.debug(" --- control isSelected             : " + isSelectedItem);
         LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
         LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
         LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
+        LOG.debug(" --- control  isSelected            : " + isSelectedItem);
         LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
         LOG.debug(" --- control  isAcceptFreeTextValue : " + control.isAcceptFreeTextValue());
         LOG.debug(" --- control  isFullSearch          : " + control.isFullSearch());
@@ -227,6 +236,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             exchangeNode(combo, button);
             button.requestFocus();
         });
+        button.textProperty().setValue(txt);
     }
 
     public void refreshIsSelected() {
@@ -258,10 +268,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         }
         root.getChildren().add(visibleBox);
         getChildren().add(root);
-    }
-
-    private void bind() {
-        button.textProperty().bind(combo.getEditor().textProperty());
     }
 
     private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {
