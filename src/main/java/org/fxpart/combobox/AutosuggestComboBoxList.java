@@ -32,11 +32,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
-    // TODO #3 set an new instance of T
-    public T newInstance() {
-        return (T) new KeyValueStringImpl("", "");
-    }
-
     public enum AUTOSUGGESTFX_MODE {
         CACHE_DATA,
         LIVE_DATA,
@@ -56,7 +51,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
     private final ObservableList<T> items;
-    private SearchTimerTask timerTask = new SearchTimerTask();
+    private SearchTimerTask timerTask = null;
     private Timer scheduler = new Timer();
 
     /**************************************************************************
@@ -74,7 +69,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(false);
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty();
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
     private Function<String, List<T>> searchFunction = null;
@@ -84,11 +79,14 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanListener = observable -> beanProperty();
 
+    // TODO #3 set a new instance of T
+    public Function<Observable, T> newInstanceOfT = t -> (T) new KeyValueStringImpl("", "");
+
     // B bean ==> T item mapping
-    private Function<Observable, T> beanToItemMapping = observeKV -> null;
+    private Function<Observable, T> beanToItemMapping = o -> null;
 
     // T item ==> B bean mapping
-    private Function<Observable, B> itemToBeanMapping = observerItem -> null;
+    private Function<Observable, B> itemToBeanMapping = o -> null;
 
     /**************************************************************************
      *
@@ -101,6 +99,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      */
     public AutosuggestComboBoxList() {
         this(null);
+        LOG.debug(" autosuggest identified by " + AutosuggestComboBoxList.this.hashCode());
         Version.getInstance();
     }
 
@@ -124,10 +123,108 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         bean.addListener(beanListener);
     }
 
+    public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+        setDataSource(datas);
+        setStringTextFormatter(stringTextFormatter);
+        setStringItemFormatter(stringItemFormatter);
+        start();
+    }
+
+    public void start() {
+        if (!lazyMode) {
+            reSchedule(null);
+        }
+    }
+
+    /**************************************************************************
+     * Implementation, Public Methods
+     **************************************************************************/
+
+    public void reSchedule(Event event) {
+        if (scheduler != null) {
+            scheduler.purge();
+            scheduler.cancel();
+        }
+        scheduler = new Timer();
+        timerTask = new SearchTimerTask(event);
+        // running timer task as daemon thread
+        scheduler.schedule(timerTask, this.delay, this.delay);
+    }
+
+    public class SearchTimerTask extends TimerTask {
+        SearchTimerTask() {
+            this(null);
+        }
+
+        SearchTimerTask(Event event) {
+            loadingIndicatorProperty().setValue(new Boolean(true));
+            this.event = event;
+        }
+
+        private Event event;
+
+        @Override
+        public void run() {
+            startSearch();
+            SearchTask<T> searchTask = new SearchTask<>(this.event);
+            searchExecutor.submit(searchTask);
+        }
+    }
+
+    public class SearchTask<T> extends Task<T> {
+        private Event event;
+
+        SearchTask() {
+            this(null);
+        }
+
+        SearchTask(Event event) {
+            this.event = event;
+            setOnCancelled(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopSearch();
+                LOG.debug(String.valueOf(getException()));
+            });
+            setOnSucceeded(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
+                ObservableList<T> list = (ObservableList<T>) getItems();
+                String inputUser = getEditorText();
+                list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
+                setEditorText(inputUser);
+                stopSearch();
+            });
+        }
+
+        @Override
+        protected T call() throws Exception {
+            return (T) getSearchFunction().apply(getEditorText());
+        }
+    }
+
+    public void startSearch() {
+
+        searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
+        stopScheduler();
+    }
+
+    public void stopSearch() {
+        stopScheduler();
+        loadingIndicatorProperty().setValue(new Boolean(false));
+    }
+
     public void updateBean(Observable item) {
         bean.removeListener(beanListener);
         beanProperty().setValue(itemToBeanMapping.apply(item));
         bean.addListener(beanListener);
+    }
+
+    /**************************************************************************
+     * Private Methods
+     **************************************************************************/
+
+    private void stopScheduler() {
+        scheduler.purge();
+        scheduler.cancel();
     }
 
     /**************************************************************************
@@ -461,101 +558,4 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         }
     };
 
-    public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
-        setDataSource(datas);
-        setStringTextFormatter(stringTextFormatter);
-        setStringItemFormatter(stringItemFormatter);
-        start();
-    }
-
-    public void start() {
-        if (!lazyMode) {
-            reSchedule(null);
-        }
-    }
-
-    /**************************************************************************
-     * Implementation, Public Methods
-     **************************************************************************/
-
-    public void reSchedule(Event event) {
-        if (scheduler != null) {
-            scheduler.purge();
-            scheduler.cancel();
-        }
-        scheduler = new Timer();
-        timerTask = new SearchTimerTask(event);
-        // running timer task as daemon thread
-        scheduler.schedule(timerTask, this.delay, this.delay);
-    }
-
-    public class SearchTimerTask extends TimerTask {
-        SearchTimerTask() {
-            this(null);
-        }
-
-        SearchTimerTask(Event event) {
-            this.event = event;
-        }
-
-        private Event event;
-
-        @Override
-        public void run() {
-            startSearch();
-            SearchTask<T> searchTask = new SearchTask<>(this.event);
-            searchExecutor.submit(searchTask);
-        }
-    }
-
-    public class SearchTask<T> extends Task<T> {
-        private Event event;
-
-        SearchTask() {
-            this(null);
-        }
-
-        SearchTask(Event event) {
-            this.event = event;
-            setOnCancelled(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
-                stopSearch();
-                LOG.debug(String.valueOf(getException()));
-            });
-            setOnSucceeded(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
-                ObservableList<T> list = (ObservableList<T>) getItems();
-                String inputUser = getEditorText();
-                list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
-                setEditorText(inputUser);
-                stopSearch();
-            });
-        }
-
-        @Override
-        protected T call() throws Exception {
-            return (T) getSearchFunction().apply(getEditorText());
-        }
-    }
-
-    public void startSearch() {
-        setLoadingIndicator(true);
-        searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
-        stopScheduler();
-    }
-
-    public void stopSearch() {
-        stopScheduler();
-        //getSkinControl().getCombo().getEditor().positionCaret(getEditorText().length());
-        setLoadingIndicator(false);
-    }
-
-    /**************************************************************************
-     * Private Methods
-     **************************************************************************/
-
-    private void stopScheduler() {
-        scheduler.purge();
-        scheduler.cancel();
-    }
 }

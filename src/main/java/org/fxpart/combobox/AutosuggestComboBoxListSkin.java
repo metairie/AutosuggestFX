@@ -4,8 +4,10 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -59,10 +61,13 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private final HBox root = new HBox();
     private final HBox visibleBox = new HBox();
     private final HBox hiddenBox = new HBox();
+    private final HBox imageBox = new HBox();
     private final ComboBox<T> combo = new ComboBox<>();
     private final Button button = new Button();
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
+    private ImageView ivWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
+    private ImageView ivClose = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close16.png")));
 
     // local data
     private final AutosuggestComboBoxList<B, T> control;
@@ -135,9 +140,8 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             userInput = combo.getEditor().getText();
             // TODO #3 set an new instance of T
             // control.itemProperty().setValue(null);
-            control.itemProperty().setValue((T) control.newInstance());
+            control.itemProperty().setValue(control.newInstanceOfT.apply(null));
             refreshIsSelected();
-            // triggers control bean update
             control.updateBean(control.itemProperty());
             return;
         }
@@ -145,7 +149,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             userInput = combo.getEditor().getText();
             control.itemProperty().setValue(combo.valueProperty().getValue());
             refreshIsSelected();
-            // triggers control bean update
             control.updateBean(control.itemProperty());
             return;
         }
@@ -158,6 +161,9 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
                 combo.getEditor().positionCaret(combo.getEditor().getText().length());
             }
         });
+
+        // TODO AUTOSFX-21
+        ivWait.visibleProperty().bind(control.loadingIndicatorProperty());
 
         // TODO #2 isSelectedItem
 //        isSelectedItem.bind(Bindings.isNotNull(control.itemProperty()));
@@ -225,33 +231,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         bind();
     }
 
-    public void debug(String title) {
-        LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
-        LOG.debug(" --- >>>>       " + title);
-        LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
-        LOG.debug(" --- combo Editor txt               : " + combo.getEditor().textProperty().getValue());
-        LOG.debug(" --- combo T VALUE                  : " + combo.valueProperty().getValue());
-        LOG.debug(" --- combo T VALUE getValue         : " + (combo.valueProperty().getValue() == null ? "" : combo.valueProperty().getValue().getValue()));
-        LOG.debug(" --- combo Index selected           : " + combo.getSelectionModel().getSelectedIndex());
-        LOG.debug(" ------------------------------------");
-        LOG.debug(" --- button text                    : " + button.textProperty().getValue());
-        LOG.debug(" ------------------------------------");
-        LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
-        LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
-        LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
-        // TODO #2 isSelectedItem
-        LOG.debug(" --- control  isSelected            : " + isSelectedItem);
-//        LOG.debug(" --- control  isSelected            : " + isSelectedItem.get());
-        LOG.debug(" --- control T BEAN                 : " + control.beanProperty().getValue());
-        LOG.debug(" --- control T BEAN NOT POSSIBLE    : " + (control.beanProperty().getValue() == null ? "" : control.beanProperty().getValue()));
-        LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
-        LOG.debug(" --- control  isAcceptFreeTextValue : " + control.isAcceptFreeTextValue());
-        LOG.debug(" --- control  isFullSearch          : " + control.isFullSearch());
-        LOG.debug(" --- control  isIgnoreCase          : " + control.isIgnoreCase());
-        LOG.debug(" --- control  isLazyMode            : " + control.isLazyMode());
-        LOG.debug(" --- <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ");
-    }
-
     /**************************************************************************
      * Public API
      **************************************************************************/
@@ -285,12 +264,11 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         root.setPadding(new Insets(1, 1, 1, 1));
         visibleBox.setPadding(new Insets(1, 1, 1, 1));
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
-        Image image = new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close.png"));
         button.setMaxHeight(Double.MAX_VALUE);
         button.setContentDisplay(ContentDisplay.RIGHT);
         button.setAlignment(Pos.BASELINE_RIGHT);
         button.setPadding(new Insets(1, 5, 1, 5));
-        button.setGraphic(new ImageView(image));
+        button.setGraphic(ivClose);
         // TODO #2 isSelectedItem
         if (isSelectedItem) {
 //        if (isSelectedItem.get()) {
@@ -300,7 +278,9 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             visibleBox.getChildren().add(combo);
             hiddenBox.getChildren().add(button);
         }
-        root.getChildren().add(visibleBox);
+        imageBox.getChildren().add(ivWait);
+        imageBox.setPadding(new Insets(5, 3, 1, 3));
+                root.getChildren().addAll(visibleBox, imageBox);
         getChildren().add(root);
     }
 
@@ -503,4 +483,33 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     public void setUserInput(String userInput) {
         this.userInput = userInput;
     }
+
+
+    public void debug(String title) {
+        LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        LOG.debug(" --- >>>>       " + title);
+        LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
+        LOG.debug(" --- combo Editor txt               : " + combo.getEditor().textProperty().getValue());
+        LOG.debug(" --- combo T VALUE                  : " + combo.valueProperty().getValue());
+        LOG.debug(" --- combo T VALUE getValue         : " + (combo.valueProperty().getValue() == null ? "" : combo.valueProperty().getValue().getValue()));
+        LOG.debug(" --- combo Index selected           : " + combo.getSelectionModel().getSelectedIndex());
+        LOG.debug(" ------------------------------------");
+        LOG.debug(" --- button text                    : " + button.textProperty().getValue());
+        LOG.debug(" ------------------------------------");
+        LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
+        LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
+        LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
+        // TODO #2 isSelectedItem
+        LOG.debug(" --- control  isSelected            : " + isSelectedItem);
+//        LOG.debug(" --- control  isSelected            : " + isSelectedItem.get());
+        LOG.debug(" --- control T BEAN                 : " + control.beanProperty().getValue());
+        LOG.debug(" --- control T BEAN NOT POSSIBLE    : " + (control.beanProperty().getValue() == null ? "" : control.beanProperty().getValue()));
+        LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
+        LOG.debug(" --- control  isAcceptFreeTextValue : " + control.isAcceptFreeTextValue());
+        LOG.debug(" --- control  isFullSearch          : " + control.isFullSearch());
+        LOG.debug(" --- control  isIgnoreCase          : " + control.isIgnoreCase());
+        LOG.debug(" --- control  isLazyMode            : " + control.isLazyMode());
+        LOG.debug(" --- <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ");
+    }
+
 }
