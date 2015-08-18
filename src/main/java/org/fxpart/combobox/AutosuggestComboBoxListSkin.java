@@ -4,9 +4,8 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -65,13 +64,18 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
 
-    // data
+    // local data
     private final AutosuggestComboBoxList<B, T> control;
     private ObservableList<T> items = null;
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
-    private boolean isSelectedItem = false;
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
+
+    // listeing the controller
+    // TODO #2 isSelectedITem
+    private boolean isSelectedItem = false;
+//    private BooleanProperty isSelectedItem = new SimpleBooleanProperty(false);
+
 
     /**************************************************************************
      * Constructors
@@ -114,6 +118,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         // visual aspect
         graphical();
 
+        // TODO #0 null possible
         userInput = item.getValue().getValue().toString();
         combo.valueProperty().setValue(item.getValue());
         refreshIsSelected();
@@ -126,9 +131,11 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
             return;
         }
-        if (control.isAcceptFreeTextValue()) {
+        if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             userInput = combo.getEditor().getText();
-            control.itemProperty().setValue(null);
+            // TODO #3 set an new instance of T
+            // control.itemProperty().setValue(null);
+            control.itemProperty().setValue((T) control.newInstance());
             refreshIsSelected();
             // triggers control bean update
             control.updateBean(control.itemProperty());
@@ -142,6 +149,21 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             control.updateBean(control.itemProperty());
             return;
         }
+    }
+
+    private void bind() {
+        // when loading indicator is false. caret is put a the end of the text
+        control.loadingIndicatorProperty().addListener(observable -> {
+            if (!((BooleanProperty) observable).getValue()) {
+                combo.getEditor().positionCaret(combo.getEditor().getText().length());
+            }
+        });
+
+        // TODO #2 isSelectedItem
+//        isSelectedItem.bind(Bindings.isNotNull(control.itemProperty()));
+        control.itemProperty().addListener((o) -> {
+            isSelectedItem = ((ObjectProperty<T>) o).getValue() != null;
+        });
     }
 
     private void initSkin() {
@@ -200,12 +222,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         combo.setItems(this.items);
 
         // bindings
-        // TODO does not work properly, occurs : set empty value on Editor, then Button is empty
-        // button.textProperty().bind(combo.getEditor().textProperty());
-//        control.itemProperty().addListener((observable) -> {
-//            LOG.debug(" add listener triggered !!!!!!!!!!!!!!!!!!!!!!!!!");
-//            //control.updateBean(observable);
-//        });
+        bind();
     }
 
     public void debug(String title) {
@@ -222,7 +239,9 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
         LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
         LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
+        // TODO #2 isSelectedItem
         LOG.debug(" --- control  isSelected            : " + isSelectedItem);
+//        LOG.debug(" --- control  isSelected            : " + isSelectedItem.get());
         LOG.debug(" --- control T BEAN                 : " + control.beanProperty().getValue());
         LOG.debug(" --- control T BEAN NOT POSSIBLE    : " + (control.beanProperty().getValue() == null ? "" : control.beanProperty().getValue()));
         LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
@@ -254,7 +273,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     public void refreshIsSelected() {
-        isSelectedItem = control.itemProperty().getValue() != null;
         showButton();
     }
 
@@ -273,7 +291,9 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         button.setAlignment(Pos.BASELINE_RIGHT);
         button.setPadding(new Insets(1, 5, 1, 5));
         button.setGraphic(new ImageView(image));
+        // TODO #2 isSelectedItem
         if (isSelectedItem) {
+//        if (isSelectedItem.get()) {
             visibleBox.getChildren().add(button);
             hiddenBox.getChildren().add(combo);
         } else {

@@ -32,6 +32,11 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
+    // TODO #3 set an new instance of T
+    public T newInstance() {
+        return (T) new KeyValueStringImpl("", "");
+    }
+
     public enum AUTOSUGGESTFX_MODE {
         CACHE_DATA,
         LIVE_DATA,
@@ -107,16 +112,13 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     public AutosuggestComboBoxList(final ObservableList<T> items) {
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
         // apply user mapping
-        beanListener = new InvalidationListener() {
-            @Override
-            public void invalidated(Observable bean) {
-                T kv = beanToItemMapping.apply(bean);
-                itemProperty().setValue(kv);
-                if (getSkinControl() != null) {
-                    getSkinControl().getCombo().valueProperty().setValue(kv);
-                    getSkinControl().setUserInput(String.valueOf(kv.getValue()));
-                    getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
-                }
+        beanListener = b -> {
+            T kv = beanToItemMapping.apply(b);
+            itemProperty().setValue(kv);
+            if (getSkinControl() != null) {
+                getSkinControl().getCombo().valueProperty().setValue(kv);
+                getSkinControl().setUserInput(String.valueOf(kv.getValue()));
+                getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
             }
         };
         bean.addListener(beanListener);
@@ -193,7 +195,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
             skin = new AutosuggestComboBoxListSkin<>(this);
         }
 
-        // TODO callback
+        // TODO #1 callback
         endControlInitialization();
         return skin;
     }
@@ -345,7 +347,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         this.isFullSearch = isFullSearch;
     }
 
-    // TODO getSkinControl() could generate null exception , if called before skin is created. Implement a callback to indicate the end of initialisation
+    // TODO #0 getSkinControl() could generate null exception , if called before skin is created. Implement a callback to indicate the end of initialisation
     public void setColumnSeparator(String columnSeparator) {
         getSkinControl().setColumnSeparator(columnSeparator);
     }
@@ -544,7 +546,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     public void stopSearch() {
         stopScheduler();
-        getSkinControl().getCombo().getEditor().positionCaret(getEditorText().length());
+        //getSkinControl().getCombo().getEditor().positionCaret(getEditorText().length());
         setLoadingIndicator(false);
     }
 
@@ -555,9 +557,5 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private void stopScheduler() {
         scheduler.purge();
         scheduler.cancel();
-    }
-
-    private boolean checkEnumProperty(StringProperty p, Enum e) {
-        return p.getValue().equalsIgnoreCase(String.valueOf(e));
     }
 }
