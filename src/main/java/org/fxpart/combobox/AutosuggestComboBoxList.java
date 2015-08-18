@@ -99,7 +99,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      */
     public AutosuggestComboBoxList() {
         this(null);
-        LOG.debug(" autosuggest identified by " + AutosuggestComboBoxList.this.hashCode());
         Version.getInstance();
     }
 
