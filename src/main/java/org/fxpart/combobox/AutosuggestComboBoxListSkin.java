@@ -137,10 +137,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         }
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             userInput = combo.getEditor().getText();
-            // TODO #3 set an new instance of T
-            // control.itemProperty().setValue(null);
             control.itemProperty().setValue(control.newInstanceOfT.apply(null));
-//            control.beanProperty().setValue(control.newInstanceOfB.apply(null));
             refreshIsSelected();
             control.updateBean(control.itemProperty());
             return;
@@ -162,7 +159,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             }
         });
 
-        // TODO AUTOSFX-21
         ivWait.visibleProperty().bind(control.loadingIndicatorProperty());
 
         // TODO #2 isSelectedItem
@@ -173,7 +169,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     private void initSkin() {
-        LOG.debug(" initSkin control.getItem = " + control.getItems().size());
         this.items = control.getItems();
 
         // build control up

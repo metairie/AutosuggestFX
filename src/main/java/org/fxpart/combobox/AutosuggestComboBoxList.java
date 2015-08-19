@@ -11,6 +11,7 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
+import org.fxpart.CollectionsUtil;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,10 +190,17 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
             });
             setOnSucceeded(t -> {
                 searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
+                // list items of Combo
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 String inputUser = getEditorText();
-                list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
-                LOG.debug(" after search list size = " + list.size());
+
+                // list coming from a datasource
+                Collection<? extends T> cList = (Collection<? extends T>) t.getSource().getValue();
+                Collection<? extends T> cListCopy = CollectionsUtil.split(cList, visibleRowsCount < cList.size() ? visibleRowsCount : cList.size());
+
+                // set the combo item list in one time
+                list.setAll(cListCopy);
+
                 setEditorText(inputUser);
                 stopSearch();
             });
@@ -205,7 +213,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     }
 
     public void startSearch() {
-
         searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
         stopScheduler();
     }
