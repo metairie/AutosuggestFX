@@ -280,7 +280,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         }
         imageBox.getChildren().add(ivWait);
         imageBox.setPadding(new Insets(5, 3, 1, 3));
-                root.getChildren().addAll(visibleBox, imageBox);
+        root.getChildren().addAll(visibleBox, imageBox);
         getChildren().add(root);
     }
 
