@@ -44,7 +44,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
      **************************************************************************/
     private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
     private static final KeyCodeCombination ESCAPE = new KeyCodeCombination(KeyCode.ESCAPE);
-    private static final KeyCodeCombination BACKSPACE = new KeyCodeCombination(KeyCode.BACK_SPACE);
     private static final KeyCodeCombination UP = new KeyCodeCombination(KeyCode.UP);
     private static final KeyCodeCombination DOWN = new KeyCodeCombination(KeyCode.DOWN);
     private static final KeyCodeCombination LEFT = new KeyCodeCombination(KeyCode.LEFT);

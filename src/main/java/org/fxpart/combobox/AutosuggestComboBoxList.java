@@ -69,7 +69,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty();
+    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(new Boolean(false));
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(true);
     private Function<String, List<T>> searchFunction = null;
@@ -131,7 +131,9 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     public void start() {
         if (!lazyMode) {
-            reSchedule(null);
+            if (!(itemProperty().getValue() != null || beanProperty().getValue() != null)) {
+                reSchedule(null);
+            }
         }
     }
 
