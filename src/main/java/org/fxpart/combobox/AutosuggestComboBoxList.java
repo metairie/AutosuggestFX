@@ -79,8 +79,9 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanListener = observable -> beanProperty();
 
-    // TODO #3 set a new instance of T
+    // TODO #3 set a new instance of T or B
     public Function<Observable, T> newInstanceOfT = t -> (T) new KeyValueStringImpl("", "");
+    public Function<Observable, B> newInstanceOfB = t -> null;
 
     // B bean ==> T item mapping
     private Function<Observable, T> beanToItemMapping = o -> null;
@@ -217,6 +218,12 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         bean.removeListener(beanListener);
         beanProperty().setValue(itemToBeanMapping.apply(item));
         bean.addListener(beanListener);
+        ObjectProperty ob = (ObjectProperty) item;
+        T t = (T) ob.getValue();
+        if (getSkinControl() != null) {
+            getSkinControl().getCombo().valueProperty().setValue(t);
+            getSkinControl().getButton().textProperty().setValue(getSkinControl().getUserInput());
+        }
     }
 
     /**************************************************************************
@@ -524,6 +531,14 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     public void setItemToBeamMapping(Function<Observable, B> itemToBeamMapping) {
         this.itemToBeanMapping = itemToBeamMapping;
+    }
+
+    public int getVisibleRowsCount() {
+        return visibleRowsCount;
+    }
+
+    public void setVisibleRowsCount(int visibleRowsCount) {
+        this.visibleRowsCount = visibleRowsCount;
     }
 
     // ----------------------------------------------------------------------- On Shown

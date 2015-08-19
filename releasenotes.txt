@@ -1,8 +1,24 @@
-0.44.8-SNAPHOT
+0.44.10-SNAPSHOT
  in progress
 
+0.44.9
+ clean fxml (sampler)
+ #JIRA-AUTOSFX-21 Loadindicator does not work anymore
+ #3 set an new instance of T not works. done
+ #2 isSelectedItem in property not working
+ cleanings following removing KVS
+ cleanings
+ add Item to Bean mapping
+
+0.44.8
+ fix problem of focus lost when before loading an T Item and after press ENTER key
+ various minor improvement
+ modify bean item mapper
+ add parametrized <B>  for having bean / item mapping
+ test properties binding , between item property and external property
+
 0.44.7
-JIRA AUTOSFX-11 Load a value
+ #JIRA-AUTOSFX-11 Load a value
  improve loading item
  fix null value pb
  review of graphical aspect
@@ -12,9 +28,9 @@ JIRA AUTOSFX-11 Load a value
  tests all
 
 0.44.6
-JIRA AUTOSFX-11 Load a value, status = selected
+ #JIRA-AUTOSFX-11 Load a value, status = selected
  add test
  fix requestFocus() problem
  add Autosuggest set up helper
  add first TestFx automatic test
-JIRA ITAPPSNEOS-1520 resolved
+ #JIRA-ITAPPSNEOS-1520 resolved

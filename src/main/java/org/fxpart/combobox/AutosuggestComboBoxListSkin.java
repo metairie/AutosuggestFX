@@ -140,6 +140,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             // TODO #3 set an new instance of T
             // control.itemProperty().setValue(null);
             control.itemProperty().setValue(control.newInstanceOfT.apply(null));
+//            control.beanProperty().setValue(control.newInstanceOfB.apply(null));
             refreshIsSelected();
             control.updateBean(control.itemProperty());
             return;
