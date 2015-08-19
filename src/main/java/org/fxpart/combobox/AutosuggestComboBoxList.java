@@ -227,10 +227,19 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         beanProperty().setValue(itemToBeanMapping.apply(item));
         bean.addListener(beanListener);
         ObjectProperty ob = (ObjectProperty) item;
-        T t = (T) ob.getValue();
-        if (getSkinControl() != null) {
-            getSkinControl().getCombo().valueProperty().setValue(t);
-            getSkinControl().getButton().textProperty().setValue(getSkinControl().getUserInput());
+        if (item != null) {
+            T t = (T) ob.getValue();
+            if (getSkinControl() != null) {
+                getSkinControl().getCombo().valueProperty().setValue(t);
+            }
+        } else {
+            getSkinControl().setUserInput("");
+            setEditorText("");
+            getSkinControl().getButton().textProperty().setValue("");
+            getSkinControl().getCombo().valueProperty().setValue(null);
+            if (!isControlShown()){
+                getSkinControl().showCombo();
+            }
         }
     }
 
