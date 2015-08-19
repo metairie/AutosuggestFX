@@ -8,10 +8,10 @@ import java.util.Iterator;
  * Created by metairie on 19.08.2015.
  */
 public class CollectionsUtil {
-    public static <T> Collection<? extends T> split(Collection<? extends T> d, long n) {
+    public static <T> Collection<? extends T> split(Collection<? extends T> d, int n) {
         Collection<T> tmp = new ArrayList<>();
         Iterator it = d.iterator();
-        long k = Math.max(0, n);
+        int k = Math.max(0, n);
         while (it.hasNext() && k > 0) {
             tmp.add((T) it.next());
             k--;

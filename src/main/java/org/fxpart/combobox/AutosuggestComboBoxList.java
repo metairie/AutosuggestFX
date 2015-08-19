@@ -196,7 +196,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
                 // list coming from a datasource
                 Collection<? extends T> cList = (Collection<? extends T>) t.getSource().getValue();
-                Collection<? extends T> cListCopy = CollectionsUtil.split(cList, visibleRowsCount < cList.size() ? visibleRowsCount : cList.size());
+                Collection<? extends T> cListCopy = CollectionsUtil.split(cList, determineListItemSize((List) cList));
 
                 // set the combo item list in one time
                 list.setAll(cListCopy);
@@ -253,7 +253,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
                 ignoreCase = false;
                 lazyMode = false;
                 delay = 100;
-                visibleRowsCount = 0;
+                visibleRowsCount = -1;
                 acceptFreeTextValue = false;
                 break;
             case LIVE_DATA:
@@ -275,18 +275,17 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         }
     }
 
-    public void setCacheDataMode() {
-        this.configure(AUTOSUGGESTFX_MODE.CACHE_DATA);
+    /**
+     * Determine the "best" size according to different parameters
+     * <p>
+     * If visibleRowsCount <= -1 display ALL list
+     *
+     * @param list
+     * @return
+     */
+    private int determineListItemSize(List list) {
+        return (visibleRowsCount <= -1 ? list.size() : visibleRowsCount < list.size() ? visibleRowsCount : list.size());
     }
-
-    public void setLiveDataMode() {
-        this.configure(AUTOSUGGESTFX_MODE.LIVE_DATA);
-    }
-
-    public void setSearchEngineMode() {
-        this.configure(AUTOSUGGESTFX_MODE.SEARCH_ENGINE);
-    }
-
 
     /**************************************************************************
      *
@@ -325,10 +324,23 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
                     return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
                 }
             }).collect(Collectors.toList());
-            list.subList(0, visibleRowsCount < list.size() ? visibleRowsCount : list.size());
+            list.subList(0, determineListItemSize(list));
             return list;
         };
     }
+
+    public void setCacheDataMode() {
+        this.configure(AUTOSUGGESTFX_MODE.CACHE_DATA);
+    }
+
+    public void setLiveDataMode() {
+        this.configure(AUTOSUGGESTFX_MODE.LIVE_DATA);
+    }
+
+    public void setSearchEngineMode() {
+        this.configure(AUTOSUGGESTFX_MODE.SEARCH_ENGINE);
+    }
+
 
     /**************************************************************************
      * Public Properties
