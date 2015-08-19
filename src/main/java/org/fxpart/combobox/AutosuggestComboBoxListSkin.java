@@ -173,6 +173,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     private void initSkin() {
+        LOG.debug(" initSkin control.getItem = " + control.getItems().size());
         this.items = control.getItems();
 
         // build control up

@@ -192,6 +192,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 String inputUser = getEditorText();
                 list.setAll((Collection<? extends T>) t.getSource().getValue());    // retrieve the T call()
+                LOG.debug(" after search list size = " + list.size());
                 setEditorText(inputUser);
                 stopSearch();
             });
@@ -308,7 +309,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     @Override
     public void endControlInitialization() {
         searchFunction = term -> {
-            return getDataSource().stream().filter(t -> {
+            List<T> list = getDataSource().stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
                 String v = String.valueOf(t.getValue());
                 if (AutosuggestComboBoxList.this.isIgnoreCase()) {
@@ -317,6 +318,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
                     return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
                 }
             }).collect(Collectors.toList());
+            list.subList(0, visibleRowsCount < list.size() ? visibleRowsCount : list.size());
+            return list;
         };
     }
 
