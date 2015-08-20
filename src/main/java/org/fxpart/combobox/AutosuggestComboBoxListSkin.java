@@ -4,6 +4,7 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -75,8 +76,8 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
-    // TODO #2 isSelectedITem
     private boolean isSelectedItem = false;
+    private InvalidationListener itemListener = null;
 
     /**************************************************************************
      * Constructors
@@ -127,9 +128,10 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
 
     /**
      * refresh is only called from control
+     *
      * @param item
      */
-    protected void refresh(Observable item) {
+    private void refresh(Observable item) {
         ObjectProperty ob = (ObjectProperty) item;
         if (item != null) {
             T t = (T) ob.getValue();
@@ -152,6 +154,13 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     private void bind() {
+        // item listener
+        itemListener = t -> {
+            isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
+            refresh(t);
+        };
+        control.itemProperty().addListener(itemListener);
+
         // when loading indicator is false. caret is put a the end of the text
         control.loadingIndicatorProperty().addListener(observable -> {
             if (!((BooleanProperty) observable).getValue()) {
@@ -159,6 +168,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             }
         });
 
+        // icone wait displayed on control load indicator value
         ivWait.visibleProperty().bind(control.loadingIndicatorProperty());
     }
 
@@ -272,9 +282,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         button.setAlignment(Pos.BASELINE_RIGHT);
         button.setPadding(new Insets(1, 5, 1, 5));
         button.setGraphic(ivClose);
-        // TODO #2 isSelectedItem
         if (isSelectedItem) {
-//        if (isSelectedItem.get()) {
             visibleBox.getChildren().add(button);
             hiddenBox.getChildren().add(combo);
         } else {
@@ -509,9 +517,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
         LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
         LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
-        // TODO #2 isSelectedItem
         LOG.debug(" --- control  isSelected            : " + isSelectedItem);
-//        LOG.debug(" --- control  isSelected            : " + isSelectedItem.get());
         LOG.debug(" --- control T BEAN                 : " + control.beanProperty().getValue());
         LOG.debug(" --- control T BEAN NOT POSSIBLE    : " + (control.beanProperty().getValue() == null ? "" : control.beanProperty().getValue()));
         LOG.debug(" --- control  isControlShown        : " + control.isControlShown());

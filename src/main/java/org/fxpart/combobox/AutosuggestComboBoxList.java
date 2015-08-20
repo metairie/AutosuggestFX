@@ -79,18 +79,16 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<T, String> stringItemFormatter = null;
     private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanListener = observable -> beanProperty();
-    private InvalidationListener itemListener = observable -> beanProperty();
 
-    // TODO #3 set a new instance of T or B
-//    public Function<Observable, T> newInstanceOfT = t -> (T) new KeyValueStringImpl("", "");
+    // mapping between B and T
+    // set a new instance of T or B
     public Function<Observable, T> newInstanceOfT = t -> null;
     public Function<Observable, B> newInstanceOfB = t -> null;
-
     // B bean ==> T item mapping
     private Function<Observable, T> beanToItemMapping = o -> null;
-
     // T item ==> B bean mapping
     private Function<Observable, B> itemToBeanMapping = o -> null;
+
 
     /**************************************************************************
      *
@@ -299,14 +297,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
             itemProperty().setValue(kv);
         };
         bean.addListener(beanListener);
-
-        // item listener
-        itemListener = t -> {
-            // TODO #2 isSelectedItem
-            getSkinControl().setIsSelectedItem(((ObjectProperty<T>) t).getValue() != null);
-            getSkinControl().refresh(t);
-        };
-        item.addListener(itemListener);
 
         // default search
         searchFunction = term -> {
