@@ -213,16 +213,17 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         loadingIndicatorProperty().setValue(new Boolean(false));
     }
 
+    /**
+     * This method could not bean called before the end of FX initialization
+     * @param item
+     */
     public void updateBean(Observable item) {
         bean.removeListener(beanListener);
         beanProperty().setValue(itemToBeanMapping.apply(item));
         bean.addListener(beanListener);
 
         // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
-        //if (getSkinControl() != null) {
-        getSkinControl().refreshSkin(item);
-        // }
-
+        //getSkinControl().refreshSkin(item);
     }
 
     /**************************************************************************
@@ -318,9 +319,11 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         bean.addListener(beanListener);
 
         // item listener
-        // TODO #2 isSelectedItem
         itemListener = t -> {
+            // TODO #2 isSelectedItem
             getSkinControl().setIsSelectedItem(((ObjectProperty<T>) t).getValue() != null);
+            // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
+            getSkinControl().refreshSkin(t);
         };
         item.addListener(itemListener);
 
