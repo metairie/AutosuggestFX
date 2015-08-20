@@ -134,7 +134,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     public void start() {
         if (!lazyMode) {
-            if (!(itemProperty().getValue() != null || beanProperty().getValue() != null)) {
+            if (!(itemProperty().getValue() == null && beanProperty().getValue() == null)) {
                 reSchedule(null);
             }
         }
@@ -229,28 +229,9 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         bean.addListener(beanListener);
 
         // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
-        ObjectProperty ob = (ObjectProperty) item;
-        if (item != null) {
-            T t = (T) ob.getValue();
-            if (getSkinControl() != null) {
-                if (t != null && t.getValue() != null) {
-                    getSkinControl().setUserInput(String.valueOf(t.getValue()));
-                    getSkinControl().getButton().textProperty().setValue(String.valueOf(t.getValue()));
-                } else {
-                    getSkinControl().getButton().textProperty().setValue(getSkinControl().getUserInput());
-                }
-                getSkinControl().getCombo().valueProperty().setValue(t);
-            }
-        } else {
-            getSkinControl().setUserInput("");
-            setEditorText("");
-            getSkinControl().getButton().textProperty().setValue("");
-            getSkinControl().getCombo().valueProperty().setValue(null);
-            if (!isControlShown()) {
-                getSkinControl().showCombo();
-            }
-        }
-        // END REMOVE
+        //if (getSkinControl() != null) {
+            getSkinControl().refreshSkin(item);
+       // }
 
     }
 

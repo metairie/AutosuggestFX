@@ -4,6 +4,7 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -148,6 +149,28 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             refreshIsSelected();
             control.updateBean(control.itemProperty());
             return;
+        }
+    }
+
+    public void refreshSkin(Observable item) {
+        ObjectProperty ob = (ObjectProperty) item;
+        if (item != null) {
+            T t = (T) ob.getValue();
+            if (t != null && t.getValue() != null) {
+                setUserInput(String.valueOf(t.getValue()));
+                getButton().textProperty().setValue(String.valueOf(t.getValue()));
+            } else {
+                getButton().textProperty().setValue(getUserInput());
+            }
+            getCombo().valueProperty().setValue(t);
+        } else {
+            setUserInput("");
+            combo.getEditor().setText("");
+            getButton().textProperty().setValue("");
+            getCombo().valueProperty().setValue(null);
+            if (!control.isControlShown()) {
+                showCombo();
+            }
         }
     }
 
@@ -507,5 +530,4 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         LOG.debug(" --- control  isLazyMode            : " + control.isLazyMode());
         LOG.debug(" --- <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ");
     }
-
 }
