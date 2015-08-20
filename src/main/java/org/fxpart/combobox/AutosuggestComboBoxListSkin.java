@@ -122,48 +122,29 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         // TODO #0 null possible
         userInput = item.getValue().getValue().toString();
         combo.valueProperty().setValue(item.getValue());
-        refreshIsSelected();
+        showButton();
     }
 
-    public void setSkinValue() {
-        if (combo.getEditor().getText().equalsIgnoreCase("")) {
-            return;
-        }
-        if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
-            return;
-        }
-        if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
-            userInput = combo.getEditor().getText();
-            control.itemProperty().setValue(control.newInstanceOfT.apply(null));
-            refreshIsSelected();
-            control.updateBean(control.itemProperty());
-            return;
-        }
-        if (combo.valueProperty().getValue() != null) {
-            userInput = combo.getEditor().getText();
-            control.itemProperty().setValue(combo.valueProperty().getValue());
-            refreshIsSelected();
-            control.updateBean(control.itemProperty());
-            return;
-        }
-    }
-
-    public void refreshSkin(Observable item) {
+    /**
+     * refresh is only called from control
+     * @param item
+     */
+    protected void refresh(Observable item) {
         ObjectProperty ob = (ObjectProperty) item;
         if (item != null) {
             T t = (T) ob.getValue();
             if (t != null && t.getValue() != null) {
-                setUserInput(String.valueOf(t.getValue()));
-                getButton().textProperty().setValue(String.valueOf(t.getValue()));
+                userInput = String.valueOf(t.getValue());
+                button.textProperty().setValue(String.valueOf(t.getValue()));
             } else {
-                getButton().textProperty().setValue(getUserInput());
+                button.textProperty().setValue(userInput);
             }
-            getCombo().valueProperty().setValue(t);
+            combo.valueProperty().setValue(t);
         } else {
-            setUserInput("");
+            userInput = "";
             combo.getEditor().setText("");
-            getButton().textProperty().setValue("");
-            getCombo().valueProperty().setValue(null);
+            button.textProperty().setValue("");
+            combo.valueProperty().setValue(null);
             if (!control.isControlShown()) {
                 showCombo();
             }
@@ -196,7 +177,24 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             } else if (ESCAPE.match(e) || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.isControlDown()) {
                 return;
             } else if (ENTER.match(e)) {
-                setSkinValue();
+                if (combo.getEditor().getText().equalsIgnoreCase("")) {
+                    return;
+                }
+                if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
+                    return;
+                }
+                if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
+                    userInput = combo.getEditor().getText();
+                    control.itemProperty().setValue(control.newInstanceOfT.apply(null));
+                    showButton();
+                    return;
+                }
+                if (combo.valueProperty().getValue() != null) {
+                    userInput = combo.getEditor().getText();
+                    control.itemProperty().setValue(combo.valueProperty().getValue());
+                    showButton();
+                    return;
+                }
             } else {
                 combo.valueProperty().setValue(null);
             }
@@ -258,10 +256,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
             button.requestFocus();
         });
         button.textProperty().setValue(userInput);
-    }
-
-    public void refreshIsSelected() {
-        showButton();
     }
 
     private void reSchedule(Event event) {

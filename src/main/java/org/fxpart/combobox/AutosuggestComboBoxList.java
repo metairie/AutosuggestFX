@@ -213,19 +213,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         loadingIndicatorProperty().setValue(new Boolean(false));
     }
 
-    /**
-     * This method could not bean called before the end of FX initialization
-     * @param item
-     */
-    public void updateBean(Observable item) {
-        bean.removeListener(beanListener);
-        beanProperty().setValue(itemToBeanMapping.apply(item));
-        bean.addListener(beanListener);
-
-        // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
-        //getSkinControl().refreshSkin(item);
-    }
-
     /**************************************************************************
      * Private Methods
      **************************************************************************/
@@ -310,11 +297,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         beanListener = b -> {
             T kv = beanToItemMapping.apply(b);
             itemProperty().setValue(kv);
-            if (getSkinControl() != null) {
-                getSkinControl().getCombo().valueProperty().setValue(kv);
-                getSkinControl().setUserInput(String.valueOf(kv.getValue()));
-                getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
-            }
         };
         bean.addListener(beanListener);
 
@@ -322,8 +304,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         itemListener = t -> {
             // TODO #2 isSelectedItem
             getSkinControl().setIsSelectedItem(((ObjectProperty<T>) t).getValue() != null);
-            // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
-            getSkinControl().refreshSkin(t);
+            getSkinControl().refresh(t);
         };
         item.addListener(itemListener);
 
