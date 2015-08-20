@@ -79,6 +79,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private Function<T, String> stringItemFormatter = null;
     private Function<T, Node> nodeItemFormatter = null;
     private InvalidationListener beanListener = observable -> beanProperty();
+    private InvalidationListener itemListener = observable -> beanProperty();
 
     // TODO #3 set a new instance of T or B
 //    public Function<Observable, T> newInstanceOfT = t -> (T) new KeyValueStringImpl("", "");
@@ -112,17 +113,6 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      */
     public AutosuggestComboBoxList(final ObservableList<T> items) {
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
-        // apply user mapping
-        beanListener = b -> {
-            T kv = beanToItemMapping.apply(b);
-            itemProperty().setValue(kv);
-            if (getSkinControl() != null) {
-                getSkinControl().getCombo().valueProperty().setValue(kv);
-                getSkinControl().setUserInput(String.valueOf(kv.getValue()));
-                getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
-            }
-        };
-        bean.addListener(beanListener);
     }
 
     public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
@@ -230,8 +220,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
         // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
         //if (getSkinControl() != null) {
-            getSkinControl().refreshSkin(item);
-       // }
+        getSkinControl().refreshSkin(item);
+        // }
 
     }
 
@@ -315,6 +305,26 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
 
     @Override
     public void endControlInitialization() {
+        // apply user mapping
+        beanListener = b -> {
+            T kv = beanToItemMapping.apply(b);
+            itemProperty().setValue(kv);
+            if (getSkinControl() != null) {
+                getSkinControl().getCombo().valueProperty().setValue(kv);
+                getSkinControl().setUserInput(String.valueOf(kv.getValue()));
+                getSkinControl().getButton().setText(String.valueOf(kv.getValue()));
+            }
+        };
+        bean.addListener(beanListener);
+
+        // item listener
+        // TODO #2 isSelectedItem
+        itemListener = t -> {
+            getSkinControl().setIsSelectedItem(((ObjectProperty<T>) t).getValue() != null);
+        };
+        item.addListener(itemListener);
+
+        // default search
         searchFunction = term -> {
             List<T> list = getDataSource().stream().filter(t -> {
                 String k = String.valueOf(t.getKey());

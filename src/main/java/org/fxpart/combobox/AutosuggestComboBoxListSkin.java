@@ -75,12 +75,8 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
-
-    // listeing the controller
     // TODO #2 isSelectedITem
     private boolean isSelectedItem = false;
-//    private BooleanProperty isSelectedItem = new SimpleBooleanProperty(false);
-
 
     /**************************************************************************
      * Constructors
@@ -183,12 +179,6 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         });
 
         ivWait.visibleProperty().bind(control.loadingIndicatorProperty());
-
-        // TODO #2 isSelectedItem
-//        isSelectedItem.bind(Bindings.isNotNull(control.itemProperty()));
-        control.itemProperty().addListener((o) -> {
-            isSelectedItem = ((ObjectProperty<T>) o).getValue() != null;
-        });
     }
 
     private void initSkin() {
@@ -503,6 +493,13 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
         this.userInput = userInput;
     }
 
+    public boolean isSelectedItem() {
+        return isSelectedItem;
+    }
+
+    public void setIsSelectedItem(boolean isSelectedItem) {
+        this.isSelectedItem = isSelectedItem;
+    }
 
     public void debug(String title) {
         LOG.debug(" --- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
