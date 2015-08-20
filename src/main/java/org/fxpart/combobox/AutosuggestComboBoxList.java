@@ -81,7 +81,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private InvalidationListener beanListener = observable -> beanProperty();
 
     // TODO #3 set a new instance of T or B
-    public Function<Observable, T> newInstanceOfT = t -> (T) new KeyValueStringImpl("", "");
+//    public Function<Observable, T> newInstanceOfT = t -> (T) new KeyValueStringImpl("", "");
+    public Function<Observable, T> newInstanceOfT = t -> null;
     public Function<Observable, B> newInstanceOfB = t -> null;
 
     // B bean ==> T item mapping
@@ -226,10 +227,18 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         bean.removeListener(beanListener);
         beanProperty().setValue(itemToBeanMapping.apply(item));
         bean.addListener(beanListener);
+
+        // TODO JIRA-AUTOSFX-25 Refactoring of updatebean method
         ObjectProperty ob = (ObjectProperty) item;
         if (item != null) {
             T t = (T) ob.getValue();
             if (getSkinControl() != null) {
+                if (t != null && t.getValue() != null) {
+                    getSkinControl().setUserInput(String.valueOf(t.getValue()));
+                    getSkinControl().getButton().textProperty().setValue(String.valueOf(t.getValue()));
+                } else {
+                    getSkinControl().getButton().textProperty().setValue(getSkinControl().getUserInput());
+                }
                 getSkinControl().getCombo().valueProperty().setValue(t);
             }
         } else {
@@ -237,10 +246,12 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
             setEditorText("");
             getSkinControl().getButton().textProperty().setValue("");
             getSkinControl().getCombo().valueProperty().setValue(null);
-            if (!isControlShown()){
+            if (!isControlShown()) {
                 getSkinControl().showCombo();
             }
         }
+        // END REMOVE
+
     }
 
     /**************************************************************************
