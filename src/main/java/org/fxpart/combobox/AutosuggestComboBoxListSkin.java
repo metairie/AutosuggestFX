@@ -231,7 +231,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
      * Public API
      **************************************************************************/
     public void showCombo() {
-        control.setControlShown(true);
+        control.setControlShown(new Boolean(true));
         Platform.runLater(() -> {
             exchangeNode(button, combo);
             combo.requestFocus();
@@ -239,7 +239,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     }
 
     public void showButton() {
-        control.setControlShown(false);
+        control.setControlShown(new Boolean(false));
         Platform.runLater(() -> {
             exchangeNode(combo, button);
             button.requestFocus();

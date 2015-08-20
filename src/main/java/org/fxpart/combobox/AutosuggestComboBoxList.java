@@ -72,7 +72,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(new Boolean(false));
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
-    private BooleanProperty controlShown = new SimpleBooleanProperty(true);
+    private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
     private Function<String, List<T>> searchFunction = null;
     private Function<String, List<T>> dataSource = s -> null;
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
@@ -321,7 +321,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
         AutosuggestComboBoxListSkin<B, T> skin;
         // if an item is loaded, button is shown
         if (itemProperty().getValue() != null) {
-            setControlShown(false);
+            setControlShown(new Boolean(false));
             skin = new AutosuggestComboBoxListSkin<>(this, item);
         } else {
             skin = new AutosuggestComboBoxListSkin<>(this);
