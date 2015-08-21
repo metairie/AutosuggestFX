@@ -4,13 +4,12 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -80,7 +79,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private String keyValueSeparator = " - ";
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
     private boolean isSelectedItem = false;
-    private ChangeListener itemListener = null;
+    private InvalidationListener itemListener = null;
 
     /**************************************************************************
      * Constructors
@@ -158,21 +157,14 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     private void bind() {
         // item listener
-        itemListener = new ChangeListener() {
+        itemListener = new InvalidationListener() {
             @Override
-            public void changed(ObservableValue t, Object oldValue, Object newValue) {
+            public void invalidated(Observable t) {
+                LOG.debug(" AutoSFXSkin LOG T Item listener  --------------------------------------------------- ");
                 isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
-                AutosuggestFXSkin.this.refresh(t);
+                refresh(t);
             }
         };
-
-//        itemListener = new InvalidationListener() {
-//            @Override
-//            public void change(Observable t,) {
-////                isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
-////                AutosuggestFXSkin.this.refresh(t);
-//            }
-//        };
         control.itemProperty().addListener(itemListener);
 
         // when loading indicator is false. caret is put a the end of the text
@@ -184,6 +176,38 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // icone wait displayed on control load indicator value
         ivWait.visibleProperty().bind(control.loadingIndicatorProperty());
+    }
+
+    /**
+     * validate the value
+     */
+    private void validateInput() {
+        userInput = combo.getEditor().getText();
+
+        if (userInput.equalsIgnoreCase("")) {
+            combo.getEditor().setText("");
+            button.textProperty().setValue("");
+            combo.valueProperty().setValue(null);
+            control.itemProperty().setValue(null);
+            return;
+        }
+        if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
+            combo.getEditor().setText("");
+            button.textProperty().setValue("");
+            combo.valueProperty().setValue(null);
+            control.itemProperty().setValue(null);
+            return;
+        }
+        if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
+            control.itemProperty().setValue(control.newInstanceOfT.apply(null));
+            showButton();
+            return;
+        }
+        if (combo.valueProperty().getValue() != null) {
+            control.itemProperty().setValue(combo.valueProperty().getValue());
+            showButton();
+            return;
+        }
     }
 
     private void initSkin() {
@@ -201,24 +225,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             } else if (ESCAPE.match(e) || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.isControlDown()) {
                 return;
             } else if (ENTER.match(e)) {
-                if (combo.getEditor().getText().equalsIgnoreCase("")) {
-                    return;
-                }
-                if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
-                    return;
-                }
-                if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
-                    userInput = combo.getEditor().getText();
-                    control.itemProperty().setValue(control.newInstanceOfT.apply(null));
-                    showButton();
-                    return;
-                }
-                if (combo.valueProperty().getValue() != null) {
-                    userInput = combo.getEditor().getText();
-                    control.itemProperty().setValue(combo.valueProperty().getValue());
-                    showButton();
-                    return;
-                }
+                validateInput();
             } else {
                 combo.valueProperty().setValue(null);
             }
@@ -260,6 +267,16 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // bindings
         bind();
+
+        // lost focus
+        combo.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            // lost focus
+            if (oldValue && !newValue) {
+                if (control.isControlShown()) {
+                    validateInput();
+                }
+            }
+        });
     }
 
     /**************************************************************************
