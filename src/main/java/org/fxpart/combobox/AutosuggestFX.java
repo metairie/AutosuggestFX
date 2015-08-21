@@ -3,7 +3,6 @@ package org.fxpart.combobox;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -20,10 +19,7 @@ import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -71,19 +67,21 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean editable = true;
     private boolean isFullSearch = false;
     private boolean ignoreCase = false;
+    private boolean alwaysRefresh = false;
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
     private BooleanProperty loadingIndicator = new SimpleBooleanProperty(new Boolean(false));
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
-    private Function<String, List<T>> searchFunction = null;
-    private Function<String, List<T>> dataSource = s -> null;
+    private Function<String, List<T>> filter = null;
+    private Function<String, List<T>> search = null;
+    private Function<String, List<T>> dataSource = s -> new ArrayList<>();
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
-    private Function<T, String> stringItemFormatter = null;
+    private Function<T, String> stringItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
     private Function<T, Node> nodeItemFormatter = null;
+
     private InvalidationListener beanListener = observable -> beanProperty();
-    //private ChangeListener beanListener = (observable, oldValue, newValue) -> beanProperty();
 
     // mapping between B and T
     // set a new instance of T or B
@@ -118,10 +116,15 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
 
+    public void setupAndStart(Function refresh, Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+        this.search = refresh;
+        this.setupAndStart(datas, stringTextFormatter, stringItemFormatter);
+    }
+
     public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
-        setDataSource(datas);
-        setStringTextFormatter(stringTextFormatter);
-        setStringItemFormatter(stringItemFormatter);
+        this.dataSource = datas;
+        this.stringTextFormatter = stringTextFormatter;
+        this.stringItemFormatter = stringItemFormatter;
         start();
     }
 
@@ -188,7 +191,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 ObservableList<T> list = (ObservableList<T>) getItems();
                 String inputUser = getEditorText();
 
-                // list coming from a datasource
+                // T call() . List comes from a datasource
                 Collection<? extends T> cList = (Collection<? extends T>) t.getSource().getValue();
                 Collection<? extends T> cListCopy = CollectionsUtil.split(cList, determineListItemSize((List) cList));
 
@@ -202,7 +205,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
         @Override
         protected T call() throws Exception {
-            return (T) getSearchFunction().apply(getEditorText());
+            if (alwaysRefresh) {
+                alwaysRefresh = false;
+                return (T) search.apply(getEditorText());
+            } else {
+                return (T) filter.apply(getEditorText());
+            }
         }
     }
 
@@ -259,7 +267,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     /**
      * Determine the "best" size according to different parameters
-     * <p>
+     * <p/>
      * If visibleRowsCount <= -1 display ALL list
      *
      * @param list
@@ -305,11 +313,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         bean.addListener(beanListener);
 
         // default search
-        searchFunction = term -> {
-            List<T> list = getDataSource().stream().filter(t -> {
+        filter = term -> {
+            List<T> list = dataSource.apply(null).stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
                 String v = String.valueOf(t.getValue());
-                if (AutosuggestFX.this.isIgnoreCase()) {
+                if (ignoreCase) {
                     return ((isFullSearch ? k.toLowerCase() : "") + v.toLowerCase()).contains(term == null ? "" : term.toLowerCase());
                 } else {
                     return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
@@ -350,7 +358,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public String getEditorText() {
-        return getSkinControl().getCombo().getEditor().getText();
+        if (getSkinControl() == null) {
+            return "";
+        } else
+            return getSkinControl().getCombo().getEditor().getText();
     }
 
     public List<T> getDataSource() {
@@ -361,8 +372,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.dataSource = dataSource;
     }
 
-    public Function<String, List<T>> getSearchFunction() {
-        return searchFunction;
+    public Function<String, List<T>> getFilter() {
+        return filter;
     }
 
     public int getDelay() {
@@ -498,6 +509,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.ignoreCase = ignoreCase;
     }
 
+    public boolean isAlwaysRefresh() {
+        return alwaysRefresh;
+    }
+
+    public void setAlwaysRefresh(boolean alwaysRefresh) {
+        this.alwaysRefresh = alwaysRefresh;
+    }
+
     public Function<T, Node> getNodeItemFormatter() {
         return nodeItemFormatter;
     }
@@ -552,6 +571,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setVisibleRowsCount(int visibleRowsCount) {
         this.visibleRowsCount = visibleRowsCount;
+    }
+
+    public Function getSearch() {
+        return search;
+    }
+
+    public void setSearch(Function search) {
+        this.search = search;
     }
 
     // ----------------------------------------------------------------------- On Shown
