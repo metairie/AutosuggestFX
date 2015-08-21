@@ -11,7 +11,11 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
-import org.fxpart.CollectionsUtil;
+import org.fxpart.common.AbstractAutosuggestControl;
+
+import org.fxpart.common.bean.KeyValue;
+import org.fxpart.common.util.CollectionsUtil;
+import org.fxpart.common.util.SearchThreadFactory;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +32,7 @@ import java.util.stream.Collectors;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestFX<B, T extends KeyValue> extends AutosuggestControl {
+public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestControl {
 
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFX.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
@@ -562,7 +566,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AutosuggestControl {
     }
 
     /**
-     * Called just after the {@link AutosuggestControl} popup/display is shown.
+     * Called just after the {@link AbstractAutosuggestControl} popup/display is shown.
      */
     private ObjectProperty<EventHandler<Event>> onShown = new ObjectPropertyBase<EventHandler<Event>>() {
         @Override

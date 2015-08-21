@@ -1,4 +1,4 @@
-package org.fxpart;
+package org.fxpart.common.util;
 
 import java.util.ArrayList;
 import java.util.Collection;

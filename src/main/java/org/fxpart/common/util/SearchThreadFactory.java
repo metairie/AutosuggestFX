@@ -1,4 +1,4 @@
-package org.fxpart.combobox;
+package org.fxpart.common.util;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
