@@ -1,8 +1,8 @@
 package org.fxpart.combobox;
 
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -12,7 +12,6 @@ import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import org.fxpart.common.AbstractAutosuggestControl;
-
 import org.fxpart.common.bean.KeyValue;
 import org.fxpart.common.util.CollectionsUtil;
 import org.fxpart.common.util.SearchThreadFactory;
@@ -82,7 +81,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<T, String> stringItemFormatter = null;
     private Function<T, Node> nodeItemFormatter = null;
-    private InvalidationListener beanListener = observable -> beanProperty();
+    //    private InvalidationListener beanListener = observable -> beanProperty();
+    private ChangeListener beanListener = (observable, oldValue, newValue) -> beanProperty();
 
     // mapping between B and T
     // set a new instance of T or B
@@ -296,10 +296,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     @Override
     public void endControlInitialization() {
         // apply user mapping
-        beanListener = b -> {
+        beanListener = (b, oldValue, newValue) -> {
             T kv = beanToItemMapping.apply(b);
             itemProperty().setValue(kv);
         };
+//        beanListener = b -> {
+//            T kv = beanToItemMapping.apply(b);
+//            itemProperty().setValue(kv);
+//        };
         bean.addListener(beanListener);
 
         // default search
