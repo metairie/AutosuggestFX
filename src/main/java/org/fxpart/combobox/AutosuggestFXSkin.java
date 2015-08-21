@@ -38,8 +38,8 @@ import java.util.function.Function;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends BehaviorSkinBase<AutosuggestComboBoxList<B, T>, BehaviorBase<AutosuggestComboBoxList<B, T>>> {
-    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxListSkin.class);
+public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<AutosuggestFX<B, T>, BehaviorBase<AutosuggestFX<B, T>>> {
+    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFXSkin.class);
 
     /**************************************************************************
      * fields
@@ -71,7 +71,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
     private ImageView ivClose = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close16.png")));
 
     // local data
-    private final AutosuggestComboBoxList<B, T> control;
+    private final AutosuggestFX<B, T> control;
     private ObservableList<T> items = null;
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
@@ -93,7 +93,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
      *
      * @param control
      */
-    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<B, T> control) {
+    public AutosuggestFXSkin(final AutosuggestFX<B, T> control) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         initSkin();
@@ -112,7 +112,7 @@ public class AutosuggestComboBoxListSkin<B, T extends KeyValue> extends Behavior
      * @param control
      * @param item
      */
-    public AutosuggestComboBoxListSkin(final AutosuggestComboBoxList<B, T> control, ObjectProperty<T> item) {
+    public AutosuggestFXSkin(final AutosuggestFX<B, T> control, ObjectProperty<T> item) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
         initSkin();

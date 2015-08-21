@@ -6,7 +6,7 @@
     <artifactId>AutosuggestFX</artifactId>
     <groupId>org.fxpart</groupId>
     <packaging>jar</packaging>
-    <version>0.45.0-SNAPSHOT</version>
+    <version>0.45.0</version>
     <name>${project.artifactId}</name>
     <description>${project.artifactId} - project</description>
 

@@ -28,9 +28,9 @@ import java.util.stream.Collectors;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestControl {
+public class AutosuggestFX<B, T extends KeyValue> extends AutosuggestControl {
 
-    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestComboBoxList.class);
+    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFX.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
 
     public enum AUTOSUGGESTFX_MODE {
@@ -99,7 +99,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
     /**
      * Creates a new AutosuggestComboBoxList instance with an empty list of choices.
      */
-    public AutosuggestComboBoxList() {
+    public AutosuggestFX() {
         this(null);
         Version.getInstance();
     }
@@ -109,7 +109,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      *
      * @param items The items to display.
      */
-    public AutosuggestComboBoxList(final ObservableList<T> items) {
+    public AutosuggestFX(final ObservableList<T> items) {
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
 
@@ -275,13 +275,13 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      */
     @Override
     protected Skin<?> createDefaultSkin() {
-        AutosuggestComboBoxListSkin<B, T> skin;
+        AutosuggestFXSkin<B, T> skin;
         // if an item is loaded, button is shown
         if (itemProperty().getValue() != null) {
             setControlShown(new Boolean(false));
-            skin = new AutosuggestComboBoxListSkin<>(this, item);
+            skin = new AutosuggestFXSkin<>(this, item);
         } else {
-            skin = new AutosuggestComboBoxListSkin<>(this);
+            skin = new AutosuggestFXSkin<>(this);
         }
 
         // TODO #1 callback
@@ -303,7 +303,7 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
             List<T> list = getDataSource().stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
                 String v = String.valueOf(t.getValue());
-                if (AutosuggestComboBoxList.this.isIgnoreCase()) {
+                if (AutosuggestFX.this.isIgnoreCase()) {
                     return ((isFullSearch ? k.toLowerCase() : "") + v.toLowerCase()).contains(term == null ? "" : term.toLowerCase());
                 } else {
                     return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
@@ -331,8 +331,8 @@ public class AutosuggestComboBoxList<B, T extends KeyValue> extends AutosuggestC
      * Public Properties
      **************************************************************************/
 
-    public AutosuggestComboBoxListSkin<B, T> getSkinControl() {
-        return (AutosuggestComboBoxListSkin) getSkin();
+    public AutosuggestFXSkin<B, T> getSkinControl() {
+        return (AutosuggestFXSkin) getSkin();
     }
 
     public ObservableList<T> getItems() {
