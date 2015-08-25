@@ -168,14 +168,14 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         control.itemProperty().addListener(itemListener);
 
         // when loading indicator is false. caret is put a the end of the text
-        control.loadingIndicatorProperty().addListener(observable -> {
+        control.filteringIndicatorProperty().addListener(observable -> {
             if (!((BooleanProperty) observable).getValue()) {
                 combo.getEditor().positionCaret(combo.getEditor().getText().length());
             }
         });
 
         // icone wait displayed on control load indicator value
-        ivWait.visibleProperty().bind(control.loadingIndicatorProperty());
+        ivWait.visibleProperty().bind(control.filteringIndicatorProperty());
     }
 
     /**

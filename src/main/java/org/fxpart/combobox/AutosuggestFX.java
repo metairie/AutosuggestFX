@@ -50,9 +50,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * Private Properties
      **************************************************************************/
 
-    private ExecutorService searchExecutor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-    private final ObservableList<T> items;
-    private SearchTimerTask timerTask = null;
+    // 1 SearchThread for filtering + 1 SearchThread for searching
+    private ExecutorService executor = Executors.newFixedThreadPool(2, new SearchThreadFactory());
+    private ObservableList<T> items;
+    private FilterTimerTask timerTask = null;
+    private SearchTimerTask searchTask = null;
     private Timer scheduler = new Timer();
 
     /**************************************************************************
@@ -71,7 +73,9 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
-    private BooleanProperty loadingIndicator = new SimpleBooleanProperty(new Boolean(false));
+    private BooleanProperty filteringIndicator = new SimpleBooleanProperty(new Boolean(false));
+    private BooleanProperty searchingIndicator = new SimpleBooleanProperty(new Boolean(false));
+
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
     private Function<String, List<T>> filter = null;
@@ -116,9 +120,9 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
 
-    public void setupAndStart(Function refresh, Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
-        this.search = refresh;
-        this.setupAndStart(datas, stringTextFormatter, stringItemFormatter);
+    public void setupAndStart(Function search, Function<String, List<T>> datasource, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+        this.search = search;
+        this.setupAndStart(datasource, stringTextFormatter, stringItemFormatter);
     }
 
     public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
@@ -146,29 +150,45 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             scheduler.cancel();
         }
         scheduler = new Timer();
-        timerTask = new SearchTimerTask(event);
+
         // running timer task as daemon thread
-        scheduler.schedule(timerTask, this.delay, this.delay);
+        LOG.debug(" reschedule -------------------------- ");
+        if (alwaysRefresh) {
+            LOG.debug(" always refresh  -------------------------- ");
+            searchTask = new SearchTimerTask(event);
+            scheduler.schedule(searchTask, this.delay, this.delay);
+        } else {
+            timerTask = new FilterTimerTask(event);
+            scheduler.schedule(timerTask, this.delay, this.delay);
+        }
+
     }
 
+    /**
+     * Class for external search
+     */
     public class SearchTimerTask extends TimerTask {
         SearchTimerTask() {
             this(null);
         }
 
+        private Event event;
+
         SearchTimerTask(Event event) {
-            loadingIndicatorProperty().setValue(new Boolean(true));
+            LOG.debug(" NEW STT  -------------------------- ");
+            filteringIndicatorProperty().setValue(new Boolean(true));
             this.event = event;
         }
 
-        private Event event;
-
         @Override
         public void run() {
-            startSearch();
+            startFiltering();
+            LOG.debug(" run STT  -------------------------- ");
             SearchTask<T> searchTask = new SearchTask<>(this.event);
-            searchExecutor.submit(searchTask);
+            executor.submit(searchTask);
+            LOG.debug(" end executor STT  -------------------------- ");
         }
+
     }
 
     public class SearchTask<T> extends Task<T> {
@@ -179,16 +199,84 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
 
         SearchTask(Event event) {
+            LOG.debug(" BEGIN SearchTask  -------------------------- ");
             this.event = event;
             setOnCancelled(t -> {
                 searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
-                stopSearch();
+                stopFiltering();
                 LOG.debug(String.valueOf(getException()));
             });
             setOnSucceeded(t -> {
+                LOG.debug(" 1 enter on success SearchTask -------------------------- ");
                 searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
                 // list items of Combo
-                ObservableList<T> list = (ObservableList<T>) getItems();
+                ObservableList<T> list = (ObservableList<T>) items;
+                String inputUser = getEditorText();
+
+                // T call() . List comes from a datasource
+                Collection<? extends T> cList = (Collection<? extends T>) t.getSource().getValue();
+
+                // set the combo item list in one time
+                LOG.debug(" 2 get Source -------------------------- ");
+                list.setAll(cList);
+                setEditorText(inputUser);
+                stopFiltering();
+            });
+        }
+
+        @Override
+        protected T call() throws Exception {
+            LOG.debug(" SEARCH T CALL -------------------------- ");
+            return (T) search.apply(getEditorText());
+        }
+    }
+
+    /**
+     * Class for filtering
+     */
+    public class FilterTimerTask extends TimerTask {
+        FilterTimerTask() {
+            this(null);
+        }
+
+        FilterTimerTask(Event event) {
+            LOG.debug(" NEW fTT  -------------------------- ");
+            filteringIndicatorProperty().setValue(new Boolean(true));
+            this.event = event;
+        }
+
+        private Event event;
+
+        @Override
+        public void run() {
+            startFiltering();
+            LOG.debug(" run fTT  -------------------------- ");
+            FilterTask<T> searchTask = new FilterTask<>(this.event);
+            executor.submit(searchTask);
+            LOG.debug(" end executor fTT  -------------------------- ");
+        }
+    }
+
+    public class FilterTask<T> extends Task<T> {
+        private Event event;
+
+        FilterTask() {
+            this(null);
+        }
+
+        FilterTask(Event event) {
+            LOG.debug(" BEGIN FilterTask  -------------------------- ");
+            this.event = event;
+            setOnCancelled(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
+            });
+            setOnSucceeded(t -> {
+                LOG.debug(" 1 enter on success FilterTask -------------------------- ");
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
+                // list items of Combo
+                ObservableList<T> list = (ObservableList<T>) items;
                 String inputUser = getEditorText();
 
                 // T call() . List comes from a datasource
@@ -196,32 +284,28 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 Collection<? extends T> cListCopy = CollectionsUtil.split(cList, determineListItemSize((List) cList));
 
                 // set the combo item list in one time
+                LOG.debug(" 2 get Source -------------------------- ");
                 list.setAll(cListCopy);
-
                 setEditorText(inputUser);
-                stopSearch();
+                stopFiltering();
             });
         }
 
         @Override
         protected T call() throws Exception {
-            if (alwaysRefresh) {
-                alwaysRefresh = false;
-                return (T) search.apply(getEditorText());
-            } else {
-                return (T) filter.apply(getEditorText());
-            }
+            LOG.debug(" filter T CALL -------------------------- ");
+            return (T) filter.apply(getEditorText());
         }
     }
 
-    public void startSearch() {
+    public void startFiltering() {
         searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
         stopScheduler();
     }
 
-    public void stopSearch() {
+    public void stopFiltering() {
         stopScheduler();
-        loadingIndicatorProperty().setValue(new Boolean(false));
+        filteringIndicatorProperty().setValue(new Boolean(false));
     }
 
     /**************************************************************************
@@ -267,14 +351,18 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     /**
      * Determine the "best" size according to different parameters
-     * <p/>
+     * <p>
      * If visibleRowsCount <= -1 display ALL list
      *
      * @param list
      * @return
      */
     private int determineListItemSize(List list) {
-        return (visibleRowsCount <= -1 ? list.size() : visibleRowsCount < list.size() ? visibleRowsCount : list.size());
+        if (list != null) {
+            return (visibleRowsCount <= -1 ? list.size() : visibleRowsCount < list.size() ? visibleRowsCount : list.size());
+        } else {
+            return visibleRowsCount;
+        }
     }
 
     /**************************************************************************
@@ -312,7 +400,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         };
         bean.addListener(beanListener);
 
-        // default search
+        // default filter
         filter = term -> {
             List<T> list = dataSource.apply(null).stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
@@ -323,6 +411,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                     return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
                 }
             }).collect(Collectors.toList());
+            LOG.debug(" filter list " + list.size() + " ---------------------------------------------------");
+            list.subList(0, determineListItemSize(list));
+            return list;
+        };
+
+        // default search
+        search = term -> {
+            List<T> list = dataSource.apply(null);
             list.subList(0, determineListItemSize(list));
             return list;
         };
@@ -351,6 +447,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public ObservableList<T> getItems() {
         return items;
+    }
+
+    public void setItems(ObservableList<T> items) {
+        this.items = items;
     }
 
     public void setEditorText(String text) {
@@ -436,16 +536,28 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.controlShown.set(controlShown);
     }
 
-    public boolean getLoadingIndicator() {
-        return loadingIndicator.get();
+    public boolean getFilteringIndicator() {
+        return filteringIndicator.get();
     }
 
-    public BooleanProperty loadingIndicatorProperty() {
-        return loadingIndicator;
+    public BooleanProperty filteringIndicatorProperty() {
+        return filteringIndicator;
     }
 
-    public void setLoadingIndicator(boolean loadingIndicator) {
-        this.loadingIndicator.set(loadingIndicator);
+    public void setFilteringIndicator(boolean filteringIndicator) {
+        this.filteringIndicator.set(filteringIndicator);
+    }
+
+    public boolean getSearchingIndicator() {
+        return searchingIndicator.get();
+    }
+
+    public BooleanProperty searchingIndicatorProperty() {
+        return searchingIndicator;
+    }
+
+    public void setSearchingIndicator(boolean searchingIndicator) {
+        this.searchingIndicator.set(searchingIndicator);
     }
 
     public final T getValue() {
