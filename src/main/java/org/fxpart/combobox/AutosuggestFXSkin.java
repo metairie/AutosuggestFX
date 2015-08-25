@@ -4,12 +4,12 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Insets;
@@ -79,7 +79,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private String keyValueSeparator = " - ";
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
     private boolean isSelectedItem = false;
-    private InvalidationListener itemListener = null;
+    private ChangeListener itemListener = null;
 
     /**************************************************************************
      * Constructors
@@ -157,12 +157,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     private void bind() {
         // item listener
-        itemListener = new InvalidationListener() {
-            @Override
-            public void invalidated(Observable t) {
-                isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
-                refresh(t);
-            }
+        itemListener = (t, o, n) -> {
+            isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
+            // TODO rework
+            control.refresh(t);
+            refresh(t);
         };
         control.itemProperty().addListener(itemListener);
 

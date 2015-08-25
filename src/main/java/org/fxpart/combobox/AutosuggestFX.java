@@ -1,8 +1,9 @@
 package org.fxpart.combobox;
 
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 
 /**
  * Created by metairie on 07-Jul-15.
+ * TODO #0 getSkinControl() could generate null exception, if called before skin is created.
+ * TODO #0 Replace by a Callback to ensure endControlInitialization() is done
  */
 public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestControl {
 
@@ -73,7 +76,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean alwaysRefresh = false;
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
-    private ObjectProperty<B> bean = new SimpleObjectProperty<>(null);
+    private ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "bean");
+
     private BooleanProperty filteringIndicator = new SimpleBooleanProperty(new Boolean(false));
     private BooleanProperty searchingIndicator = new SimpleBooleanProperty(new Boolean(false));
 
@@ -86,7 +90,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private Function<T, String> stringItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
     private Function<T, Node> nodeItemFormatter = null;
 
-    private InvalidationListener beanListener = observable -> beanProperty();
+    //    private InvalidationListener beanListener = observable -> beanProperty();
+    private ChangeListener beanListener = new ChangeListener() {
+        @Override
+        public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+            beanProperty();
+        }
+    };
 
     // mapping between B and T
     // set a new instance of T or B
@@ -214,6 +224,23 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     /**
+     * Method for trigger the update of cells
+     *
+     * @param newList
+     */
+    public void applyList(Object newList) {
+        // list items of Combo
+        ObservableList<T> list = (ObservableList<T>) items;
+
+        // T call() . List comes from a datasource
+        Collection<? extends T> cList = (Collection<? extends T>) newList;
+        Collection<? extends T> cListCopy = CollectionsUtil.split(cList, determineListItemSize((List) cList));
+
+        // set the combo item list in one time
+        list.setAll(cListCopy);
+    }
+
+    /**
      * Class for filtering
      */
     public class FilterTimerTask extends TimerTask {
@@ -252,16 +279,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             });
             setOnSucceeded(t -> {
                 searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
-                // list items of Combo
-                ObservableList<T> list = (ObservableList<T>) items;
                 String inputUser = getEditorText();
 
-                // T call() . List comes from a datasource
-                Collection<? extends T> cList = (Collection<? extends T>) t.getSource().getValue();
-                Collection<? extends T> cListCopy = CollectionsUtil.split(cList, determineListItemSize((List) cList));
+                // apply new list
+                applyList(t.getSource().getValue());
 
-                // set the combo item list in one time
-                list.setAll(cListCopy);
+                // reset editor text
                 setEditorText(inputUser);
                 stopFiltering();
             });
@@ -360,17 +383,24 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             skin = new AutosuggestFXSkin<>(this);
         }
 
-        // TODO #1 callback
         endControlInitialization();
         return skin;
     }
 
+    public void refresh(ObservableValue t) {
+        beanProperty().removeListener(beanListener);
+        beanProperty().setValue(itemToBeanMapping.apply(t));
+        beanProperty().addListener(beanListener);
+    }
+
     @Override
     public void endControlInitialization() {
-        // apply user mapping
-        beanListener = (b) -> {
-            T kv = beanToItemMapping.apply(b);
-            itemProperty().setValue(kv);
+        beanListener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue b, Object o, Object n) {
+                T kv = beanToItemMapping.apply(b);
+                item.setValue(kv);
+            }
         };
         bean.addListener(beanListener);
 
@@ -554,7 +584,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.isFullSearch = isFullSearch;
     }
 
-    // TODO #0 getSkinControl() could generate null exception , if called before skin is created. Implement a callback to indicate the end of initialisation
     public void setColumnSeparator(String columnSeparator) {
         getSkinControl().setColumnSeparator(columnSeparator);
     }
@@ -615,16 +644,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.item.set(item);
     }
 
-    public B getBean() {
-        return beanProperty().getValue();
-    }
-
     public ObjectProperty<B> beanProperty() {
         return bean;
     }
 
-    public void setBean(B b) {
-        beanProperty().setValue(b);
+    public final void setBean(B b) {
+        beanProperty().set(b);
+    }
+
+    public final B getBean() {
+        return beanProperty().get();
     }
 
     public Function<Observable, T> getBeanToItemMapping() {
