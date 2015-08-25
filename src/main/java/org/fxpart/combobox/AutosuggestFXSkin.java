@@ -160,7 +160,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         itemListener = new InvalidationListener() {
             @Override
             public void invalidated(Observable t) {
-                LOG.debug(" AutoSFXSkin LOG T Item listener  --------------------------------------------------- ");
                 isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
                 refresh(t);
             }
@@ -300,7 +299,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     private void reSchedule(Event event) {
-        control.reSchedule(event);
+        control.reSchedule(event, control.isAlwaysRefresh());
     }
 
     private void graphical() {
