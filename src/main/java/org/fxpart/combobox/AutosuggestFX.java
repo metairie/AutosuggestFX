@@ -74,6 +74,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean isFullSearch = false;
     private boolean ignoreCase = false;
     private boolean alwaysRefresh = false;
+    private boolean refreshFXML = false;
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "bean");
@@ -387,7 +388,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return skin;
     }
 
-    public void refresh(ObservableValue t) {
+    public void refreshFXML(ObjectProperty<B> b) {
+        beanProperty().setValue(b.getValue());
+        T kv = beanToItemMapping.apply(b);
+        item.setValue(kv);
+        refreshFXML = true;
+    }
+
+    public void refresh(ObservableValue<T> t) {
         beanProperty().removeListener(beanListener);
         beanProperty().setValue(itemToBeanMapping.apply(t));
         beanProperty().addListener(beanListener);
@@ -418,6 +426,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             list.subList(0, determineListItemSize(list));
             return list;
         };
+
+        // if a value is set
+        if (beanProperty().getValue() != null) {
+            T kv = beanToItemMapping.apply(beanProperty());
+            item.setValue(kv);
+        }
     }
 
     public void setCacheDataMode() {
@@ -686,6 +700,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setSearch(Function search) {
         this.search = search;
+    }
+
+    public boolean isRefreshFXML() {
+        return refreshFXML;
+    }
+
+    public void setRefreshFXML(boolean refreshFXML) {
+        this.refreshFXML = refreshFXML;
     }
 
     // ----------------------------------------------------------------------- On Shown

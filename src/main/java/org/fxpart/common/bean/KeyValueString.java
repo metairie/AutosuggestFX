@@ -5,8 +5,14 @@ package org.fxpart.common.bean;
  */
 public class KeyValueString implements KeyValue<String, String> {
 
+    private Long id;
     private String value;
     private String key;
+
+    public KeyValueString(Long id, String key, String value) {
+        this(value, key);
+        this.id = id;
+    }
 
     public KeyValueString(String key, String value) {
         this.value = value;
@@ -26,6 +32,16 @@ public class KeyValueString implements KeyValue<String, String> {
     @Override
     public void setValue(String v) {
         value = v;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
     }
 
     @Override

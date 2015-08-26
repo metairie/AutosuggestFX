@@ -102,6 +102,15 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // visual aspect
         graphical();
+
+        if (control.isRefreshFXML()) {
+            // TODO #0 null possible
+            // When FXML initialize component , never pass here
+            isSelectedItem = (((ObjectProperty<T>) control.itemProperty()).getValue() != null);
+            userInput = control.itemProperty().getValue().getValue().toString();
+            combo.valueProperty().setValue(control.itemProperty().getValue());
+            showButton();
+        }
     }
 
     /**
@@ -123,6 +132,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         graphical();
 
         // TODO #0 null possible
+        // When FXML initialize component , never pass here
+        isSelectedItem = (((ObjectProperty<T>) item).getValue() != null);
         userInput = item.getValue().getValue().toString();
         combo.valueProperty().setValue(item.getValue());
         showButton();

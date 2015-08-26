@@ -12,4 +12,8 @@ public interface KeyValue<K, V> {
     void setKey(K k);
 
     void setValue(V v);
+
+    void setId(Long id);
+
+    Long getId();
 }
