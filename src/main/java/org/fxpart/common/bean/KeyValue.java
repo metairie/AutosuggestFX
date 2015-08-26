@@ -1,19 +1,35 @@
 package org.fxpart.common.bean;
 
 /**
- * Created by laurent on 11.02.2015.
+ * Created by metairie on 26.08.2015.
  */
-public interface KeyValue<K, V> {
+public class KeyValue<K, V> {
+    Long id;
+    V value;
+    K key;
 
-    K getKey();
+    public V getValue() {
+        return value;
+    }
 
-    V getValue();
+    public void setKey(K k) {
+        key = k;
+    }
 
-    void setKey(K k);
+    public void setValue(V v) {
+        value = v;
+    }
 
-    void setValue(V v);
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    void setId(Long id);
+    public Long getId() {
+        return id;
+    }
 
-    Long getId();
+    public K getKey() {
+        return key;
+    }
+
 }

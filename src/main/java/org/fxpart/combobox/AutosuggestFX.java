@@ -99,14 +99,31 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     };
 
-    // mapping between B and T
-    // set a new instance of T or B
-    public Function<Observable, T> newInstanceOfT = t -> null;
-    public Function<Observable, B> newInstanceOfB = t -> null;
-    // B bean ==> T item mapping
-    private Function<Observable, T> beanToItemMapping = o -> null;
-    // T item ==> B bean mapping
-    private Function<Observable, B> itemToBeanMapping = o -> null;
+    // mandatory
+    // set a new instance of T
+    public Function<Observable, T> newInstanceOfT = observable -> null;
+    // set a new instance of B
+    public Function<Observable, B> newInstanceOfB = observable -> null;
+
+    // Generic T item ==> B bean mapping
+    private Function<Observable, B> itemToBeanMapping = o -> {
+        ObjectProperty<B> op = (ObjectProperty<B>) o;
+        if (op == null || op.getValue() == null) {
+            return newInstanceOfB.apply(null);
+        } else {
+            return newInstanceOfB.apply(o);
+        }
+    };
+
+    // Generic B bean ==> T item mapping
+    private Function<Observable, T> beanToItemMapping = o -> {
+        ObjectProperty<T> op = (ObjectProperty<T>) o;
+        if (op == null || op.getValue() == null) {
+            return newInstanceOfT.apply(null);
+        } else {
+            return newInstanceOfT.apply(o);
+        }
+    };
 
 
     /**************************************************************************
