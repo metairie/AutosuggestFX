@@ -47,6 +47,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * fields
      **************************************************************************/
     private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
+    private static final KeyCodeCombination BACKSPACE = new KeyCodeCombination(KeyCode.BACK_SPACE);
     private static final KeyCodeCombination ESCAPE = new KeyCodeCombination(KeyCode.ESCAPE);
     private static final KeyCodeCombination UP = new KeyCodeCombination(KeyCode.UP);
     private static final KeyCodeCombination DOWN = new KeyCodeCombination(KeyCode.DOWN);
@@ -213,8 +214,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             return;
         }
         if (combo.valueProperty().getValue() != null) {
-            control.itemProperty().setValue(combo.valueProperty().getValue());
-            showButton();
+            T t = combo.valueProperty().getValue();
+            if (String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
+                control.itemProperty().setValue(combo.valueProperty().getValue());
+                showButton();
+            }
             return;
         }
     }
@@ -235,24 +239,28 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                 return;
             } else if (ENTER.match(e)) {
                 validateInput();
-            } else {
-                combo.valueProperty().setValue(null);
+//            } else {
+//                //combo.valueProperty().setValue(null);
+            } else if (BACKSPACE.match(e)) {
+                if (combo.getEditor().getText().length() == 0) {
+                    reSchedule(e);
+                }
             }
 
             // search if possible
-            if (combo.visibleProperty().getValue()) {
+            if (combo.visibleProperty().getValue() && combo.getEditor().getText().length() >= control.getLimitSearch()) {
                 reSchedule(e);
                 if (!combo.isShowing()) {
                     combo.show();
                 }
             }
         });
-        combo.setOnShown(event -> {
-            reSchedule(event);
+        combo.setOnShown(e -> {
+            reSchedule(e);
         });
 
-        button.setOnAction(event -> {
-            event.consume();
+        button.setOnAction(e -> {
+            e.consume();
             showCombo();
             combo.getEditor().setText(userInput);
         });
@@ -260,8 +268,14 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             switch (e.getCode()) {
                 case ENTER:
                     e.consume();
-                    showCombo();
                     combo.getEditor().setText(userInput);
+                    showCombo();
+                    return;
+                case ESCAPE:
+                    e.consume();
+                    combo.getEditor().setText("");
+                    showCombo();
+                    return;
             }
         });
 

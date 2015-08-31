@@ -65,16 +65,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * Public Properties
      **************************************************************************/
 
-    private int delay = 300; // delay in ms
-    private int visibleRowsCount = 10;
-
-    private boolean lazyMode = true;
-    private boolean acceptFreeTextValue = false;
-    private boolean editable = true;
-    private boolean isFullSearch = false;
-    private boolean ignoreCase = false;
-    private boolean alwaysRefresh = false;
-    private boolean refreshFXML = false;
+    private int delay = 300;                        // delay in ms, max 5000
+    private int visibleRowsCount = 10;              // display only 10 items
+    private boolean lazyMode = true;                // load before or not datasource
+    private boolean acceptFreeTextValue = false;    // ability to input value not in the datasource list
+    private boolean editable = true;                // combo is editable
+    private boolean isFullSearch = false;           // search on all columns Key + Value(s)
+    private boolean ignoreCase = false;             // ignore case when searching
+    private boolean alwaysRefresh = false;          // trigger a search after each input letter
+    private boolean refreshFXML = false;            // TODO to be removed
+    private int limitSearch = 0;                    // number of input character needed for searching, max 20
 
     private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "bean");
@@ -242,7 +242,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     /**
-     * Method for trigger the update of cells
+     * Method for doing the update of cells
      *
      * @param newList
      */
@@ -367,7 +367,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     /**
      * Determine the "best" size according to different parameters
-     * <p/>
+     * <p>
      * If visibleRowsCount <= -1 display ALL list
      *
      * @param list
@@ -725,6 +725,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setRefreshFXML(boolean refreshFXML) {
         this.refreshFXML = refreshFXML;
+    }
+
+    public int getLimitSearch() {
+        return limitSearch;
+    }
+
+    public void setLimitSearch(int limitSearch) {
+        this.limitSearch = Math.max(0, Math.min(20, limitSearch));
     }
 
     // ----------------------------------------------------------------------- On Shown
