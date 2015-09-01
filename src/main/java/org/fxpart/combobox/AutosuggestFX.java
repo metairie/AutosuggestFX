@@ -53,18 +53,17 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * Private Properties
      **************************************************************************/
 
-    // 1 SearchThread for filtering + 1 SearchThread for searching
+    // 1 SearchThread for filtering + 1 SearchThread for searching       -----------------------
     private ExecutorService executor = Executors.newFixedThreadPool(2, new SearchThreadFactory());
-    private ObservableList<T> items;
     private FilterTimerTask timerTask = null;
     private SearchTimerTask searchTask = null;
-
     private Timer scheduler = new Timer();
 
     /**************************************************************************
      * Public Properties
      **************************************************************************/
 
+    // configuration       -----------------------
     private int delay = 300;                        // delay in ms, max 5000
     private int visibleRowsCount = 10;              // display only 10 items
     private boolean lazyMode = true;                // load before or not datasource
@@ -76,35 +75,32 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean refreshFXML = false;            // TODO to be removed
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
 
-    private ObjectProperty<T> item = new SimpleObjectProperty<>(null);
-    private ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "bean");
-
+    // properties updated in control or skin       -----------------------
     private BooleanProperty filteringIndicator = new SimpleBooleanProperty(new Boolean(false));
     private BooleanProperty searchingIndicator = new SimpleBooleanProperty(new Boolean(false));
-
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
+    private BooleanProperty askReschedule = new SimpleBooleanProperty(new Boolean(false));
+
+    // formatter        -----------------------
     private Function<String, List<T>> filter = null;
     private Function<String, List<T>> search = null;
     private Function<String, List<T>> dataSource = s -> new ArrayList<>();
+
+    // formatter        -----------------------
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
     private Function<T, String> stringItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
     private Function<T, Node> nodeItemFormatter = null;
 
-    //    private InvalidationListener beanListener = observable -> beanProperty();
-    private ChangeListener beanListener = new ChangeListener() {
-        @Override
-        public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-            beanProperty();
-        }
-    };
-
-    // mandatory
+    // T B manager      -----------------------
+    private ObservableList<T> items;
+    private ObjectProperty<T> item = new SimpleObjectProperty<>(this, "item");
+    private ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "bean");
+    private ChangeListener beanListener = (observable, oldValue, newValue) -> beanProperty();
     // set a new instance of T
     public Function<Observable, T> newInstanceOfT = observable -> null;
     // set a new instance of B
     public Function<Observable, B> newInstanceOfB = observable -> null;
-
     // Generic T item ==> B bean mapping
     private Function<Observable, B> itemToBeanMapping = o -> {
         ObjectProperty<B> op = (ObjectProperty<B>) o;
@@ -114,7 +110,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return newInstanceOfB.apply(o);
         }
     };
-
     // Generic B bean ==> T item mapping
     private Function<Observable, T> beanToItemMapping = o -> {
         ObjectProperty<T> op = (ObjectProperty<T>) o;
@@ -149,11 +144,32 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
 
+    /**************************************************************************
+     *
+     * Implementation, Public Methods
+     *
+     **************************************************************************/
+
+    /**
+     * Setup with an external search function
+     *
+     * @param search
+     * @param datasource
+     * @param stringTextFormatter
+     * @param stringItemFormatter
+     */
     public void setupAndStart(Function<String, List<T>> search, Function<String, List<T>> datasource, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
         this.search = search;
         this.setupAndStart(datasource, stringTextFormatter, stringItemFormatter);
     }
 
+    /**
+     * Setup with a datasource. Searching is done by control itself
+     *
+     * @param datas
+     * @param stringTextFormatter
+     * @param stringItemFormatter
+     */
     public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
         this.dataSource = datas;
         this.stringTextFormatter = stringTextFormatter;
@@ -161,6 +177,9 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         start();
     }
 
+    /**
+     * Call a load if necessary
+     */
     public void start() {
         if (!lazyMode) {
             if (!(itemProperty().getValue() == null && beanProperty().getValue() == null)) {
@@ -169,10 +188,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    /**************************************************************************
-     * Implementation, Public Methods
-     **************************************************************************/
-
+    /**
+     * reSchedule a searching or a filtering task
+     *
+     * @param event
+     * @param doSearch
+     */
     public void reSchedule(Event event, boolean doSearch) {
         if (scheduler != null) {
             scheduler.purge();
@@ -192,7 +213,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     /**
-     * Class for external search
+     * inner Class for external search
      */
     public class SearchTimerTask extends TimerTask {
         SearchTimerTask() {
@@ -259,7 +280,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     /**
-     * Class for filtering
+     * inner Class for filtering
      */
     public class FilterTimerTask extends TimerTask {
         FilterTimerTask() {
@@ -365,22 +386,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    /**
-     * Determine the "best" size according to different parameters
-     * <p>
-     * If visibleRowsCount <= -1 display ALL list
-     *
-     * @param list
-     * @return
-     */
-    public int determineListItemSize(List list) {
-        if (list != null) {
-            return (visibleRowsCount <= -1 ? list.size() : visibleRowsCount < list.size() ? visibleRowsCount : list.size());
-        } else {
-            return visibleRowsCount;
-        }
-    }
-
     /**************************************************************************
      *
      * Public API
@@ -405,14 +410,43 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return skin;
     }
 
-    public void refreshFXML(ObjectProperty<B> b) {
+    /**
+     * Determine the "best" size according to different parameters
+     * <p/>
+     * If visibleRowsCount <= -1 display ALL list
+     *
+     * @param list
+     * @return
+     */
+    public int determineListItemSize(List list) {
+        if (list != null) {
+            return (visibleRowsCount <= -1 ? list.size() : visibleRowsCount < list.size() ? visibleRowsCount : list.size());
+        } else {
+            return visibleRowsCount;
+        }
+    }
+
+    /**
+     * When the AutosuggestFx is used in a form with fields.
+     * After the binding, it's mandatory to call this method
+     * // TODO problem when system with autodetection bean exists. This method marks then B Bean as modified at startup
+     *
+     * @param b The Observable Property bind with the AutosuggestFx B bean property
+     */
+    public void refreshBeanCascade(ObjectProperty<B> b) {
         beanProperty().setValue(b.getValue());
         T kv = beanToItemMapping.apply(b);
         item.setValue(kv);
         refreshFXML = true;
     }
 
-    public void refresh(ObservableValue<T> t) {
+    /**
+     * This method set the AutosuggestFx B Bean Property.
+     * After an Item is set in the Skin, for avoiding infinite listening
+     *
+     * @param t
+     */
+    void refreshOnlyBean(ObservableValue<T> t) {
         beanProperty().removeListener(beanListener);
         beanProperty().setValue(itemToBeanMapping.apply(t));
         beanProperty().addListener(beanListener);
@@ -733,6 +767,18 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setLimitSearch(int limitSearch) {
         this.limitSearch = Math.max(0, Math.min(20, limitSearch));
+    }
+
+    public boolean getAskReschedule() {
+        return askReschedule.get();
+    }
+
+    public BooleanProperty askRescheduleProperty() {
+        return askReschedule;
+    }
+
+    public void setAskReschedule(boolean askReschedule) {
+        this.askReschedule.set(askReschedule);
     }
 
     // ----------------------------------------------------------------------- On Shown
