@@ -9,7 +9,7 @@ public class KeyValueString extends KeyValue<String, String> {
     }
 
     public KeyValueString(Long id, String key, String value) {
-        this(value, key);
+        this(key, value);
         this.id = id;
     }
 

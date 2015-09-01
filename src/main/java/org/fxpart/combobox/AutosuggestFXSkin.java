@@ -190,10 +190,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         });
 
         // set factories
-        if (control.getStringItemFormatter() != null) {
-            setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
-        } else {
+        if (control.isGraphicalRendering()) {
             setNodeCellFactory((Function<T, Node>) control.getNodeItemFormatter());
+        } else {
+            setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
         }
         setTextFieldFormatter((Function<T, String>) control.getStringTextFormatter());
 
@@ -243,12 +243,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @param item*/
 
     /**
-     *
      * @param item
      */
-    private void refreshSkinWithItem(ObjectProperty<T> item){
-        // TODO #0 null possible
-        // When FXML initialize component , never pass here
+    private void refreshSkinWithItem(ObjectProperty<T> item) {
         isSelectedItem = (((ObjectProperty<T>) item).getValue() != null);
         userInput = item.getValue().getValue().toString();
         combo.valueProperty().setValue(item.getValue());
@@ -303,7 +300,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             return;
         }
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
-            control.itemProperty().setValue(control.newInstanceOfT.apply(null));
+            T t = control.newInstanceOfT.apply(null);
+            control.itemProperty().setValue(t);
             showButton();
             return;
         }
@@ -354,6 +352,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         combo.setConverter(new StringConverter<T>() {
             @Override
             public String toString(T t) {
+                if (t != null) {
+                    String ret = textFieldFormatter.apply((T) t);
+                    LOG.debug(" factory give me " + ret);
+                }
                 return t == null ? null : textFieldFormatter.apply((T) t);
             }
 
@@ -499,9 +501,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     /**************************************************************************
-     *
      * Public API
-     *
      **************************************************************************/
 
     public void showCombo() {

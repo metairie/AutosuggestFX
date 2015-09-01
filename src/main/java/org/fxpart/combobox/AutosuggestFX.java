@@ -74,6 +74,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean alwaysRefresh = false;          // trigger a search after each input letter
     private boolean refreshFXML = false;            // TODO to be removed
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
+    private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
 
     // properties updated in control or skin       -----------------------
     private BooleanProperty filteringIndicator = new SimpleBooleanProperty(new Boolean(false));
@@ -156,11 +157,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param search
      * @param datasource
      * @param stringTextFormatter
-     * @param stringItemFormatter
      */
-    public void setupAndStart(Function<String, List<T>> search, Function<String, List<T>> datasource, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+    public void setupSearch(Function<String, List<T>> search, Function<String, List<T>> datasource, Function<T, String> stringTextFormatter) {
         this.search = search;
-        this.setupAndStart(datasource, stringTextFormatter, stringItemFormatter);
+        setupFilter(datasource, stringTextFormatter);
     }
 
     /**
@@ -168,12 +168,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      *
      * @param datas
      * @param stringTextFormatter
-     * @param stringItemFormatter
      */
-    public void setupAndStart(Function<String, List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+    public void setupFilter(Function<String, List<T>> datas, Function<T, String> stringTextFormatter) {
         this.dataSource = datas;
         this.stringTextFormatter = stringTextFormatter;
-        this.stringItemFormatter = stringItemFormatter;
         start();
     }
 
@@ -454,12 +452,9 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     @Override
     public void endControlInitialization() {
-        beanListener = new ChangeListener() {
-            @Override
-            public void changed(ObservableValue b, Object o, Object n) {
-                T kv = beanToItemMapping.apply(b);
-                item.setValue(kv);
-            }
+        beanListener = (b, o, n) -> {
+            T kv = beanToItemMapping.apply(b);
+            item.setValue(kv);
         };
         bean.addListener(beanListener);
 
@@ -779,6 +774,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setAskReschedule(boolean askReschedule) {
         this.askReschedule.set(askReschedule);
+    }
+
+    public boolean isGraphicalRendering() {
+        return graphicalRendering;
+    }
+
+    public void setGraphicalRendering(boolean graphicalRendering) {
+        this.graphicalRendering = graphicalRendering;
     }
 
     // ----------------------------------------------------------------------- On Shown
