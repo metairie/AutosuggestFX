@@ -247,9 +247,14 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      */
     private void refreshSkinWithItem(ObjectProperty<T> item) {
         isSelectedItem = (((ObjectProperty<T>) item).getValue() != null);
-        userInput = item.getValue().getValue().toString();
-        combo.valueProperty().setValue(item.getValue());
-        showButton();
+        if (item != null && item.getValue() != null) {
+            userInput = item.getValue().getValue().toString();
+            combo.valueProperty().setValue(item.getValue());
+            showButton();
+        } else {
+            userInput = "";
+            combo.valueProperty().setValue(null);
+        }
     }
 
     /**
@@ -290,6 +295,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             button.textProperty().setValue("");
             combo.valueProperty().setValue(null);
             control.itemProperty().setValue(null);
+            debug("case 1");
             return;
         }
         if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {

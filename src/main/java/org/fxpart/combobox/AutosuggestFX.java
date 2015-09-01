@@ -106,7 +106,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private Function<Observable, B> itemToBeanMapping = o -> {
         ObjectProperty<B> op = (ObjectProperty<B>) o;
         if (op == null || op.getValue() == null) {
-            return newInstanceOfB.apply(null);
+            return null;
         } else {
             return newInstanceOfB.apply(o);
         }
@@ -115,7 +115,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private Function<Observable, T> beanToItemMapping = o -> {
         ObjectProperty<T> op = (ObjectProperty<T>) o;
         if (op == null || op.getValue() == null) {
-            return newInstanceOfT.apply(null);
+            return null;
         } else {
             return newInstanceOfT.apply(o);
         }
@@ -446,7 +446,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      */
     void refreshOnlyBean(ObservableValue<T> t) {
         beanProperty().removeListener(beanListener);
-        beanProperty().setValue(itemToBeanMapping.apply(t));
+        B b = itemToBeanMapping.apply(t);
+        beanProperty().setValue(b);
         beanProperty().addListener(beanListener);
     }
 
