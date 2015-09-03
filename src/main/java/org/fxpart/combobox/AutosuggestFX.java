@@ -64,7 +64,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      **************************************************************************/
 
     // configuration       -----------------------
-    private int delay = 300;                        // delay in ms, max 5000
+    private int delay = 100;                        // delay in ms, max 5000
     private int visibleRowsCount = 10;              // display only 10 items
     private boolean lazyMode = true;                // load before or not datasource
     private boolean acceptFreeTextValue = false;    // ability to input value not in the datasource list
@@ -75,6 +75,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean refreshFXML = false;            // TODO to be removed
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
     private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
+    private boolean promptText = false;             // display when empty "Please enter text here"
 
     // properties updated in control or skin       -----------------------
     private BooleanProperty filteringIndicator = new SimpleBooleanProperty(new Boolean(false));
@@ -361,24 +362,17 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 isFullSearch = false;
                 ignoreCase = false;
                 lazyMode = false;
-                delay = 100;
                 visibleRowsCount = -1;
                 acceptFreeTextValue = false;
                 break;
             case LIVE_DATA:
                 isFullSearch = true;
                 ignoreCase = true;
-                lazyMode = true;
-                delay = 500;
-                visibleRowsCount = 10;
                 acceptFreeTextValue = false;
                 break;
             case SEARCH_ENGINE:
                 isFullSearch = true;
                 ignoreCase = true;
-                lazyMode = true;
-                delay = 500;
-                visibleRowsCount = 10;
                 acceptFreeTextValue = true;
                 break;
         }
@@ -410,7 +404,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     /**
      * Determine the "best" size according to different parameters
-     * <p/>
+     * <p>
      * If visibleRowsCount <= -1 display ALL list
      *
      * @param list
@@ -783,6 +777,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setGraphicalRendering(boolean graphicalRendering) {
         this.graphicalRendering = graphicalRendering;
+    }
+
+    public boolean isPromptText() {
+        return promptText;
+    }
+
+    public void setPromptText(boolean promptText) {
+        this.promptText = promptText;
     }
 
     // ----------------------------------------------------------------------- On Shown

@@ -352,6 +352,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         imageBox.setPadding(new Insets(5, 3, 1, 3));
         root.getChildren().addAll(visibleBox, imageBox);
         getChildren().add(root);
+        if (control.isPromptText()) {
+            combo.promptTextProperty().setValue("Please enter text here");
+        }
     }
 
     private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {
