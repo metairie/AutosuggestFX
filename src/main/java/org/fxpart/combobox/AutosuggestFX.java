@@ -190,11 +190,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    Callable<Timer> myTimer() {
-
-        return null;
-    }
-
     /**
      * reSchedule a searching or a filtering task
      *
