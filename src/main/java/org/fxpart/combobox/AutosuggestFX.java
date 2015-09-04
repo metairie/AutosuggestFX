@@ -14,13 +14,16 @@ import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import org.fxpart.common.AbstractAutosuggestControl;
 import org.fxpart.common.bean.KeyValue;
+import org.fxpart.common.util.AutosuggestFXTimer;
 import org.fxpart.common.util.CollectionsUtil;
 import org.fxpart.common.util.SearchThreadFactory;
+import org.fxpart.common.util.TimerThreadFactory;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -50,16 +53,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     /**************************************************************************
-     * Private Properties
-     **************************************************************************/
-
-    // 1 SearchThread for filtering + 1 SearchThread for searching       -----------------------
-    private ExecutorService executor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-    private FilterTimerTask timerTask = null;
-    private SearchTimerTask searchTask = null;
-    private Timer scheduler = new Timer();
-
-    /**************************************************************************
      * Public Properties
      **************************************************************************/
 
@@ -78,8 +71,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean promptText = false;             // display when empty "Please enter text here"
 
     // properties updated in control or skin       -----------------------
-    private BooleanProperty filteringIndicator = new SimpleBooleanProperty(new Boolean(false));
-    private BooleanProperty searchingIndicator = new SimpleBooleanProperty(new Boolean(false));
+    private BooleanProperty activityIndicator = new SimpleBooleanProperty(new Boolean(false));
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
     private BooleanProperty askReschedule = new SimpleBooleanProperty(new Boolean(false));
@@ -121,6 +113,17 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return newInstanceOfT.apply(o);
         }
     };
+
+    /**************************************************************************
+     * Private Properties
+     **************************************************************************/
+
+    // 1 SearchThread       -----------------------
+    private ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
+    private ExecutorService executorTimer = Executors.newFixedThreadPool(1, new TimerThreadFactory());
+    private AutosuggestFXTimer scheduler = AutosuggestFXTimer.getInstance();
+    private FilterTimerTask filterTask = null;
+    private SearchTimerTask searchTask = null;
 
 
     /**************************************************************************
@@ -187,6 +190,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    Callable<Timer> myTimer() {
+
+        return null;
+    }
+
     /**
      * reSchedule a searching or a filtering task
      *
@@ -194,19 +202,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param doSearch
      */
     public void reSchedule(Event event, boolean doSearch) {
-        if (scheduler != null) {
-            scheduler.purge();
-            scheduler.cancel();
-        }
-        scheduler = new Timer();
-
+        scheduler = AutosuggestFXTimer.getInstance();
         // running timer task as daemon thread
         if (doSearch) {
             searchTask = new SearchTimerTask(event);
             scheduler.schedule(searchTask, this.delay, this.delay);
         } else {
-            timerTask = new FilterTimerTask(event);
-            scheduler.schedule(timerTask, this.delay, this.delay);
+            filterTask = new FilterTimerTask(event);
+            scheduler.schedule(filterTask, this.delay, this.delay);
         }
     }
 
@@ -221,7 +224,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         private Event event;
 
         SearchTimerTask(Event event) {
-            filteringIndicatorProperty().setValue(new Boolean(true));
+            activityIndicatorProperty().setValue(new Boolean(true));
             this.event = event;
         }
 
@@ -229,7 +232,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         public void run() {
             startFiltering();
             SearchTask<T> searchTask = new SearchTask<>(this.event);
-            executor.submit(searchTask);
+            executorSearch.submit(searchTask);
         }
 
     }
@@ -286,7 +289,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
 
         FilterTimerTask(Event event) {
-            filteringIndicatorProperty().setValue(new Boolean(true));
+            activityIndicatorProperty().setValue(new Boolean(true));
             this.event = event;
         }
 
@@ -295,8 +298,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         @Override
         public void run() {
             startFiltering();
-            FilterTask<T> searchTask = new FilterTask<>(this.event);
-            executor.submit(searchTask);
+            FilterTask<T> filterTask = new FilterTask<>(this.event);
+            executorSearch.submit(filterTask);
         }
     }
 
@@ -340,7 +343,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void stopFiltering() {
         stopScheduler();
-        filteringIndicatorProperty().setValue(new Boolean(false));
+        activityIndicatorProperty().setValue(new Boolean(false));
     }
 
     /**************************************************************************
@@ -403,7 +406,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     /**
      * Determine the "best" size according to different parameters
-     * <p/>
+     * <p>
      * If visibleRowsCount <= -1 display ALL list
      *
      * @param list
@@ -474,11 +477,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    @Override
     public void dispose() {
-        if (timerTask != null) {
-            timerTask.cancel();
-            timerTask = null;
+        if (filterTask != null) {
+            filterTask.cancel();
+            filterTask = null;
         }
         if (searchTask != null) {
             searchTask.cancel();
@@ -488,8 +490,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             scheduler.cancel();
             scheduler = null;
         }
-        if (executor != null) {
-            executor.shutdownNow();
+        if (executorSearch != null) {
+            executorSearch.shutdownNow();
+        }
+        if (executorTimer != null) {
+            executorTimer.shutdownNow();
+        }
+        if (getSkinControl() != null) {
+            getSkinControl().unbindAll();
         }
     }
 
@@ -605,29 +613,29 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.controlShown.set(controlShown);
     }
 
-    public boolean getFilteringIndicator() {
-        return filteringIndicator.get();
+    public boolean getActivityIndicator() {
+        return activityIndicator.get();
     }
 
-    public BooleanProperty filteringIndicatorProperty() {
-        return filteringIndicator;
+    public BooleanProperty activityIndicatorProperty() {
+        return activityIndicator;
     }
 
-    public void setFilteringIndicator(boolean filteringIndicator) {
-        this.filteringIndicator.set(filteringIndicator);
+    public void setActivityIndicator(boolean activityIndicator) {
+        this.activityIndicator.set(activityIndicator);
     }
 
-    public boolean getSearchingIndicator() {
-        return searchingIndicator.get();
-    }
-
-    public BooleanProperty searchingIndicatorProperty() {
-        return searchingIndicator;
-    }
-
-    public void setSearchingIndicator(boolean searchingIndicator) {
-        this.searchingIndicator.set(searchingIndicator);
-    }
+//    public boolean getSearchingIndicator() {
+//        return searchingIndicator.get();
+//    }
+//
+//    public BooleanProperty searchingIndicatorProperty() {
+//        return searchingIndicator;
+//    }
+//
+//    public void setSearchingIndicator(boolean searchingIndicator) {
+//        this.searchingIndicator.set(searchingIndicator);
+//    }
 
     public final T getValue() {
         return (T) getSkinControl().getCombo().getValue();

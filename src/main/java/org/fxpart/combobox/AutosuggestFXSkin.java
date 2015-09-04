@@ -11,6 +11,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -28,6 +29,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.fxpart.common.WeakBinder;
 import org.fxpart.common.bean.KeyValue;
 import org.fxpart.common.bean.KeyValueString;
 import org.slf4j.Logger;
@@ -72,8 +74,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private final Button button = new Button();
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
-    private ImageView ivWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
-    private ImageView ivClose = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close16.png")));
+    private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
+    private ImageView iconClose = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close16.png")));
 
     // local data
     private final AutosuggestFX<B, T> control;
@@ -82,8 +84,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private String keyValueSeparator = " - ";
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
     private boolean isSelectedItem = false;
-    private ChangeListener itemListener = null;
-    private InvalidationListener loadingListener = null;
+
+    // listeners & binds, events
+    private final WeakBinder binder = new WeakBinder();
+    private ChangeListener<KeyValue> itemListener = null;
+    private InvalidationListener loadingIndicatorListener = null;
     private ChangeListener<Boolean> focusListener = null;
     private EventHandler filterComboKeyReleased = null;
     private EventHandler filterButtonKeyReleased = null;
@@ -152,6 +157,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // fill combo
         combo.setItems(this.items);
+
+        // listeners
+        buildListeners();
 
         // bindings
         buildBindings();
@@ -232,9 +240,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     /**
      * Gather all bindings
      */
-    private void buildBindings() {
+    private void buildListeners() {
         // loading property
-        loadingListener = o -> {
+        loadingIndicatorListener = o -> {
             if (!((BooleanProperty) o).getValue()) {
                 combo.getEditor().positionCaret(combo.getEditor().getText().length());
             }
@@ -243,7 +251,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         itemListener = (t, o, n) -> {
             isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
             // TODO rework
-            control.refreshOnlyBean(t);
+            control.refreshOnlyBean((ObservableValue<T>) t);
             refreshSkin(t);
         };
         // focus lost
@@ -258,23 +266,25 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // Set bindings and listeners ---------------------------------------------------
         // when loading indicator is false. caret is put a the end of the text
-        control.filteringIndicatorProperty().addListener(loadingListener);
+        control.activityIndicatorProperty().addListener(loadingIndicatorListener);
         // T item listener
         control.itemProperty().addListener(itemListener);
         // lost focus
         combo.focusedProperty().addListener(focusListener);
-        // icone wait displayed on control load indicator value
-        ivWait.visibleProperty().bind(control.filteringIndicatorProperty());
     }
 
     /**
      * Unbind all
      */
-    private void destroyBindings() {
+    private void destroyListeners() {
         control.itemProperty().removeListener(itemListener);
-        control.filteringIndicatorProperty().removeListener(loadingListener);
-        ivWait.visibleProperty().unbind();
+        control.activityIndicatorProperty().removeListener(loadingIndicatorListener);
         combo.focusedProperty().removeListener(focusListener);
+    }
+
+    private void buildBindings() {
+        // icone wait displayed on control load indicator value
+        binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
     }
 
     /**
@@ -298,6 +308,13 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         setTextFieldFormatter(null);
     }
 
+    public void unbindAll() {
+        binder.unbindAllInvalidationListener();
+        destroyListeners();
+        destroyFactories();
+        destroyEvents();
+    }
+
     /**************************************************************************
      *
      * Private Methods
@@ -309,7 +326,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @param item
      */
     private void refreshSkinWithItem(ObjectProperty<T> item) {
-        isSelectedItem = (((ObjectProperty<T>) item).getValue() != null);
+        isSelectedItem = (item.getValue() != null);
         if (item != null && item.getValue() != null) {
             userInput = item.getValue().getValue().toString();
             combo.valueProperty().setValue(item.getValue());
@@ -402,7 +419,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         button.setContentDisplay(ContentDisplay.RIGHT);
         button.setAlignment(Pos.BASELINE_RIGHT);
         button.setPadding(new Insets(1, 5, 1, 5));
-        button.setGraphic(ivClose);
+        button.setGraphic(iconClose);
         if (isSelectedItem) {
             visibleBox.getChildren().add(button);
             hiddenBox.getChildren().add(combo);
@@ -410,7 +427,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             visibleBox.getChildren().add(combo);
             hiddenBox.getChildren().add(button);
         }
-        imageBox.getChildren().add(ivWait);
+        imageBox.getChildren().add(iconWait);
         imageBox.setPadding(new Insets(5, 3, 1, 3));
         root.getChildren().addAll(visibleBox, imageBox);
         getChildren().add(root);
@@ -596,10 +613,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     @Override
     public void dispose() {
         super.dispose();
-        destroyBindings();
-        destroyFactories();
-        destroyEvents();
-        control.dispose();
+        unbindAll();
     }
 
     /**************************************************************************
