@@ -8,6 +8,8 @@ import javafx.scene.control.Control;
 public abstract class AbstractAutosuggestControl extends Control {
 
     public void endControlInitialization() {
+
     }
 
+    public abstract void dispose();
 }

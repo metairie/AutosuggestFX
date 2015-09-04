@@ -54,7 +54,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      **************************************************************************/
 
     // 1 SearchThread for filtering + 1 SearchThread for searching       -----------------------
-    private ExecutorService executor = Executors.newFixedThreadPool(2, new SearchThreadFactory());
+    private ExecutorService executor = Executors.newFixedThreadPool(1, new SearchThreadFactory());
     private FilterTimerTask timerTask = null;
     private SearchTimerTask searchTask = null;
     private Timer scheduler = new Timer();
@@ -204,7 +204,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         if (doSearch) {
             searchTask = new SearchTimerTask(event);
             scheduler.schedule(searchTask, this.delay, this.delay);
-
         } else {
             timerTask = new FilterTimerTask(event);
             scheduler.schedule(timerTask, this.delay, this.delay);
@@ -404,7 +403,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     /**
      * Determine the "best" size according to different parameters
-     * <p>
+     * <p/>
      * If visibleRowsCount <= -1 display ALL list
      *
      * @param list
@@ -472,6 +471,25 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         if (beanProperty().getValue() != null) {
             T kv = beanToItemMapping.apply(beanProperty());
             item.setValue(kv);
+        }
+    }
+
+    @Override
+    public void dispose() {
+        if (timerTask != null) {
+            timerTask.cancel();
+            timerTask = null;
+        }
+        if (searchTask != null) {
+            searchTask.cancel();
+            searchTask = null;
+        }
+        if (scheduler != null) {
+            scheduler.cancel();
+            scheduler = null;
+        }
+        if (executor != null) {
+            executor.shutdownNow();
         }
     }
 

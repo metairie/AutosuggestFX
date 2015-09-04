@@ -11,7 +11,7 @@ public class SearchThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable runnable) {
-        Thread thread = new Thread(runnable, "Search-Autossuggest-" + poolNumber.getAndIncrement() + "-thread");
+        Thread thread = new Thread(runnable, "Search-Autosuggest-" + poolNumber.getAndIncrement() + "-thread");
         thread.setDaemon(true);
         return thread;
     }

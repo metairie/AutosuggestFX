@@ -4,6 +4,7 @@ import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -12,6 +13,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -81,6 +83,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
     private boolean isSelectedItem = false;
     private ChangeListener itemListener = null;
+    private InvalidationListener loadingListener = null;
+    private ChangeListener<Boolean> focusListener = null;
+    private EventHandler filterComboKeyReleased = null;
+    private EventHandler filterButtonKeyReleased = null;
 
     /**************************************************************************
      * Constructors
@@ -138,83 +144,101 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private void initSkin() {
         this.items = control.getItems();
 
-        // build control up
-        combo.setEditable(control.isEditable());
-        combo.addEventFilter(KeyEvent.KEY_RELEASED, e -> {
-            e.consume();
-            if (DOWN.match(e)) {
-                if (!combo.isShowing()) {
-                    combo.show();
-                }
-                return;
-            } else if (ESCAPE.match(e) || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.isControlDown()) {
-                return;
-            } else if (ENTER.match(e)) {
-                validateInput();
-            } else if (BACKSPACE.match(e)) {
-                if (combo.getEditor().getText().length() == 0) {
-                    reScheduleSearch(e);
-                }
-            }
+        // events
+        buildEvents();
 
-            // search if possible
-            if (combo.visibleProperty().getValue() && combo.getEditor().getText().length() >= control.getLimitSearch()) {
-                reScheduleSearch(e);
-                if (!combo.isShowing()) {
-                    combo.show();
-                }
-            }
-        });
-        combo.setOnShown(e -> {
-            reScheduleSearch(e);
-        });
-
-        button.setOnAction(e -> {
-            e.consume();
-            showCombo();
-            combo.getEditor().setText(userInput);
-        });
-        button.addEventFilter(KeyEvent.KEY_RELEASED, e -> {
-            switch (e.getCode()) {
-                case ENTER:
-                    e.consume();
-                    combo.getEditor().setText(userInput);
-                    showCombo();
-                    return;
-                case ESCAPE:
-                    e.consume();
-                    combo.getEditor().setText("");
-                    showCombo();
-                    return;
-            }
-        });
-
-        // set factories
-        if (control.isGraphicalRendering()) {
-            setNodeCellFactory((Function<T, Node>) control.getNodeItemFormatter());
-        } else {
-            setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
-        }
-        setTextFieldFormatter((Function<T, String>) control.getStringTextFormatter());
+        // formatter factories
+        buildFactories();
 
         // fill combo
         combo.setItems(this.items);
 
         // bindings
-        bind();
-
-        // lost focus
-        combo.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            // lost focus
-            if (oldValue && !newValue) {
-                if (control.isControlShown()) {
-                    validateInput();
-                }
-            }
-        });
+        buildBindings();
     }
 
-    private void bind() {
+    /**
+     * build event for internal controls
+     */
+    private void buildEvents() {
+        // combo when input text
+        filterComboKeyReleased = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent e) {
+                e.consume();
+                if (DOWN.match(e)) {
+                    if (!combo.isShowing()) {
+                        combo.show();
+                    }
+                    return;
+                } else if (ESCAPE.match(e) || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.isControlDown()) {
+                    return;
+                } else if (ENTER.match(e)) {
+                    AutosuggestFXSkin.this.validateInput();
+                } else if (BACKSPACE.match(e)) {
+                    if (combo.getEditor().getText().length() == 0) {
+                        AutosuggestFXSkin.this.reScheduleSearch(e);
+                    }
+                }
+
+                // search if possible
+                if (combo.visibleProperty().getValue() && combo.getEditor().getText().length() >= control.getLimitSearch()) {
+                    AutosuggestFXSkin.this.reScheduleSearch(e);
+                    if (!combo.isShowing()) {
+                        combo.show();
+                    }
+                }
+            }
+        };
+        // button when pressed ENTER , ESC ...
+        filterButtonKeyReleased = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent e) {
+                switch (e.getCode()) {
+                    case ENTER:
+                        e.consume();
+                        combo.getEditor().setText(userInput);
+                        showCombo();
+                        return;
+                    case ESCAPE:
+                        e.consume();
+                        combo.getEditor().setText("");
+                        showCombo();
+                        return;
+                }
+
+            }
+        };
+
+        // Set events ---------------------------------------------------
+        combo.addEventFilter(KeyEvent.KEY_RELEASED, filterComboKeyReleased);
+        combo.setOnShown(e -> reScheduleSearch(e));
+        button.addEventFilter(KeyEvent.KEY_RELEASED, filterButtonKeyReleased);
+        button.setOnAction(e -> {
+            e.consume();
+            showCombo();
+            combo.getEditor().setText(userInput);
+        });
+
+    }
+
+    private void destroyEvents() {
+        combo.removeEventFilter(KeyEvent.KEY_RELEASED, filterComboKeyReleased);
+        combo.setOnShown(null);
+        button.removeEventFilter(KeyEvent.KEY_RELEASED, filterButtonKeyReleased);
+        button.setOnAction(null);
+    }
+
+    /**
+     * Gather all bindings
+     */
+    private void buildBindings() {
+        // loading property
+        loadingListener = o -> {
+            if (!((BooleanProperty) o).getValue()) {
+                combo.getEditor().positionCaret(combo.getEditor().getText().length());
+            }
+        };
         // item listener
         itemListener = (t, o, n) -> {
             isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
@@ -222,17 +246,56 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             control.refreshOnlyBean(t);
             refreshSkin(t);
         };
-        control.itemProperty().addListener(itemListener);
-
-        // when loading indicator is false. caret is put a the end of the text
-        control.filteringIndicatorProperty().addListener(observable -> {
-            if (!((BooleanProperty) observable).getValue()) {
-                combo.getEditor().positionCaret(combo.getEditor().getText().length());
+        // focus lost
+        focusListener = (o, old, n) -> {
+            // lost focus
+            if (old && !n) {
+                if (control.isControlShown()) {
+                    validateInput();
+                }
             }
-        });
+        };
 
+        // Set bindings and listeners ---------------------------------------------------
+        // when loading indicator is false. caret is put a the end of the text
+        control.filteringIndicatorProperty().addListener(loadingListener);
+        // T item listener
+        control.itemProperty().addListener(itemListener);
+        // lost focus
+        combo.focusedProperty().addListener(focusListener);
         // icone wait displayed on control load indicator value
         ivWait.visibleProperty().bind(control.filteringIndicatorProperty());
+    }
+
+    /**
+     * Unbind all
+     */
+    private void destroyBindings() {
+        control.itemProperty().removeListener(itemListener);
+        control.filteringIndicatorProperty().removeListener(loadingListener);
+        ivWait.visibleProperty().unbind();
+        combo.focusedProperty().removeListener(focusListener);
+    }
+
+    /**
+     * set factories
+     */
+    private void buildFactories() {
+        if (control.isGraphicalRendering()) {
+            setNodeCellFactory((Function<T, Node>) control.getNodeItemFormatter());
+        } else {
+            setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
+        }
+        setTextFieldFormatter((Function<T, String>) control.getStringTextFormatter());
+    }
+
+    /**
+     * Destroy factories
+     */
+    private void destroyFactories() {
+        setNodeCellFactory(null);
+        setStringCellFactory(null);
+        setTextFieldFormatter(null);
     }
 
     /**************************************************************************
@@ -354,6 +417,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         if (control.isPromptText()) {
             combo.promptTextProperty().setValue("Please enter text here");
         }
+        combo.setEditable(control.isEditable());
     }
 
     private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {
@@ -526,6 +590,16 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             button.requestFocus();
         });
         button.textProperty().setValue(userInput);
+    }
+
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        destroyBindings();
+        destroyFactories();
+        destroyEvents();
+        control.dispose();
     }
 
     /**************************************************************************
