@@ -31,7 +31,6 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxpart.common.WeakBinder;
 import org.fxpart.common.bean.KeyValue;
-import org.fxpart.common.bean.KeyValueString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -443,9 +442,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         imageBox.setPadding(new Insets(5, 3, 1, 3));
         root.getChildren().addAll(visibleBox, imageBox);
         getChildren().add(root);
-        if (control.isPromptText()) {
-            combo.promptTextProperty().setValue("Please enter text here");
-        }
+        combo.setPromptText(control.promptTextProperty().getValue());
         combo.setEditable(control.isEditable());
     }
 
@@ -502,8 +499,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                                  setGraphic(null);
                                              } else {
                                                  HBox styledText = new HBox();
-                                                 String keyString = ((KeyValueString) item).getKey();
-                                                 String valueString = ((KeyValueString) item).getValue();
+                                                 String keyString = String.valueOf(item.getKey());
+                                                 String valueString = String.valueOf(item.getValue());
                                                  String guess = control.getEditorText();
 
                                                  // key
@@ -717,6 +714,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         LOG.debug(" --- control  isFullSearch          : " + control.isFullSearch());
         LOG.debug(" --- control  isIgnoreCase          : " + control.isIgnoreCase());
         LOG.debug(" --- control  isLazyMode            : " + control.isLazyMode());
+        LOG.debug(" --- control  promptText            : " + control.promptTextProperty().getValue());
+        LOG.debug(" --- combo  getEditor               : " + combo.getEditor().promptTextProperty().getValue());
+
         LOG.debug(" --- <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ");
     }
 }

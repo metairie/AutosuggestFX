@@ -70,13 +70,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean refreshFXML = false;            // TODO to be removed
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
     private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
-    private boolean promptText = false;             // display when empty "Please enter text here"
 
     // properties updated in control or skin       -----------------------
     private BooleanProperty activityIndicator = new SimpleBooleanProperty(new Boolean(false));
     private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
     private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
     private BooleanProperty askReschedule = new SimpleBooleanProperty(new Boolean(false));
+    private StringProperty promptText = new SimpleStringProperty(String.valueOf("Please enter text here"));
 
     // formatter        -----------------------
     private Function<String, List<T>> filter = null;
@@ -299,7 +299,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    public class FilterService<T> extends Service<T>{
+    public class FilterService<T> extends Service<T> {
         @Override
         protected Task<T> createTask() {
             return new FilterTask<>();
@@ -633,18 +633,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.activityIndicator.set(activityIndicator);
     }
 
-//    public boolean getSearchingIndicator() {
-//        return searchingIndicator.get();
-//    }
-//
-//    public BooleanProperty searchingIndicatorProperty() {
-//        return searchingIndicator;
-//    }
-//
-//    public void setSearchingIndicator(boolean searchingIndicator) {
-//        this.searchingIndicator.set(searchingIndicator);
-//    }
-
     public final T getValue() {
         return (T) getSkinControl().getCombo().getValue();
     }
@@ -813,12 +801,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.graphicalRendering = graphicalRendering;
     }
 
-    public boolean isPromptText() {
+    public String getPromptText() {
+        return promptText.get();
+    }
+
+    public StringProperty promptTextProperty() {
         return promptText;
     }
 
-    public void setPromptText(boolean promptText) {
-        this.promptText = promptText;
+    public void setPromptText(String promptText) {
+        this.promptText.set(promptText);
     }
 
     // ----------------------------------------------------------------------- On Shown

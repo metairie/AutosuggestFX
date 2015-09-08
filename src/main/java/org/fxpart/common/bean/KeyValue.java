@@ -3,7 +3,7 @@ package org.fxpart.common.bean;
 /**
  * Created by metairie on 26.08.2015.
  */
-public class KeyValue<K, V> {
+public abstract class KeyValue<K, V> {
     Long id;
     V value;
     K key;
