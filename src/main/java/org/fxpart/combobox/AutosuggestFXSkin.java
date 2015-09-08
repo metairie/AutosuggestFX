@@ -492,6 +492,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                  public ListCell<T> call(ListView<T> param) {
                                      param.setPrefHeight(getFixedHeight());
                                      final ListCell<T> cell = new ListCell<T>() {
+                                         {
+                                             super.setPrefWidth(control.getPrefWidth());
+                                             super.setPrefHeight(control.getPrefHeight());
+                                         }
+
                                          @Override
                                          protected void updateItem(T item, boolean empty) {
                                              super.updateItem(item, empty);
@@ -536,6 +541,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @return
      */
     private HBox createStyledText(String searched, String guess, HBox styledText, boolean isIgnoreCase) {
+        LOG.debug(" searched:" + searched + ", guess:" + guess + ", styledText:" + styledText + ", ignoreCase:" + isIgnoreCase);
         int index = (isIgnoreCase ? searched.toLowerCase().indexOf(guess.toLowerCase()) : searched.indexOf(guess));
         if (index >= 0) {
 
@@ -553,9 +559,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             final Text end = new Text(endString);
             end.getStyleClass().add(USUAL_DROPDOWN_CLASS);
             styledText.getChildren().add(end);
-
+            LOG.debug(" INDEX = " + index + ", begin hightlight end=" + begin + " " + highlighted + " " + end);
         } else {
             styledText.getChildren().add(new Text(searched));
+            LOG.debug(" INDEX =-1 : put " + searched);
         }
         return styledText;
     }

@@ -42,15 +42,4 @@ public class WeakBinder {
         listeners.clear();
     }
 
-//
-//    public <T> void bindChangeListener(final Property<T> property, final ObservableValue<? extends T> dest) {
-//        ChangeListener cl = (o, old, n) -> property.setValue(dest.getValue());
-//        WeakChangeListener wcl = new WeakChangeListener(cl);
-//        listeners.put(dest, wcl);
-//        dest.addListener(wcl);
-//        property.setValue(dest.getValue());
-//        hardRefs.add(dest);
-//        hardRefs.add(cl);
-//    }
-
 }
