@@ -6,6 +6,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -96,7 +97,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     public Function<Observable, T> newInstanceOfT = observable -> null;
     // set a new instance of B
     public Function<Observable, B> newInstanceOfB = observable -> null;
-    // Generic T item ==> B bean mapping
+    // T item ==> B bean mapping
     private Function<Observable, B> itemToBeanMapping = o -> {
         ObjectProperty<B> op = (ObjectProperty<B>) o;
         if (op == null || op.getValue() == null) {
@@ -105,7 +106,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return newInstanceOfB.apply(o);
         }
     };
-    // Generic B bean ==> T item mapping
+    // B bean ==> T item mapping
     private Function<Observable, T> beanToItemMapping = o -> {
         ObjectProperty<T> op = (ObjectProperty<T>) o;
         if (op == null || op.getValue() == null) {
@@ -120,8 +121,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      **************************************************************************/
 
     // 1 SearchThread       -----------------------
-    private ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-    //    private ExecutorService executorTimer = Executors.newFixedThreadPool(1, new TimerThreadFactory());
+    private static ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
     private AutosuggestFXTimer scheduler = AutosuggestFXTimer.getInstance();
     private FilterTimerTask filterTask = null;
     private SearchTimerTask searchTask = null;
@@ -215,14 +215,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * inner Class for external search
      */
     public class SearchTimerTask extends TimerTask {
+        private Event event;
+
         SearchTimerTask() {
             this(null);
         }
 
-        private Event event;
-
         SearchTimerTask(Event event) {
-            activityIndicatorProperty().setValue(new Boolean(true));
             this.event = event;
         }
 
@@ -287,7 +286,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
 
         FilterTimerTask(Event event) {
-            activityIndicatorProperty().setValue(new Boolean(true));
             this.event = event;
         }
 
@@ -298,6 +296,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             startFiltering();
             FilterTask<T> filterTask = new FilterTask<>(this.event);
             executorSearch.submit(filterTask);
+        }
+    }
+
+    public class FilterService<T> extends Service<T>{
+        @Override
+        protected Task<T> createTask() {
+            return new FilterTask<>();
         }
     }
 
@@ -335,7 +340,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public void startFiltering() {
-        startScheduler();
+        activityIndicatorProperty().setValue(new Boolean(true));
         searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
         stopScheduler();
     }
@@ -348,10 +353,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     /**************************************************************************
      * Private Methods
      **************************************************************************/
-
-    private void startScheduler() {
-        //executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-    }
 
     private void stopScheduler() {
 //        scheduler.purge();

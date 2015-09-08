@@ -206,13 +206,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                     }
                 }
             }
-        }
+        };
 
-        ;
         // button when pressed ENTER , ESC ...
-        filterButtonKeyReleased = new EventHandler<KeyEvent>()
-
-        {
+        filterButtonKeyReleased = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent e) {
                 switch (e.getCode()) {
@@ -229,9 +226,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                 }
 
             }
-        }
-
-        ;
+        };
 
         // Set events ---------------------------------------------------
         combo.addEventFilter(KeyEvent.KEY_RELEASED, filterComboKeyReleased);
@@ -333,12 +328,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     /**************************************************************************
-     *
      * Private Methods
-     *
-     *************************************************************************
-
-     /**
+     * <p>
+     * ************************************************************************
+     * <p>
+     * /**
      * Refresh the skin when item is set
      *
      * @param item
