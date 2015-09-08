@@ -235,20 +235,14 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // Set events ---------------------------------------------------
         combo.addEventFilter(KeyEvent.KEY_RELEASED, filterComboKeyReleased);
-        combo.setOnShown(e ->
-
-                        reScheduleSearch(e)
-
+        combo.setOnShown(e -> reScheduleSearch(e)
         );
         button.addEventFilter(KeyEvent.KEY_RELEASED, filterButtonKeyReleased);
-        button.setOnAction(e ->
-
-                {
+        button.setOnAction(e -> {
                     e.consume();
                     showCombo();
                     combo.getEditor().setText(userInput);
                 }
-
         );
 
     }
@@ -343,9 +337,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * Private Methods
      *
      *************************************************************************
-     * @param item*/
 
-    /**
+     /**
+     * Refresh the skin when item is set
+     *
      * @param item
      */
     private void refreshSkinWithItem(ObjectProperty<T> item) {
@@ -361,7 +356,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     /**
-     * refresh is only called from control
+     * only called from control
      *
      * @param item
      */

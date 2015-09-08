@@ -17,13 +17,14 @@ import org.fxpart.common.bean.KeyValue;
 import org.fxpart.common.util.AutosuggestFXTimer;
 import org.fxpart.common.util.CollectionsUtil;
 import org.fxpart.common.util.SearchThreadFactory;
-import org.fxpart.common.util.TimerThreadFactory;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -120,7 +121,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     // 1 SearchThread       -----------------------
     private ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-    private ExecutorService executorTimer = Executors.newFixedThreadPool(1, new TimerThreadFactory());
+    //    private ExecutorService executorTimer = Executors.newFixedThreadPool(1, new TimerThreadFactory());
     private AutosuggestFXTimer scheduler = AutosuggestFXTimer.getInstance();
     private FilterTimerTask filterTask = null;
     private SearchTimerTask searchTask = null;
@@ -194,15 +195,17 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * reSchedule a searching or a filtering task
      *
      * @param event
-     * @param doSearch
+     * @param refresh do a search again
      */
-    public void reSchedule(Event event, boolean doSearch) {
+    public void reSchedule(Event event, boolean refresh) {
         scheduler = AutosuggestFXTimer.getInstance();
         // running timer task as daemon thread
-        if (doSearch) {
+        if (refresh) {
+            // ask a new external Search
             searchTask = new SearchTimerTask(event);
             scheduler.schedule(searchTask, this.delay, this.delay);
         } else {
+            // apply an internal Stream filter
             filterTask = new FilterTimerTask(event);
             scheduler.schedule(filterTask, this.delay, this.delay);
         }
@@ -332,6 +335,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public void startFiltering() {
+        startScheduler();
         searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
         stopScheduler();
     }
@@ -345,9 +349,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * Private Methods
      **************************************************************************/
 
+    private void startScheduler() {
+        //executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
+    }
+
     private void stopScheduler() {
-        scheduler.purge();
-        scheduler.cancel();
+//        scheduler.purge();
+//        scheduler.cancel();
+        dispose();
     }
 
     /**************************************************************************
@@ -472,6 +481,9 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    /**
+     * release timer, executor, bindings
+     */
     public void dispose() {
         if (filterTask != null) {
             filterTask.cancel();
@@ -485,15 +497,15 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             scheduler.cancel();
             scheduler = null;
         }
-        if (executorSearch != null) {
-            executorSearch.shutdownNow();
-        }
-        if (executorTimer != null) {
-            executorTimer.shutdownNow();
-        }
-        if (getSkinControl() != null) {
-            getSkinControl().unbindAll();
-        }
+//        if (executorSearch != null) {
+//            executorSearch.shutdownNow();
+//        }
+//        if (executorTimer != null) {
+//            executorTimer.shutdownNow();
+//        }
+//        if (getSkinControl() != null) {
+//            getSkinControl().unbindAll();
+//        }
     }
 
     public void setCacheDataMode() {
