@@ -24,6 +24,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
@@ -50,6 +51,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * fields
      **************************************************************************/
     private static final KeyCodeCombination A = new KeyCodeCombination(KeyCode.A);
+    private static final KeyCodeCombination SHIFT_TAB = new KeyCodeCombination(KeyCode.TAB, KeyCombination.SHIFT_DOWN);
+
     private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
     private static final KeyCodeCombination BACKSPACE = new KeyCodeCombination(KeyCode.BACK_SPACE);
     private static final KeyCodeCombination ESCAPE = new KeyCodeCombination(KeyCode.ESCAPE);
@@ -179,7 +182,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                         combo.show();
                     }
                     return;
-                } else if (e.getCode().isModifierKey() || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown() || e.isShiftDown()) {
+                } else if ( e.getCode().isModifierKey() || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown() ) {
                     return;
                 } else if (ESCAPE.match(e)) {
                     if (getCombo().getEditor().getCaretPosition() == 0) {
