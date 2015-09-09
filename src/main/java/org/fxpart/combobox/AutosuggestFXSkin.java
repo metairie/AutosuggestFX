@@ -90,6 +90,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private ChangeListener<KeyValue> itemListener = null;
     private InvalidationListener loadingIndicatorListener = null;
     private ChangeListener<Boolean> focusListener = null;
+    private ChangeListener<Boolean> getFocusListener = null;
     private EventHandler filterComboKeyReleased = null;
     private EventHandler filterButtonKeyReleased = null;
 
@@ -142,7 +143,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         refreshSkinWithItem(item);
     }
 
-
     /**
      * This method is called by the constructor
      */
@@ -179,12 +179,12 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                         combo.show();
                     }
                     return;
-                } else if (UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown()) {
+                } else if (e.getCode().isModifierKey() || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown() || e.isShiftDown()) {
                     return;
                 } else if (ESCAPE.match(e)) {
                     if (getCombo().getEditor().getCaretPosition() == 0) {
                         getCombo().getEditor().setText("");
-                        validateInput();
+                        control.setItem(null);
                     } else {
                         getCombo().getEditor().positionCaret(0);
                     }
@@ -229,8 +229,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // Set events ---------------------------------------------------
         combo.addEventFilter(KeyEvent.KEY_RELEASED, filterComboKeyReleased);
-        combo.setOnShown(e -> reScheduleSearch(e)
-        );
+        combo.setOnShown(e -> reScheduleSearch(e));
         button.addEventFilter(KeyEvent.KEY_RELEASED, filterButtonKeyReleased);
         button.setOnAction(e -> {
                     e.consume();
@@ -251,6 +250,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     /**
      * Gather all bindings
      */
+    private boolean quit = false;
+
     private void buildListeners() {
         // loading property
         loadingIndicatorListener = o -> {
@@ -261,17 +262,26 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         // item listener
         itemListener = (t, o, n) -> {
             isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
-            // TODO rework
             control.refreshOnlyBean((ObservableValue<T>) t);
             refreshSkin(t);
         };
         // focus lost
         focusListener = (o, old, n) -> {
+            quit = old;
             // lost focus
             if (old && !n) {
                 if (control.isControlShown()) {
-                    validateInput();
+                    if (quit) {
+                        validateInput();
+                    }
                 }
+            }
+        };
+        // managing TAB
+        getFocusListener = (o, old, n) -> {
+            // control has focus false - true
+            if (!quit && !old && n) {
+                showCombo();
             }
         };
 
@@ -282,6 +292,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         control.itemProperty().addListener(itemListener);
         // lost focus
         combo.focusedProperty().addListener(focusListener);
+        // control has focus
+        control.focusedProperty().addListener(getFocusListener);
     }
 
     /**
@@ -291,6 +303,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         control.itemProperty().removeListener(itemListener);
         control.activityIndicatorProperty().removeListener(loadingIndicatorListener);
         combo.focusedProperty().removeListener(focusListener);
+        control.focusedProperty().removeListener(getFocusListener);
     }
 
     private void buildBindings() {
@@ -336,12 +349,15 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      *
      * @param item
      */
+
     private void refreshSkinWithItem(ObjectProperty<T> item) {
         isSelectedItem = (item.getValue() != null);
         if (item != null && item.getValue() != null) {
             userInput = item.getValue().getValue().toString();
             combo.valueProperty().setValue(item.getValue());
-            showButton();
+            if (!userInput.equalsIgnoreCase("")) {
+                showButton();
+            }
         } else {
             userInput = "";
             combo.valueProperty().setValue(null);
@@ -397,15 +413,21 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         }
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             T t = control.newInstanceOfT.apply(null);
-            control.itemProperty().setValue(t);
-            showButton();
+            if (String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
+                control.itemProperty().setValue(t);
+                showButton();
+            } else {
+                combo.getEditor().setText("");
+            }
             return;
         }
         if (combo.valueProperty().getValue() != null) {
             T t = combo.valueProperty().getValue();
             if (String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
-                control.itemProperty().setValue(combo.valueProperty().getValue());
+                control.itemProperty().setValue(t);
                 showButton();
+            } else {
+                combo.getEditor().setText("");
             }
             return;
         }
@@ -541,7 +563,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @return
      */
     private HBox createStyledText(String searched, String guess, HBox styledText, boolean isIgnoreCase) {
-        LOG.debug(" searched:" + searched + ", guess:" + guess + ", styledText:" + styledText + ", ignoreCase:" + isIgnoreCase);
         int index = (isIgnoreCase ? searched.toLowerCase().indexOf(guess.toLowerCase()) : searched.indexOf(guess));
         if (index >= 0) {
 
@@ -559,10 +580,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             final Text end = new Text(endString);
             end.getStyleClass().add(USUAL_DROPDOWN_CLASS);
             styledText.getChildren().add(end);
-            LOG.debug(" INDEX = " + index + ", begin hightlight end=" + begin + " " + highlighted + " " + end);
         } else {
             styledText.getChildren().add(new Text(searched));
-            LOG.debug(" INDEX =-1 : put " + searched);
+            ;
         }
         return styledText;
     }

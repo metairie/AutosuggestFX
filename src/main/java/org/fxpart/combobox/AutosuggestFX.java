@@ -138,6 +138,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      */
     public AutosuggestFX() {
         this(null);
+        setFocusTraversable(true);
         Version.getInstance();
     }
 
@@ -189,6 +190,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 reSchedule(null, alwaysRefresh);
             }
         }
+    }
+
+    public void setHasFocus(Boolean focus) {
+        setFocused(focus);
     }
 
     /**
@@ -498,12 +503,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             scheduler.cancel();
             scheduler = null;
         }
+        // TODO try to shutdown
 //        if (executorSearch != null) {
 //            executorSearch.shutdownNow();
 //        }
-//        if (executorTimer != null) {
-//            executorTimer.shutdownNow();
-//        }
+        // TODO try to unbind
 //        if (getSkinControl() != null) {
 //            getSkinControl().unbindAll();
 //        }
