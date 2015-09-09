@@ -138,7 +138,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      */
     public AutosuggestFX() {
         this(null);
-        setFocusTraversable(true);
+        setFocusTraversable(false);
         Version.getInstance();
     }
 
@@ -191,11 +191,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             }
         }
     }
-
-    public void setHasFocus(Boolean focus) {
-        setFocused(focus);
-    }
-
     /**
      * reSchedule a searching or a filtering task
      *
