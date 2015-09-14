@@ -66,6 +66,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean isFullSearch = false;           // search on all columns Key + Value(s)
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
     private boolean ignoreCase = false;             // ignore case when searching
+    private boolean multiple = false;               // for having multiple choices
 
     private boolean editable = true;                // combo is editable
     private boolean alwaysRefresh = false;          // trigger a search after each input letter
@@ -192,6 +193,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             }
         }
     }
+
     /**
      * reSchedule a searching or a filtering task
      *
@@ -811,6 +813,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setPromptText(String promptText) {
         this.promptText.set(promptText);
+    }
+
+    public boolean isMultiple() {
+        return multiple;
+    }
+
+    public void setMultiple(boolean multiple) {
+        this.multiple = multiple;
     }
 
     // ----------------------------------------------------------------------- On Shown

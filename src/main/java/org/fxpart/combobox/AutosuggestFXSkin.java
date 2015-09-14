@@ -24,7 +24,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
@@ -32,6 +31,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxpart.common.WeakBinder;
 import org.fxpart.common.bean.KeyValue;
+import org.fxpart.common.util.ButtonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +50,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     /**************************************************************************
      * fields
      **************************************************************************/
-    private static final KeyCodeCombination A = new KeyCodeCombination(KeyCode.A);
-    private static final KeyCodeCombination SHIFT_TAB = new KeyCodeCombination(KeyCode.TAB, KeyCombination.SHIFT_DOWN);
-
     private static final KeyCodeCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
     private static final KeyCodeCombination BACKSPACE = new KeyCodeCombination(KeyCode.BACK_SPACE);
     private static final KeyCodeCombination ESCAPE = new KeyCodeCombination(KeyCode.ESCAPE);
@@ -74,7 +71,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private final HBox hiddenBox = new HBox();
     private final HBox imageBox = new HBox();
     private final ComboBox<T> combo = new ComboBox<>();
-    private final Button button = new Button();
+    // TODO final list
+    private Button button = null;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
     private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
@@ -114,10 +112,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public AutosuggestFXSkin(final AutosuggestFX<B, T> control) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
-        initSkin();
 
         // visual aspect
         graphical();
+
+        initSkin();
 
         if (control.isRefreshFXML()) {
             refreshSkinWithItem(control.itemProperty());
@@ -137,10 +136,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public AutosuggestFXSkin(final AutosuggestFX<B, T> control, ObjectProperty<T> item) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
-        initSkin();
 
         // visual aspect
         graphical();
+
+        initSkin();
 
         // at startup only
         refreshSkinWithItem(item);
@@ -454,11 +454,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         root.setPadding(new Insets(1, 1, 1, 1));
         visibleBox.setPadding(new Insets(1, 1, 1, 1));
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
-        button.setMaxHeight(Double.MAX_VALUE);
-        button.setContentDisplay(ContentDisplay.RIGHT);
-        button.setAlignment(Pos.BASELINE_RIGHT);
-        button.setPadding(new Insets(1, 5, 1, 5));
-        button.setGraphic(iconClose);
+        button = ButtonFactory.getNew();
         if (isSelectedItem) {
             visibleBox.getChildren().add(button);
             hiddenBox.getChildren().add(combo);
@@ -466,9 +462,13 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             visibleBox.getChildren().add(combo);
             hiddenBox.getChildren().add(button);
         }
+        if (control.isMultiple()) {
+            button.setGraphic(iconClose);
+        }
+        root.getChildren().add(visibleBox);
         imageBox.getChildren().add(iconWait);
         imageBox.setPadding(new Insets(5, 3, 1, 3));
-        root.getChildren().addAll(visibleBox, imageBox);
+        root.getChildren().add(imageBox);
         getChildren().add(root);
         combo.setPromptText(control.promptTextProperty().getValue());
         combo.setEditable(control.isEditable());
