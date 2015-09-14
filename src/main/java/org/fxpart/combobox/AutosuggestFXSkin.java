@@ -182,7 +182,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                         combo.show();
                     }
                     return;
-                } else if ( e.getCode().isModifierKey() || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown() ) {
+                } else if (e.getCode().isModifierKey() || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown()) {
                     return;
                 } else if (ESCAPE.match(e)) {
                     if (getCombo().getEditor().getCaretPosition() == 0) {
@@ -197,6 +197,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                 } else if (BACKSPACE.match(e)) {
                     if (combo.getEditor().getText().length() == 0) {
                         reScheduleSearch(e);
+                    }
+                } else {
+                    if (!control.isAcceptFreeTextValue()) {
+                        combo.valueProperty().setValue(null);
                     }
                 }
 
@@ -352,7 +356,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      *
      * @param item
      */
-
     private void refreshSkinWithItem(ObjectProperty<T> item) {
         isSelectedItem = (item.getValue() != null);
         if (item != null && item.getValue() != null) {

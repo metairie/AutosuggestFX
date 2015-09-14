@@ -63,12 +63,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private int visibleRowsCount = 10;              // display only 10 items
     private boolean lazyMode = true;                // load before or not datasource
     private boolean acceptFreeTextValue = false;    // ability to input value not in the datasource list
-    private boolean editable = true;                // combo is editable
     private boolean isFullSearch = false;           // search on all columns Key + Value(s)
+    private int limitSearch = 0;                    // number of input character needed for searching, max 20
     private boolean ignoreCase = false;             // ignore case when searching
+
+    private boolean editable = true;                // combo is editable
     private boolean alwaysRefresh = false;          // trigger a search after each input letter
     private boolean refreshFXML = false;            // TODO to be removed
-    private int limitSearch = 0;                    // number of input character needed for searching, max 20
     private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
 
     // properties updated in control or skin       -----------------------
