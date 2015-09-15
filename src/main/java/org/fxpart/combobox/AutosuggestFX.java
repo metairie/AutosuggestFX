@@ -6,7 +6,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -233,12 +232,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         @Override
         public void run() {
             startFiltering();
-            SearchTask<T> searchTask = new SearchTask<>(this.event);
+            SearchTask searchTask = new SearchTask(this.event);
             executorSearch.submit(searchTask);
         }
     }
 
-    public class SearchTask<T> extends Task<T> {
+    public class SearchTask extends Task<List<T>> {
         private Event event;
 
         SearchTask() {
@@ -259,8 +258,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
 
         @Override
-        protected T call() throws Exception {
-            return (T) search.apply(getEditorText());
+        protected List<T> call() throws Exception {
+            return search.apply(getEditorText());
         }
     }
 
@@ -298,19 +297,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         @Override
         public void run() {
             startFiltering();
-            FilterTask<T> filterTask = new FilterTask<>(this.event);
+            FilterTask filterTask = new FilterTask(this.event);
             executorSearch.submit(filterTask);
         }
     }
 
-    public class FilterService<T> extends Service<T> {
-        @Override
-        protected Task<T> createTask() {
-            return new FilterTask<>();
-        }
-    }
-
-    public class FilterTask<T> extends Task<T> {
+    public class FilterTask extends Task<List<T>> {
         private Event event;
 
         FilterTask() {
@@ -338,8 +330,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
 
         @Override
-        protected T call() throws Exception {
-            return (T) filter.apply(getEditorText());
+        protected List<T> call() throws Exception {
+            return filter.apply(getEditorText());
         }
     }
 
