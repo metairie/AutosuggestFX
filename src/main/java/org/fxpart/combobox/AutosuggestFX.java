@@ -75,14 +75,15 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
 
     // properties updated in control or skin       -----------------------
-    private BooleanProperty activityIndicator = new SimpleBooleanProperty(new Boolean(false));
-    private StringProperty searchStatus = new SimpleStringProperty(String.valueOf(STATUS_SEARCH.NOTHING));
-    private BooleanProperty controlShown = new SimpleBooleanProperty(new Boolean(true));
-    private BooleanProperty askReschedule = new SimpleBooleanProperty(new Boolean(false));
-    private StringProperty promptText = new SimpleStringProperty(String.valueOf("Please enter text here"));
+    private BooleanProperty activityIndicator = new SimpleBooleanProperty(this, "activityIndicator", false);
+    private StringProperty searchStatus = new SimpleStringProperty(this, "searchStatus", STATUS_SEARCH.NOTHING.name());
+    private BooleanProperty controlShown = new SimpleBooleanProperty(this, "controlShown", true);
+    private BooleanProperty askReschedule = new SimpleBooleanProperty(this, "askReschedule", false);
+    private StringProperty promptText = new SimpleStringProperty(this, "promptText", "Please enter text here");
 
-    // formatter        -----------------------
+    // filter a datasource which not supposed to change (array list...)
     private Function<String, List<T>> filter = null;
+    // search from a source which is dynamic (database, ws, ...)
     private Function<String, List<T>> search = null;
     private Supplier<List<T>> dataSource = () -> new ArrayList<>();
 
@@ -235,7 +236,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             SearchTask<T> searchTask = new SearchTask<>(this.event);
             executorSearch.submit(searchTask);
         }
-
     }
 
     public class SearchTask<T> extends Task<T> {
@@ -269,16 +269,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      *
      * @param newList
      */
-    public void applyList(Object newList) {
+    public void applyList(List<T> newList) {
         // list items of Combo
-        ObservableList<T> list = (ObservableList<T>) items;
+//        ObservableList<T> list = (ObservableList<T>) items;
 
         // T call() . List comes from a datasource
-        Collection<? extends T> cList = (Collection<? extends T>) newList;
-        Collection<? extends T> cListCopy = CollectionsUtil.split(cList, determineListItemSize((List) cList));
+        //Collection<? extends T> cList = (Collection<? extends T>) newList;
+        Collection<? extends T> cListCopy = CollectionsUtil.split(newList, determineListItemSize(newList));
 
         // set the combo item list in one time
-        list.setAll(cListCopy);
+        items.setAll(cListCopy);
     }
 
     /**
@@ -329,7 +329,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 String inputUser = getEditorText();
 
                 // apply new list
-                applyList(t.getSource().getValue());
+                applyList((List) t.getSource().getValue());
 
                 // reset editor text
                 setEditorText(inputUser);
