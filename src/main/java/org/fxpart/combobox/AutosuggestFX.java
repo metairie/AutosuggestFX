@@ -29,6 +29,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +84,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     // formatter        -----------------------
     private Function<String, List<T>> filter = null;
     private Function<String, List<T>> search = null;
-    private Function<String, List<T>> dataSource = s -> new ArrayList<>();
+    private Supplier<List<T>> dataSource = () -> new ArrayList<>();
 
     // formatter        -----------------------
     private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
@@ -166,7 +167,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param datasource
      * @param stringTextFormatter
      */
-    public void setupSearch(Function<String, List<T>> search, Function<String, List<T>> datasource, Function<T, String> stringTextFormatter) {
+    public void setupSearch(Function<String, List<T>> search, Supplier<List<T>> datasource, Function<T, String> stringTextFormatter) {
         this.search = search;
         setupFilter(datasource, stringTextFormatter);
     }
@@ -177,7 +178,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param datas
      * @param stringTextFormatter
      */
-    public void setupFilter(Function<String, List<T>> datas, Function<T, String> stringTextFormatter) {
+    public void setupFilter(Supplier<List<T>> datas, Function<T, String> stringTextFormatter) {
         this.dataSource = datas;
         this.stringTextFormatter = stringTextFormatter;
         start();
@@ -465,7 +466,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
         // default filter
         filter = term -> {
-            List<T> list = dataSource.apply(null).stream().filter(t -> {
+            List<T> list = dataSource.get().stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
                 String v = String.valueOf(t.getValue());
                 if (ignoreCase) {
@@ -552,10 +553,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public List<T> getDataSource() {
-        return dataSource.apply(null);
+        return dataSource.get();
     }
 
-    public void setDataSource(Function<String, List<T>> dataSource) {
+    public void setDataSource(Supplier<List<T>> dataSource) {
         this.dataSource = dataSource;
     }
 
