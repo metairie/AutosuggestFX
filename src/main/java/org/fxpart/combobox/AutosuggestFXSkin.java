@@ -425,7 +425,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         }
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             T t = control.newInstanceOfT.apply(null);
-            if (String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
+            if (t !=null && String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
                 control.itemProperty().setValue(t);
                 showButton();
             } else {
@@ -486,9 +486,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             @Override
             public String toString(T t) {
                 if (t != null) {
-                    String ret = textFieldFormatter.apply((T) t);
+                    String ret = textFieldFormatter.apply(t);
                 }
-                return t == null ? null : textFieldFormatter.apply((T) t);
+                return t == null ? "" : textFieldFormatter.apply(t);
             }
 
             @Override
