@@ -282,7 +282,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         focusListener = (o, old, n) -> {
             quit = old;
             // lost focus
-            if (old && !n) {
+            if (old) {
                 if (control.isControlShown()) {
                     if (quit) {
                         validateInput();
@@ -293,7 +293,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         // managing TAB
         getFocusListener = (o, old, n) -> {
             // control has focus false - true
-            if (!quit && !old && n) {
+            if (!quit && !old) {
                 showCombo();
             }
         };
