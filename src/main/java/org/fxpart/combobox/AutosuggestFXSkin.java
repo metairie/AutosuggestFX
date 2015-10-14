@@ -365,7 +365,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private void refreshSkinWithItem(ObjectProperty<T> item) {
         isSelectedItem = (item.getValue() != null);
         if (item != null && item.getValue() != null) {
-            userInput = item.getValue().getValue().toString();
+            userInput = control.getStringTextFormatter().apply(item.getValue());
             combo.valueProperty().setValue(item.getValue());
             if (!userInput.equalsIgnoreCase("")) {
                 showButton();
@@ -386,8 +386,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         if (item != null) {
             T t = (T) ob.getValue();
             if (t != null && t.getValue() != null) {
-                userInput = String.valueOf(t.getValue());
-                currentButton.textProperty().setValue(String.valueOf(t.getValue()));
+                userInput = control.getStringTextFormatter().apply(t);
+                currentButton.textProperty().setValue(userInput);
             } else {
                 currentButton.textProperty().setValue(userInput);
             }
@@ -425,7 +425,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         }
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             T t = control.newInstanceOfT.apply(null);
-            if (t !=null && String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
+            if (t != null && String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
                 control.itemProperty().setValue(t);
                 showButton();
             } else {
@@ -435,8 +435,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         }
         if (combo.valueProperty().getValue() != null) {
             T t = combo.valueProperty().getValue();
-            if (String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
+            userInput = control.getStringTextFormatter().apply(t);
+            if (String.valueOf(userInput).equalsIgnoreCase(combo.getEditor().getText())) {
                 control.itemProperty().setValue(t);
+                combo.getEditor().setText(userInput);
                 showButton();
             } else {
                 combo.getEditor().setText("");
