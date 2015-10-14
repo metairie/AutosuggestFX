@@ -12,7 +12,7 @@ public class SearchThreadFactory implements ThreadFactory {
     @Override
     public Thread newThread(Runnable r) {
         Thread thread = new Thread(r, "Search-Autosuggest-" + poolNumber.getAndIncrement() + "-thread");
-        thread.setDaemon(true);
+        //thread.setDaemon(true);
         return thread;
     }
 }
