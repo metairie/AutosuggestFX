@@ -123,7 +123,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     // 1 SearchThread       -----------------------
     //private static ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
-    private AutosuggestFXTimer scheduler = AutosuggestFXTimer.getInstance();
+    private AutosuggestFXTimer scheduler = null;//AutosuggestFXTimer.getInstance();
     private FilterTimerTask filterTask = null;
     private SearchTimerTask searchTask = null;
 
