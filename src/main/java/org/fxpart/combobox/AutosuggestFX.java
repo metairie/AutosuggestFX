@@ -6,6 +6,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -16,7 +17,6 @@ import org.fxpart.common.AbstractAutosuggestControl;
 import org.fxpart.common.bean.KeyValue;
 import org.fxpart.common.util.AutosuggestFXTimer;
 import org.fxpart.common.util.CollectionsUtil;
-import org.fxpart.common.util.SearchThreadFactory;
 import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -124,7 +122,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      **************************************************************************/
 
     // 1 SearchThread       -----------------------
-    private static ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
+    //private static ExecutorService executorSearch = Executors.newFixedThreadPool(1, new SearchThreadFactory());
     private AutosuggestFXTimer scheduler = AutosuggestFXTimer.getInstance();
     private FilterTimerTask filterTask = null;
     private SearchTimerTask searchTask = null;
@@ -196,6 +194,17 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     /**
+     * Method for doing the update of cells
+     *
+     * @param newList
+     */
+    public void applyList(List<T> newList) {
+        Collection<? extends T> cListCopy = CollectionsUtil.split(newList, determineListItemSize(newList));
+        // set the combo item list in one time
+        items.setAll(cListCopy);
+    }
+
+    /**
      * reSchedule a searching or a filtering task
      *
      * @param event
@@ -203,7 +212,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      */
     public void reSchedule(Event event, boolean refresh) {
         scheduler = AutosuggestFXTimer.getInstance();
-        // running timer task as daemon thread
         if (refresh) {
             // ask a new external Search
             searchTask = new SearchTimerTask(event);
@@ -215,12 +223,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    // ----------------------------------------------------------------------- Search Task
+
     /**
      * inner Class for external search
      */
     public class SearchTimerTask extends TimerTask {
-        private Event event;
-
         SearchTimerTask() {
             this(null);
         }
@@ -229,11 +237,19 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             this.event = event;
         }
 
+        final private Event event;
+
         @Override
         public void run() {
             startFiltering();
-            SearchTask searchTask = new SearchTask(this.event);
-            executorSearch.submit(searchTask);
+            final SearchTask task = new SearchTask(this.event);
+            final Service searchService = new Service() {
+                @Override
+                protected Task createTask() {
+                    return task;
+                }
+            };
+            searchService.start();
         }
     }
 
@@ -263,22 +279,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    /**
-     * Method for doing the update of cells
-     *
-     * @param newList
-     */
-    public void applyList(List<T> newList) {
-        // list items of Combo
-//        ObservableList<T> list = (ObservableList<T>) items;
-
-        // T call() . List comes from a datasource
-        //Collection<? extends T> cList = (Collection<? extends T>) newList;
-        Collection<? extends T> cListCopy = CollectionsUtil.split(newList, determineListItemSize(newList));
-
-        // set the combo item list in one time
-        items.setAll(cListCopy);
-    }
+    // ----------------------------------------------------------------------- Filter Task
 
     /**
      * inner Class for filtering
@@ -292,14 +293,22 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             this.event = event;
         }
 
-        private Event event;
+        final private Event event;
 
         @Override
         public void run() {
             startFiltering();
-            FilterTask filterTask = new FilterTask(this.event);
-            executorSearch.submit(filterTask);
+            // create a service.
+            FilterTask task = new FilterTask(this.event);
+            final Service searchService = new Service() {
+                @Override
+                protected Task createTask() {
+                    return task;
+                }
+            };
+            searchService.start();
         }
+
     }
 
     public class FilterTask extends Task<List<T>> {
@@ -321,7 +330,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 String inputUser = getEditorText();
 
                 // apply new list
-                applyList((List) t.getSource().getValue());
+                applyList((List<T>) t.getSource().getValue());
 
                 // reset editor text
                 setEditorText(inputUser);
@@ -351,8 +360,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      **************************************************************************/
 
     private void stopScheduler() {
-//        scheduler.purge();
-//        scheduler.cancel();
         dispose();
     }
 
@@ -494,14 +501,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             scheduler.cancel();
             scheduler = null;
         }
-        // TODO try to shutdown
-//        if (executorSearch != null) {
-//            executorSearch.shutdownNow();
-//        }
-        // TODO try to unbind
-//        if (getSkinControl() != null) {
-//            getSkinControl().unbindAll();
-//        }
     }
 
     public void setCacheDataMode() {
