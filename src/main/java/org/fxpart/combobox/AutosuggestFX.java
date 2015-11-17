@@ -268,8 +268,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 LOG.debug(String.valueOf(getException()));
             });
             setOnSucceeded(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
                 stopFiltering();
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
+            });
+            setOnFailed(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
             });
         }
 
@@ -336,6 +341,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 setEditorText(inputUser);
                 stopFiltering();
             });
+            setOnFailed(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
+            });
         }
 
         @Override
@@ -352,6 +362,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void stopFiltering() {
         stopScheduler();
+        searchStatus.setValue(String.valueOf(STATUS_SEARCH.NOTHING));
         activityIndicatorProperty().setValue(new Boolean(false));
     }
 
