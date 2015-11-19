@@ -15,3 +15,14 @@
     -fx-background-color: #ffffff;
     -fx-text-fill: white;
 }
+/** Size the combo-box button. */
+.combo-box {
+    -fx-pref-width: 200;
+/*    -fx-pref-height: 200;*/
+}
+
+/** Size the combo-box drop down list. */
+.combo-box-popup > .list-view {
+    -fx-pref-width: 200;
+    -fx-pref-height: 200;
+}

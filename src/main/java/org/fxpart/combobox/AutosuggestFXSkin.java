@@ -50,6 +50,7 @@ import java.util.function.Function;
  */
 public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<AutosuggestFX<B, T>, BehaviorBase<AutosuggestFX<B, T>>> {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFXSkin.class);
+    private static final String DEFAULT_STYLE_CLASS = "autosuggestfx";
 
     /**************************************************************************
      * fields
@@ -118,6 +119,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public AutosuggestFXSkin(final AutosuggestFX<B, T> control) {
         super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
         this.control = control;
+        this.control.getStyleClass().add(DEFAULT_STYLE_CLASS);
 
         // visual aspect
         graphical();
