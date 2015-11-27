@@ -65,6 +65,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
     private boolean ignoreCase = false;             // ignore case when searching
     private boolean multiple = false;               // for having multiple choices
+    private boolean autoselect = false;             // when the word searched is found, select the first items automatically
 
     private boolean editable = true;                // combo is editable
     private boolean alwaysRefresh = false;          // trigger a search after each input letter
@@ -824,6 +825,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setMultiple(boolean multiple) {
         this.multiple = multiple;
+    }
+
+    public boolean isAutoselect() {
+        return autoselect;
+    }
+
+    public void setAutoselect(boolean autoselect) {
+        this.autoselect = autoselect;
     }
 
     // ----------------------------------------------------------------------- On Shown

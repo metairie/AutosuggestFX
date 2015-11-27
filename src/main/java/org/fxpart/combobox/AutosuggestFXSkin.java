@@ -418,13 +418,28 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             control.itemProperty().setValue(null);
             return;
         }
-        if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue()) {
+        // search maybe done BUT no result selected in item list (or no item list)
+        if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue() && !control.isAutoselect()) {
             combo.getEditor().setText("");
             currentButton.textProperty().setValue("");
             combo.valueProperty().setValue(null);
             control.itemProperty().setValue(null);
             return;
         }
+        // autoselect , means K code match exactly with searched word
+        if (control.isAutoselect() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
+            if (combo.getItems().size() > 0) {
+                T t = combo.getItems().get(0);
+                if (userInput.equalsIgnoreCase(t.getKey().toString())) {
+                    control.itemProperty().setValue(t);
+                    showButton();
+                } else {
+                    combo.getEditor().setText("");
+                }
+            }
+            return;
+        }
+        // free text and NO item selected
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             T t = control.newInstanceOfT.apply(null);
             if (t != null && String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
@@ -435,6 +450,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             }
             return;
         }
+        // selected item
         if (combo.valueProperty().getValue() != null) {
             T t = combo.valueProperty().getValue();
             userInput = control.getStringTextFormatter().apply(t);
@@ -447,6 +463,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             }
             return;
         }
+
     }
 
     /**
