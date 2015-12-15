@@ -177,6 +177,17 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param datas
      * @param stringTextFormatter
      */
+    public void setupFilter(Supplier<List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
+        this.stringItemFormatter = stringItemFormatter;
+        this.setupFilter(datas, stringTextFormatter);
+    }
+
+    /**
+     * Setup with a datasource. Searching is done by control itself
+     *
+     * @param datas
+     * @param stringTextFormatter
+     */
     public void setupFilter(Supplier<List<T>> datas, Function<T, String> stringTextFormatter) {
         this.dataSource = datas;
         this.stringTextFormatter = stringTextFormatter;

@@ -6,10 +6,7 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -18,10 +15,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -33,7 +27,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.fxpart.common.WeakBinder;
 import org.fxpart.common.bean.KeyValue;
-import org.fxpart.common.util.ButtonFactory;
+import org.fxpart.common.util.ComponentFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +74,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private final List<Button> button = new ArrayList<>();
     private int index = 0;
 
+    private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>();
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
     private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
@@ -319,11 +314,15 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         control.activityIndicatorProperty().removeListener(loadingIndicatorListener);
         combo.focusedProperty().removeListener(focusListener);
         control.focusedProperty().removeListener(getFocusListener);
+
     }
 
     private void buildBindings() {
         // icone wait displayed on control load indicator value
         binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
+
+        // context menu
+        binder.bindInvalidationListener(contextMenu, combo.getEditor().contextMenuProperty());
     }
 
     /**
@@ -331,11 +330,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      */
     private void buildFactories() {
         if (control.isGraphicalRendering()) {
-            setNodeCellFactory((Function<T, Node>) control.getNodeItemFormatter());
+            setNodeCellFactory(control.getNodeItemFormatter());
         } else {
-            setStringCellFactory((Function<T, String>) control.getStringItemFormatter());
+            setStringCellFactory(control.getStringItemFormatter());
         }
-        setTextFieldFormatter((Function<T, String>) control.getStringTextFormatter());
+        setTextFieldFormatter(control.getStringTextFormatter());
     }
 
     /**
@@ -481,7 +480,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         root.setPadding(new Insets(1, 1, 1, 1));
         visibleBox.setPadding(new Insets(1, 1, 1, 1));
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
-        button.add(ButtonFactory.getNew());
+        button.add(ComponentFactory.getNewButton());
         currentButton = button.get(0);
         if (isSelectedItem) {
             visibleBox.getChildren().add(currentButton);
@@ -520,26 +519,26 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     private void setStringCellFactory(Function<T, String> itemFormatter) {
-        combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
-                                 @Override
-                                 public ListCell<T> call(ListView<T> param) {
-                                     param.setPrefHeight(getFixedHeight());
-                                     final ListCell<T> cell = new ListCell<T>() {
-                                         @Override
-                                         protected void updateItem(T item, boolean empty) {
-                                             super.updateItem(item, empty);
-                                             if (item == null || empty) {
-                                                 setText(null);
-                                             } else {
-                                                 // render
-                                                 setText(itemFormatter.apply(item));
-                                             }
-                                         }
-                                     };
-                                     return cell;
-                                 }
-                             }
-        );
+        Callback<ListView<T>, ListCell<T>> cellFactory = new Callback<ListView<T>, ListCell<T>>() {
+            @Override
+            public ListCell<T> call(ListView<T> param) {
+                param.setPrefHeight(getFixedHeight());
+                final ListCell<T> cell = new ListCell<T>() {
+                    @Override
+                    protected void updateItem(T item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item == null || empty) {
+                            setText(null);
+                        } else {
+                            // render
+                            setText(itemFormatter.apply(item));
+                        }
+                    }
+                };
+                return cell;
+            }
+        };
+        combo.setCellFactory(cellFactory);
     }
 
     private void setNodeCellFactory(Function<T, Node> itemFormatter) {
@@ -750,6 +749,28 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     public void setIsSelectedItem(boolean isSelectedItem) {
         this.isSelectedItem = isSelectedItem;
+    }
+
+    public ContextMenu getContextMenu() {
+        return contextMenu.get();
+    }
+
+    public ObjectProperty<ContextMenu> contextMenuProperty() {
+        return contextMenu;
+    }
+
+    public void setContextMenu(ContextMenu contextMenu) {
+        this.contextMenu.set(contextMenu);
+    }
+
+    public void clearAll() {
+        combo.getEditor().textProperty().setValue("");
+        //combo.getValue().setValue(null);
+        combo.getItems().clear();
+        control.getItems().clear();
+        currentButton.textProperty().setValue("");
+        control.itemProperty().setValue(null);
+        control.beanProperty().setValue(null);
     }
 
     // TODO remove this when version will be 1.0.0
