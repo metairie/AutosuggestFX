@@ -526,6 +526,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    public void clearAll() {
+        getSkinControl().clearAll();
+    }
+
     public void setCacheDataMode() {
         this.configure(AUTOSUGGESTFX_MODE.CACHE_DATA);
     }
