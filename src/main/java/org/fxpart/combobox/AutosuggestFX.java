@@ -36,22 +36,12 @@ import java.util.stream.Collectors;
  */
 public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestControl {
 
-    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFX.class);
     public static final EventType<Event> ON_SHOWN = new EventType<>(Event.ANY, "AUTOSUGGEST_ON_SHOWN");
-
-    public enum AUTOSUGGESTFX_MODE {
-        CACHE_DATA,
-        LIVE_DATA,
-        SEARCH_ENGINE
-    }
-
-    public enum STATUS_SEARCH {
-        NOTHING,
-        RUN,
-        SUCCESS,
-        FAIL
-    }
-
+    private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFX.class);
+    // set a new instance of T
+    public Function<Observable, T> newInstanceOfT = observable -> null;
+    // set a new instance of B
+    public Function<Observable, B> newInstanceOfB = observable -> null;
     /**************************************************************************
      * Public Properties
      **************************************************************************/
@@ -67,7 +57,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean multiple = false;               // for having multiple choices
     private boolean autoselect = false;             // when the word searched is found, select the first items automatically
 
-    private boolean editable = true;                // combo is editable
+    private BooleanProperty editable = new SimpleBooleanProperty(this, "editable", true);                // combo is editable
     private boolean alwaysRefresh = false;          // trigger a search after each input letter
     private boolean refreshFXML = false;            // TODO to be removed
     private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
@@ -95,10 +85,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private ObjectProperty<T> item = new SimpleObjectProperty<>(this, "item");
     private ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "bean");
     private ChangeListener beanListener = (observable, oldValue, newValue) -> beanProperty();
-    // set a new instance of T
-    public Function<Observable, T> newInstanceOfT = observable -> null;
-    // set a new instance of B
-    public Function<Observable, B> newInstanceOfB = observable -> null;
     // T item ==> B bean mapping
     private Function<Observable, B> itemToBeanMapping = o -> {
         ObjectProperty<B> op = (ObjectProperty<B>) o;
@@ -117,7 +103,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return newInstanceOfT.apply(o);
         }
     };
-
     /**************************************************************************
      * Private Properties
      **************************************************************************/
@@ -127,13 +112,25 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private AutosuggestFXTimer scheduler = null;//AutosuggestFXTimer.getInstance();
     private FilterTimerTask filterTask = null;
     private SearchTimerTask searchTask = null;
+    /**
+     * Called just after the {@link AbstractAutosuggestControl} popup/display is shown.
+     */
+    private ObjectProperty<EventHandler<Event>> onShown = new ObjectPropertyBase<EventHandler<Event>>() {
+        @Override
+        protected void invalidated() {
+            setEventHandler(ON_SHOWN, get());
+        }
 
+        @Override
+        public Object getBean() {
+            return this;
+        }
 
-    /**************************************************************************
-     *
-     * Constructors
-     *
-     **************************************************************************/
+        @Override
+        public String getName() {
+            return "onShown";
+        }
+    };
 
     /**
      * Creates a new AutosuggestComboBoxList instance with an empty list of choices.
@@ -144,6 +141,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         Version.getInstance();
     }
 
+
+    /**************************************************************************
+     *
+     * Constructors
+     *
+     **************************************************************************/
+
     /**
      * Creates a new AutosuggestComboBoxList instance
      *
@@ -152,12 +156,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     public AutosuggestFX(final ObservableList<T> items) {
         this.items = items == null ? FXCollections.<T>observableArrayList() : items;
     }
-
-    /**************************************************************************
-     *
-     * Implementation, Public Methods
-     *
-     **************************************************************************/
 
     /**
      * Setup with an external search function
@@ -170,6 +168,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.search = search;
         setupFilter(datasource, stringTextFormatter);
     }
+
+    /**************************************************************************
+     *
+     * Implementation, Public Methods
+     *
+     **************************************************************************/
 
     /**
      * Setup with a datasource. Searching is done by control itself
@@ -235,142 +239,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
-    // ----------------------------------------------------------------------- Search Task
-
-    /**
-     * inner Class for external search
-     */
-    public class SearchTimerTask extends TimerTask {
-        SearchTimerTask() {
-            this(null);
-        }
-
-        SearchTimerTask(Event event) {
-            this.event = event;
-        }
-
-        final private Event event;
-
-        @Override
-        public void run() {
-            startFiltering();
-            final SearchTask task = new SearchTask(this.event);
-            final Service searchService = new Service() {
-                @Override
-                protected Task createTask() {
-                    return task;
-                }
-            };
-            searchService.start();
-        }
-    }
-
-    public class SearchTask extends Task<List<T>> {
-        private Event event;
-
-        SearchTask() {
-            this(null);
-        }
-
-        SearchTask(Event event) {
-            this.event = event;
-            setOnCancelled(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
-                stopFiltering();
-                LOG.debug(String.valueOf(getException()));
-            });
-            setOnSucceeded(t -> {
-                stopFiltering();
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
-            });
-            setOnFailed(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
-                stopFiltering();
-                LOG.debug(String.valueOf(getException()));
-            });
-        }
-
-        @Override
-        protected List<T> call() throws Exception {
-            return search.apply(getEditorText());
-        }
-    }
-
-    // ----------------------------------------------------------------------- Filter Task
-
-    /**
-     * inner Class for filtering
-     */
-    public class FilterTimerTask extends TimerTask {
-        FilterTimerTask() {
-            this(null);
-        }
-
-        FilterTimerTask(Event event) {
-            this.event = event;
-        }
-
-        final private Event event;
-
-        @Override
-        public void run() {
-            startFiltering();
-            // create a service.
-            FilterTask task = new FilterTask(this.event);
-            final Service searchService = new Service() {
-                @Override
-                protected Task createTask() {
-                    return task;
-                }
-            };
-            searchService.start();
-        }
-
-    }
-
-    public class FilterTask extends Task<List<T>> {
-        private Event event;
-
-        FilterTask() {
-            this(null);
-        }
-
-        FilterTask(Event event) {
-            this.event = event;
-            setOnCancelled(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
-                stopFiltering();
-                LOG.debug(String.valueOf(getException()));
-            });
-            setOnSucceeded(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
-                String inputUser = getEditorText();
-
-                // apply new list
-                applyList((List<T>) t.getSource().getValue());
-
-                // reset editor text
-                setEditorText(inputUser);
-                stopFiltering();
-            });
-            setOnFailed(t -> {
-                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
-                stopFiltering();
-                LOG.debug(String.valueOf(getException()));
-            });
-        }
-
-        @Override
-        protected List<T> call() throws Exception {
-            return filter.apply(getEditorText());
-        }
-    }
-
     public void startFiltering() {
         activityIndicatorProperty().setValue(new Boolean(true));
         searchStatus.setValue(String.valueOf(STATUS_SEARCH.RUN));
         stopScheduler();
     }
+
+    // ----------------------------------------------------------------------- Search Task
 
     public void stopFiltering() {
         stopScheduler();
@@ -385,6 +260,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private void stopScheduler() {
         dispose();
     }
+
+    // ----------------------------------------------------------------------- Filter Task
 
     /**************************************************************************
      * Helper
@@ -410,12 +287,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
                 break;
         }
     }
-
-    /**************************************************************************
-     *
-     * Public API
-     *
-     **************************************************************************/
 
     /**
      * {@inheritDoc}
@@ -508,6 +379,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    /**************************************************************************
+     *
+     * Public API
+     *
+     **************************************************************************/
+
     /**
      * release timer, executor, bindings
      */
@@ -542,7 +419,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.configure(AUTOSUGGESTFX_MODE.SEARCH_ENGINE);
     }
 
-
     /**************************************************************************
      * Public Properties
      **************************************************************************/
@@ -559,15 +435,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.items = items;
     }
 
-    public void setEditorText(String text) {
-        getSkinControl().getCombo().getEditor().setText(text);
-    }
-
     public String getEditorText() {
         if (getSkinControl() == null) {
             return "";
-        } else
+        } else {
             return getSkinControl().getCombo().getEditor().getText();
+        }
+    }
+
+    public void setEditorText(String text) {
+        getSkinControl().getCombo().getEditor().setText(text);
     }
 
     public List<T> getDataSource() {
@@ -590,16 +467,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.delay = Math.max(100, Math.min(5000, delay));
     }
 
-    public void setLazyMode(boolean lazyMode) {
-        this.lazyMode = lazyMode;
-    }
-
     public boolean getLazyMode() {
         return lazyMode;
     }
 
     public boolean isLazyMode() {
         return lazyMode;
+    }
+
+    public void setLazyMode(boolean lazyMode) {
+        this.lazyMode = lazyMode;
     }
 
     public boolean isAcceptFreeTextValue() {
@@ -611,51 +488,55 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public boolean isEditable() {
-        return editable;
+        return editable.getValue();
     }
 
     public void setEditable(boolean editable) {
-        this.editable = editable;
+        this.editable.setValue(editable);
+    }
+
+    public BooleanProperty editableProperty() {
+        return editable;
     }
 
     public String getSearchStatus() {
         return searchStatus.get();
     }
 
-    public StringProperty searchStatusProperty() {
-        return searchStatus;
-    }
-
     public void setSearchStatus(String searchStatus) {
         this.searchStatus.set(searchStatus);
+    }
+
+    public StringProperty searchStatusProperty() {
+        return searchStatus;
     }
 
     public boolean isControlShown() {
         return controlShown.get();
     }
 
-    public BooleanProperty controlShownProperty() {
-        return controlShown;
-    }
-
     public void setControlShown(boolean controlShown) {
         this.controlShown.set(controlShown);
+    }
+
+    public BooleanProperty controlShownProperty() {
+        return controlShown;
     }
 
     public boolean getActivityIndicator() {
         return activityIndicator.get();
     }
 
-    public BooleanProperty activityIndicatorProperty() {
-        return activityIndicator;
-    }
-
     public void setActivityIndicator(boolean activityIndicator) {
         this.activityIndicator.set(activityIndicator);
     }
 
+    public BooleanProperty activityIndicatorProperty() {
+        return activityIndicator;
+    }
+
     public final T getValue() {
-        return (T) getSkinControl().getCombo().getValue();
+        return getSkinControl().getCombo().getValue();
     }
 
     public Function<T, String> getStringTextFormatter() {
@@ -682,12 +563,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.isFullSearch = isFullSearch;
     }
 
-    public void setColumnSeparator(String columnSeparator) {
-        getSkinControl().setColumnSeparator(columnSeparator);
-    }
-
     public String getColumnSeparator() {
         return getSkinControl().getColumnSeparator();
+    }
+
+    public void setColumnSeparator(String columnSeparator) {
+        getSkinControl().setColumnSeparator(columnSeparator);
     }
 
     public boolean isColumnSeparatorVisible() {
@@ -698,12 +579,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         getSkinControl().setColumnSeparatorVisible(columnSeparatorVisible);
     }
 
-    public void setKeyValueSeparator(String keyValueSeparator) {
-        getSkinControl().setKeyValueSeparator(keyValueSeparator);
-    }
-
     public String getKeyValueSeparator() {
         return getSkinControl().getKeyValueSeparator();
+    }
+
+    public void setKeyValueSeparator(String keyValueSeparator) {
+        getSkinControl().setKeyValueSeparator(keyValueSeparator);
     }
 
     public boolean isIgnoreCase() {
@@ -734,24 +615,24 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return item.get();
     }
 
-    public ObjectProperty<T> itemProperty() {
-        return item;
-    }
-
     public void setItem(T item) {
         this.item.set(item);
+    }
+
+    public ObjectProperty<T> itemProperty() {
+        return item;
     }
 
     public ObjectProperty<B> beanProperty() {
         return bean;
     }
 
-    public final void setBean(B b) {
-        beanProperty().set(b);
-    }
-
     public final B getBean() {
         return beanProperty().get();
+    }
+
+    public final void setBean(B b) {
+        beanProperty().set(b);
     }
 
     public Function<Observable, T> getBeanToItemMapping() {
@@ -806,12 +687,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return askReschedule.get();
     }
 
-    public BooleanProperty askRescheduleProperty() {
-        return askReschedule;
-    }
-
     public void setAskReschedule(boolean askReschedule) {
         this.askReschedule.set(askReschedule);
+    }
+
+    public BooleanProperty askRescheduleProperty() {
+        return askReschedule;
     }
 
     public boolean isGraphicalRendering() {
@@ -826,12 +707,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return promptText.get();
     }
 
-    public StringProperty promptTextProperty() {
-        return promptText;
-    }
-
     public void setPromptText(String promptText) {
         this.promptText.set(promptText);
+    }
+
+    public StringProperty promptTextProperty() {
+        return promptText;
     }
 
     public boolean isMultiple() {
@@ -855,32 +736,152 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return onShown;
     }
 
-    public final void setOnShown(EventHandler<Event> value) {
-        onShownProperty().set(value);
-    }
-
     public final EventHandler<Event> getOnShown() {
         return onShownProperty().get();
     }
 
+    public final void setOnShown(EventHandler<Event> value) {
+        onShownProperty().set(value);
+    }
+
+    public enum AUTOSUGGESTFX_MODE {
+        CACHE_DATA,
+        LIVE_DATA,
+        SEARCH_ENGINE
+    }
+
+    public enum STATUS_SEARCH {
+        NOTHING,
+        RUN,
+        SUCCESS,
+        FAIL
+    }
+
     /**
-     * Called just after the {@link AbstractAutosuggestControl} popup/display is shown.
+     * inner Class for external search
      */
-    private ObjectProperty<EventHandler<Event>> onShown = new ObjectPropertyBase<EventHandler<Event>>() {
-        @Override
-        protected void invalidated() {
-            setEventHandler(ON_SHOWN, get());
+    public class SearchTimerTask extends TimerTask {
+        final private Event event;
+
+        SearchTimerTask() {
+            this(null);
+        }
+
+        SearchTimerTask(Event event) {
+            this.event = event;
         }
 
         @Override
-        public Object getBean() {
-            return this;
+        public void run() {
+            startFiltering();
+            final SearchTask task = new SearchTask(this.event);
+            final Service searchService = new Service() {
+                @Override
+                protected Task createTask() {
+                    return task;
+                }
+            };
+            searchService.start();
+        }
+    }
+
+    public class SearchTask extends Task<List<T>> {
+        private Event event;
+
+        SearchTask() {
+            this(null);
+        }
+
+        SearchTask(Event event) {
+            this.event = event;
+            setOnCancelled(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
+            });
+            setOnSucceeded(t -> {
+                stopFiltering();
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
+            });
+            setOnFailed(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
+            });
         }
 
         @Override
-        public String getName() {
-            return "onShown";
+        protected List<T> call() throws Exception {
+            return search.apply(getEditorText());
         }
-    };
+    }
+
+    /**
+     * inner Class for filtering
+     */
+    public class FilterTimerTask extends TimerTask {
+        final private Event event;
+
+        FilterTimerTask() {
+            this(null);
+        }
+
+        FilterTimerTask(Event event) {
+            this.event = event;
+        }
+
+        @Override
+        public void run() {
+            startFiltering();
+            // create a service.
+            FilterTask task = new FilterTask(this.event);
+            final Service searchService = new Service() {
+                @Override
+                protected Task createTask() {
+                    return task;
+                }
+            };
+            searchService.start();
+        }
+
+    }
+
+    public class FilterTask extends Task<List<T>> {
+        private Event event;
+
+        FilterTask() {
+            this(null);
+        }
+
+        FilterTask(Event event) {
+            this.event = event;
+            setOnCancelled(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
+            });
+            setOnSucceeded(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.SUCCESS));
+                String inputUser = getEditorText();
+
+                // apply new list
+                applyList((List<T>) t.getSource().getValue());
+
+                // reset editor text
+                setEditorText(inputUser);
+                stopFiltering();
+            });
+            setOnFailed(t -> {
+                searchStatus.setValue(String.valueOf(STATUS_SEARCH.FAIL));
+                stopFiltering();
+                LOG.debug(String.valueOf(getException()));
+            });
+        }
+
+        @Override
+        protected List<T> call() throws Exception {
+            return filter.apply(getEditorText());
+        }
+    }
 
 }

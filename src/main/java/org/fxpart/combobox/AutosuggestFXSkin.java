@@ -6,16 +6,21 @@ import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -70,26 +75,22 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 //    private final HBox hiddenBox = new HBox();
 //    private final HBox imageBox = new HBox();
     private final ComboBox<T> combo = new ComboBox<>();
-    private Button currentButton = null;
     private final List<Button> button = new ArrayList<>();
+    // local data
+    private final AutosuggestFX<B, T> control;
+    // listeners & binds, events
+    private final WeakBinder binder = new WeakBinder();
+    private Button currentButton = null;
     private int index = 0;
-
-    private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>();
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
     private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
     private ImageView iconClose = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close16.png")));
-
-    // local data
-    private final AutosuggestFX<B, T> control;
     private ObservableList<T> items = null;
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
     private String userInput = ""; // sometimes txt editor is reset, must be saved here
     private boolean isSelectedItem = false;
-
-    // listeners & binds, events
-    private final WeakBinder binder = new WeakBinder();
     private ChangeListener<KeyValue> itemListener = null;
     private InvalidationListener loadingIndicatorListener = null;
     private ChangeListener<Boolean> focusListener = null;
@@ -100,6 +101,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     /**************************************************************************
      * Constructors
      **************************************************************************/
+    /**
+     * Gather all bindings
+     */
+    private boolean quit = false;
 
     /**
      * Default constructor
@@ -263,11 +268,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         currentButton.setOnAction(null);
     }
 
-    /**
-     * Gather all bindings
-     */
-    private boolean quit = false;
-
     private void buildListeners() {
         // loading property
         loadingIndicatorListener = o -> {
@@ -328,7 +328,13 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
 
         // context menu
-        binder.bindInvalidationListener(contextMenu, combo.getEditor().contextMenuProperty());
+        combo.getEditor().contextMenuProperty().bind(getSkinnable().contextMenuProperty());
+        combo.contextMenuProperty().bind(getSkinnable().contextMenuProperty());
+        // basic control properties
+        combo.editableProperty().bind(getSkinnable().editableProperty());
+        combo.tooltipProperty().bind(getSkinnable().tooltipProperty());
+
+        // combo.visibleProperty().bind(getSkinnable().visibleProperty());
     }
 
     /**
@@ -638,7 +644,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             styledText.getChildren().add(end);
         } else {
             styledText.getChildren().add(new Text(searched));
-            ;
         }
         return styledText;
     }
@@ -757,12 +762,12 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         return fixedHeight.get();
     }
 
-    public DoubleProperty fixedHeightProperty() {
-        return fixedHeight;
-    }
-
     public void setFixedHeight(double fixedHeight) {
         this.fixedHeight.set(fixedHeight);
+    }
+
+    public DoubleProperty fixedHeightProperty() {
+        return fixedHeight;
     }
 
     public ComboBox<T> getCombo() {
@@ -811,18 +816,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     public void setIsSelectedItem(boolean isSelectedItem) {
         this.isSelectedItem = isSelectedItem;
-    }
-
-    public ContextMenu getContextMenu() {
-        return contextMenu.get();
-    }
-
-    public ObjectProperty<ContextMenu> contextMenuProperty() {
-        return contextMenu;
-    }
-
-    public void setContextMenu(ContextMenu contextMenu) {
-        this.contextMenu.set(contextMenu);
     }
 
     public void clearAll() {
