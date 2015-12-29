@@ -72,7 +72,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     // filter a datasource which not supposed to change (array list...)
     private Function<String, List<T>> filter = null;
     // search from a source which is dynamic (database, ws, ...)
-    private Function<String, List<T>> search = null;
+    private ObjectProperty<Function<String, List<T>>> search = new SimpleObjectProperty<>(this, "search");
     private Supplier<List<T>> dataSource = () -> new ArrayList<>();
 
     // formatter        -----------------------
@@ -165,7 +165,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param stringTextFormatter
      */
     public void setupSearch(Function<String, List<T>> search, Supplier<List<T>> datasource, Function<T, String> stringTextFormatter) {
-        this.search = search;
+        this.search.setValue(search);
         setupFilter(datasource, stringTextFormatter);
     }
 
@@ -667,12 +667,12 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.visibleRowsCount = visibleRowsCount;
     }
 
-    public Function getSearch() {
-        return search;
+    public Function<String, List<T>> getSearch() {
+        return search.getValue();
     }
 
-    public void setSearch(Function search) {
-        this.search = search;
+    public void setSearch(Function<String, List<T>> search) {
+        this.search.setValue(search);
     }
 
     public boolean isRefreshFXML() {
@@ -824,7 +824,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
         @Override
         protected List<T> call() throws Exception {
-            return search.apply(getEditorText());
+            return search.getValue().apply(getEditorText());
         }
     }
 
