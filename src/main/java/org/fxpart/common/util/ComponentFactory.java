@@ -13,9 +13,8 @@ public class ComponentFactory {
     public static Button getNewButton() {
         Button o = new Button();
         o.setMaxHeight(Double.MAX_VALUE);
-        o.setContentDisplay(ContentDisplay.RIGHT);
-        o.setAlignment(Pos.BASELINE_RIGHT);
-        o.setPadding(new Insets(1, 5, 1, 5));
+        o.setContentDisplay(ContentDisplay.LEFT);
+        o.setAlignment(Pos.BASELINE_LEFT);
         return o;
     }
 
