@@ -53,14 +53,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private boolean acceptFreeTextValue = false;    // ability to input value not in the datasource list
     private boolean isFullSearch = false;           // search on all columns Key + Value(s)
     private int limitSearch = 0;                    // number of input character needed for searching, max 20
-    private boolean ignoreCase = false;             // ignore case when searching
+    private BooleanProperty ignoreCase = new SimpleBooleanProperty(this, "ignoreCase", false);             // ignore case when searching
     private boolean multiple = false;               // for having multiple choices
     private boolean autoselect = false;             // when the word searched is found, select the first items automatically
 
     private BooleanProperty editable = new SimpleBooleanProperty(this, "editable", true);                // combo is editable
     private boolean alwaysRefresh = false;          // trigger a search after each input letter
     private boolean refreshFXML = false;            // TODO to be removed
-    private boolean graphicalRendering = true;      // use for combo : Node cell factory (true) or String cell factory
+    private BooleanProperty graphicalRendering = new SimpleBooleanProperty(this, "graphicalRendering", true);      // use for combo : Node cell factory (true) or String cell factory
 
     // properties updated in control or skin       -----------------------
     private BooleanProperty activityIndicator = new SimpleBooleanProperty(this, "activityIndicator", false);
@@ -76,8 +76,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private Supplier<List<T>> dataSource = () -> new ArrayList<>();
 
     // formatter        -----------------------
-    private Function<T, String> stringTextFormatter = item -> String.format("%s", item.getValue());
-    private Function<T, String> stringItemFormatter = item -> String.format("%s - %s", item.getKey(), item.getValue());
+    private ObjectProperty<Function<T, String>> stringTextFormatter = new SimpleObjectProperty<>(this, "stringTextFormatter", item -> String.format("%s", item.getValue()));
+    private ObjectProperty<Function<T, String>> stringItemFormatter = new SimpleObjectProperty<>(this, "stringItemFormatter", item -> String.format("%s - %s", item.getKey(), item.getValue()));
     private Function<T, Node> nodeItemFormatter = null;
 
     // T B manager      -----------------------
@@ -182,7 +182,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param stringTextFormatter
      */
     public void setupFilter(Supplier<List<T>> datas, Function<T, String> stringTextFormatter, Function<T, String> stringItemFormatter) {
-        this.stringItemFormatter = stringItemFormatter;
+        this.stringItemFormatter.setValue(stringItemFormatter);
         this.setupFilter(datas, stringTextFormatter);
     }
 
@@ -194,7 +194,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      */
     public void setupFilter(Supplier<List<T>> datas, Function<T, String> stringTextFormatter) {
         this.dataSource = datas;
-        this.stringTextFormatter = stringTextFormatter;
+        this.stringTextFormatter.setValue(stringTextFormatter);
         start();
     }
 
@@ -270,19 +270,19 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         switch (autosuggestfx_mode) {
             case CACHE_DATA:
                 isFullSearch = false;
-                ignoreCase = false;
+                ignoreCase.setValue(false);
                 lazyMode = false;
                 visibleRowsCount = -1;
                 acceptFreeTextValue = false;
                 break;
             case LIVE_DATA:
                 isFullSearch = true;
-                ignoreCase = true;
+                ignoreCase.setValue(true);
                 acceptFreeTextValue = false;
                 break;
             case SEARCH_ENGINE:
                 isFullSearch = true;
-                ignoreCase = true;
+                ignoreCase.setValue(true);
                 acceptFreeTextValue = true;
                 break;
         }
@@ -362,7 +362,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             List<T> list = dataSource.get().stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
                 String v = String.valueOf(t.getValue());
-                if (ignoreCase) {
+                if (ignoreCase.getValue()) {
                     return ((isFullSearch ? k.toLowerCase() : "") + v.toLowerCase()).contains(term == null ? "" : term.toLowerCase());
                 } else {
                     return ((isFullSearch ? k : "") + v).contains(term == null ? "" : term);
@@ -540,19 +540,27 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public Function<T, String> getStringTextFormatter() {
-        return stringTextFormatter;
+        return stringTextFormatter.getValue();
     }
 
     public void setStringTextFormatter(Function<T, String> stringTextFormatter) {
-        this.stringTextFormatter = stringTextFormatter;
+        this.stringTextFormatter.setValue(stringTextFormatter);
+    }
+
+    public ObjectProperty<Function<T, String>> stringTextFormatterProperty() {
+        return stringTextFormatter;
     }
 
     public Function<T, String> getStringItemFormatter() {
-        return stringItemFormatter;
+        return stringItemFormatter.getValue();
     }
 
     public void setStringItemFormatter(Function<T, String> stringItemFormatter) {
-        this.stringItemFormatter = stringItemFormatter;
+        this.stringItemFormatter.setValue(stringItemFormatter);
+    }
+
+    public ObjectProperty<Function<T, String>> stringItemFormatterProperty() {
+        return stringItemFormatter;
     }
 
     public boolean isFullSearch() {
@@ -588,11 +596,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public boolean isIgnoreCase() {
-        return ignoreCase;
+        return ignoreCase.getValue();
     }
 
     public void setIgnoreCase(boolean ignoreCase) {
-        this.ignoreCase = ignoreCase;
+        this.ignoreCase.setValue(ignoreCase);
     }
 
     public boolean isAlwaysRefresh() {
@@ -696,11 +704,15 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public boolean isGraphicalRendering() {
-        return graphicalRendering;
+        return graphicalRendering.getValue();
     }
 
     public void setGraphicalRendering(boolean graphicalRendering) {
-        this.graphicalRendering = graphicalRendering;
+        this.graphicalRendering.setValue(graphicalRendering);
+    }
+
+    public BooleanProperty graphicalRenderingProperty() {
+        return graphicalRendering;
     }
 
     public String getPromptText() {

@@ -170,7 +170,22 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         buildEvents();
 
         // formatter factories
+        getSkinnable().graphicalRenderingProperty().addListener(observable -> {
+            // change rendered items if state change
+            buildFactories();
+        });
+        getSkinnable().stringItemFormatterProperty().addListener(observable -> {
+            // change rendered items if formatter change
+            buildFactories();
+        });
         buildFactories();
+
+        getSkinnable().stringTextFormatterProperty().addListener(observable -> {
+            // change editor converter if editor formatter change
+            buildEditorRendered();
+        });
+
+        buildEditorRendered();
 
         // fill combo
         combo.setItems(this.items);
@@ -346,6 +361,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         } else {
             setStringCellFactory(control.getStringItemFormatter());
         }
+    }
+
+    private void buildEditorRendered() {
         setTextFieldFormatter(control.getStringTextFormatter());
     }
 
