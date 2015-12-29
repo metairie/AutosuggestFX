@@ -73,7 +73,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private Function<String, List<T>> filter = null;
     // search from a source which is dynamic (database, ws, ...)
     private ObjectProperty<Function<String, List<T>>> search = new SimpleObjectProperty<>(this, "search");
-    private Supplier<List<T>> dataSource = () -> new ArrayList<>();
+    private ObjectProperty<Supplier<List<T>>> dataSource = new SimpleObjectProperty<>(this, "dataSource", ArrayList::new);
 
     // formatter        -----------------------
     private ObjectProperty<Function<T, String>> stringTextFormatter = new SimpleObjectProperty<>(this, "stringTextFormatter", item -> String.format("%s", item.getValue()));
@@ -193,7 +193,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      * @param stringTextFormatter
      */
     public void setupFilter(Supplier<List<T>> datas, Function<T, String> stringTextFormatter) {
-        this.dataSource = datas;
+        this.dataSource.setValue(datas);
         this.stringTextFormatter.setValue(stringTextFormatter);
         start();
     }
@@ -359,7 +359,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
         // default filter
         filter = term -> {
-            List<T> list = dataSource.get().stream().filter(t -> {
+            List<T> list = dataSource.get().get().stream().filter(t -> {
                 String k = String.valueOf(t.getKey());
                 String v = String.valueOf(t.getValue());
                 if (ignoreCase.getValue()) {
@@ -448,11 +448,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public List<T> getDataSource() {
-        return dataSource.get();
+        return dataSource.get().get();
     }
 
     public void setDataSource(Supplier<List<T>> dataSource) {
-        this.dataSource = dataSource;
+        this.dataSource.setValue(dataSource);
     }
 
     public Function<String, List<T>> getFilter() {
