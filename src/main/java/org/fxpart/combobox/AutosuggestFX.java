@@ -403,6 +403,9 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    /**
+     * clear all objects. AutosuggestFx is like a new
+     */
     public void clearAll() {
         getSkinControl().clearAll();
     }
