@@ -15,6 +15,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -507,18 +508,12 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     private void graphical() {
         // building nodes
-<<<<<<< HEAD
-=======
         root.setPadding(new Insets(1, 1, 1, 1));
-        //visibleBox.setPadding(new Insets(1, 1, 1, 1));
->>>>>>> improve graphical behviour
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
         button.add(ComponentFactory.getNewButton());
         currentButton = button.get(0);
         if (isSelectedItem) {
             exchangeNode(combo, currentButton);
-<<<<<<< HEAD
-
             // TODO creer une fonction générique
             // ---
             combo.setVisible(false);
@@ -541,34 +536,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             combo.setVisible(true);
             combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             combo.setPrefWidth(root.getWidth());
-            // ---
-=======
-            //combo.setMaxWidth(0);
-//            combo.setVisible(false);
-//            currentButton.setVisible(true);
-            //currentButton.setMinWidth(root.getWidth());
-            //visibleBox.getChildren().add(currentButton);
-            //hiddenBox.getChildren().add(combo);
-        } else {
-            //currentButton.setMaxWidth(0);
-            //combo.setMinWidth(root.getWidth());
-            exchangeNode(currentButton, combo);
-//            combo.setVisible(true);
-//            currentButton.setVisible(false);
-            //visibleBox.getChildren().add(combo);
-            //hiddenBox.getChildren().add(currentButton);
->>>>>>> improve graphical behviour
         }
         if (control.isMultiple()) {
             currentButton.setGraphic(iconClose);
         }
-<<<<<<< HEAD
-=======
-//        root.getChildren().add(visibleBox);
-//        imageBox.getChildren().add(iconWait);
-//        imageBox.setPadding(new Insets(5, 3, 1, 3));
-//        root.getChildren().add(imageBox);
->>>>>>> improve graphical behviour
         root.getChildren().add(currentButton);
         root.getChildren().add(combo);
         root.getChildren().add(iconWait);
