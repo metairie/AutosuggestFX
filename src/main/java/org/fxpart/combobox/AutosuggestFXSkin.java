@@ -471,6 +471,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         }
         // free text and NO item selected
         if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
+            // TODO bug t is null
             T t = control.newInstanceOfT.apply(null);
             if (t != null && String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
                 control.itemProperty().setValue(t);
