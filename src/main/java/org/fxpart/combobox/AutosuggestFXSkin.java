@@ -229,9 +229,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                         reScheduleSearch(e);
                     }
                 } else {
-                    if (!control.isAcceptFreeTextValue()) {
-                        combo.valueProperty().setValue(null);
-                    }
+                    // TODO bug with isAcceptFreeTextValue
+//                    if (!control.isAcceptFreeTextValue()) {
+//                        combo.valueProperty().setValue(null);
+//                    }
                 }
 
                 // search if possible

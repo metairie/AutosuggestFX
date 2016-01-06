@@ -884,6 +884,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
                 // reset editor text
                 setEditorText(inputUser);
+
                 stopFiltering();
             });
             setOnFailed(t -> {
