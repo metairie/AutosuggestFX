@@ -514,13 +514,16 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
         button.add(ComponentFactory.getNewButton());
         currentButton = button.get(0);
+
         if (isSelectedItem) {
             exchangeNode(combo, currentButton);
             // TODO creer une fonction générique
             // ---
+
             combo.setVisible(false);
             combo.setMinSize(0, 0);
             combo.setMaxSize(0, 0);
+            iconWait.prefWidth(0);
 
             currentButton.setVisible(true);
             currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -534,6 +537,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             currentButton.setVisible(false);
             currentButton.setMinSize(0, 0);
             currentButton.setMaxSize(0, 0);
+            iconWait.prefWidth(16);
 
             combo.setVisible(true);
             combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -596,10 +600,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                  public ListCell<T> call(ListView<T> param) {
                                      param.setPrefHeight(getFixedHeight());
                                      final ListCell<T> cell = new ListCell<T>() {
-                                         {
-                                             super.setPrefWidth(control.getPrefWidth());
-                                             super.setPrefHeight(control.getPrefHeight());
-                                         }
+//                                         {
+//                                             super.setPrefWidth(control.getPrefWidth());
+//                                             super.setPrefHeight(control.getPrefHeight());
+//                                         }
 
                                          @Override
                                          protected void updateItem(T item, boolean empty) {
@@ -734,6 +738,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             currentButton.setVisible(false);
             currentButton.setMinSize(0, 0);
             currentButton.setMaxSize(0, 0);
+            iconWait.prefWidth(16);
 
             combo.setVisible(true);
             combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -756,6 +761,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             combo.setVisible(false);
             combo.setMinSize(0, 0);
             combo.setMaxSize(0, 0);
+            iconWait.prefWidth(0);
 
             currentButton.setVisible(true);
             currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
