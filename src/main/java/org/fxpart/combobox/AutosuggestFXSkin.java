@@ -15,15 +15,12 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
@@ -72,9 +69,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     // visuals
     private final HBox root = new HBox();
-    //    private final HBox visibleBox = new HBox();
-//    private final HBox hiddenBox = new HBox();
-//    private final HBox imageBox = new HBox();
+    //private final HBox hidden = new HBox(); // for icon wait
     private final ComboBox<T> combo = new ComboBox<>();
     private final List<Button> button = new ArrayList<>();
     // local data
@@ -85,8 +80,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private int index = 0;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
-    private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
-    private ImageView iconClose = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/close16.png")));
+    //private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
     private ObservableList<T> items = null;
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
@@ -342,7 +336,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     private void buildBindings() {
         // icone wait displayed on control load indicator value
-        binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
+        //binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
 
         // context menu
         combo.getEditor().contextMenuProperty().bind(getSkinnable().contextMenuProperty());
@@ -350,8 +344,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         // basic control properties
         combo.editableProperty().bind(getSkinnable().editableProperty());
         combo.tooltipProperty().bind(getSkinnable().tooltipProperty());
-
-        // combo.visibleProperty().bind(getSkinnable().visibleProperty());
     }
 
     /**
@@ -510,46 +502,18 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     private void graphical() {
         // building nodes
-        root.setPadding(new Insets(1, 1, 1, 1));
+//        hidden.setVisible(true);
+//        hidden.setMaxSize(0, 0);
+//        hidden.setPrefSize(0, 0);
+//        hidden.getChildren().add(iconWait);
+//        iconWait.resize(0, 0);
+        //root.setPadding(new Insets(1, 1, 0, 0));
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
         button.add(ComponentFactory.getNewButton());
         currentButton = button.get(0);
-
-        if (isSelectedItem) {
-            exchangeNode(combo, currentButton);
-            // TODO creer une fonction générique
-            // ---
-
-            combo.setVisible(false);
-            combo.setMinSize(0, 0);
-            combo.setMaxSize(0, 0);
-            iconWait.prefWidth(0);
-
-            currentButton.setVisible(true);
-            currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            currentButton.setPrefWidth(root.getWidth());
-            // ---
-        } else {
-            exchangeNode(currentButton, combo);
-
-            // TODO creer une fonction générique
-            // ---
-            currentButton.setVisible(false);
-            currentButton.setMinSize(0, 0);
-            currentButton.setMaxSize(0, 0);
-            iconWait.prefWidth(16);
-
-            combo.setVisible(true);
-            combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            combo.setPrefWidth(root.getWidth());
-        }
-        if (control.isMultiple()) {
-            currentButton.setGraphic(iconClose);
-        }
-        root.getChildren().add(currentButton);
-        root.getChildren().add(combo);
-        root.getChildren().add(iconWait);
-        getChildren().add(root);
+        exchangeNode(isSelectedItem);
+        root.getChildren().addAll(currentButton, combo);
+        getChildren().addAll(root);
         combo.setPromptText(control.promptTextProperty().getValue());
         combo.setEditable(control.isEditable());
     }
@@ -600,10 +564,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                  public ListCell<T> call(ListView<T> param) {
                                      param.setPrefHeight(getFixedHeight());
                                      final ListCell<T> cell = new ListCell<T>() {
-//                                         {
-//                                             super.setPrefWidth(control.getPrefWidth());
-//                                             super.setPrefHeight(control.getPrefHeight());
-//                                         }
+                                         {
+                                             super.setPrefWidth(control.getPrefWidth());
+                                             super.setPrefHeight(control.getPrefHeight());
+                                         }
 
                                          @Override
                                          protected void updateItem(T item, boolean empty) {
@@ -700,28 +664,32 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
     /**
      * Swap between Button and Combo
-     *
-     * @param nodeToHide
-     * @param nodeToShow
      */
-    private void exchangeNode(Node nodeToHide, Node nodeToShow) {
-//        changeParent(nodeToHide, hiddenBox);
-//        changeParent(nodeToShow, visibleBox);
-//        nodeToHide.maxWidth(0);
-//        nodeToHide.minWidth(0);
-
-        nodeToHide.setVisible(false);
-        nodeToHide.prefWidth(1);
-        nodeToHide.minWidth(1);
-        nodeToHide.maxWidth(1);
-
-//        nodeToShow.minWidth(200);
-//        nodeToShow.maxWidth(200);
-
-        nodeToShow.setVisible(true);
-        nodeToHide.prefWidth(-1);
-        nodeToHide.minWidth(-1);
-        nodeToHide.maxWidth(-1);
+    private void exchangeNode(boolean isSelectedItem) {
+        double w = root.getWidth();
+        root.setMinWidth(w);
+        if (!currentButton.isVisible()) {
+            // -- show button
+            combo.setVisible(false);
+            combo.setMinSize(0, 0);
+            combo.setMaxSize(0, 0);
+            currentButton.setVisible(true);
+            currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            currentButton.setPrefWidth(w);
+            //hidden.setVisible(false);
+           // iconWait.resize(0, 0);
+        } else {
+            // -- show combo
+            currentButton.setVisible(false);
+            currentButton.setMinSize(0, 0);
+            currentButton.setMaxSize(0, 0);
+            combo.setVisible(true);
+            combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            combo.setPrefWidth(w);
+           // hidden.setVisible(true);
+            //iconWait.resize(32, 32);
+        }
+        root.setMinWidth(-1);
     }
 
     /**************************************************************************
@@ -731,20 +699,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public void showCombo() {
         control.setControlShown(new Boolean(true));
         Platform.runLater(() -> {
-            exchangeNode(currentButton, combo);
-
-            // TODO creer une fonction générique
-            // ---
-            currentButton.setVisible(false);
-            currentButton.setMinSize(0, 0);
-            currentButton.setMaxSize(0, 0);
-            iconWait.prefWidth(16);
-
-            combo.setVisible(true);
-            combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            combo.setPrefWidth(root.getWidth());
-            // ---
-
+            exchangeNode(true);
             combo.getEditor().requestFocus();
             combo.getEditor().positionCaret(0);
             combo.getEditor().selectAll();
@@ -754,20 +709,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public void showButton() {
         control.setControlShown(new Boolean(false));
         Platform.runLater(() -> {
-            exchangeNode(combo, currentButton);
-
-            // TODO creer une fonction générique
-            // ---
-            combo.setVisible(false);
-            combo.setMinSize(0, 0);
-            combo.setMaxSize(0, 0);
-            iconWait.prefWidth(0);
-
-            currentButton.setVisible(true);
-            currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            currentButton.setPrefWidth(root.getWidth());
-            // ---
-
+            exchangeNode(true);
             currentButton.requestFocus();
         });
         currentButton.textProperty().setValue(userInput);
