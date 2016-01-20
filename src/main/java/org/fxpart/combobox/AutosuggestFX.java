@@ -357,6 +357,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             //
             if (n == null && o != null) {
                 clearAll();
+                getSkinControl().showCombo();
             }
 
         };
