@@ -354,6 +354,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         beanListener = (b, o, n) -> {
             T kv = beanToItemMapping.apply(b);
             item.setValue(kv);
+            //
+            if (n == null && o != null) {
+                clearAll();
+            }
+
         };
         bean.addListener(beanListener);
 
