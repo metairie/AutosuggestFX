@@ -17,12 +17,14 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -66,20 +68,19 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private static final String USUAL_DROPDOWN_CLASS = "usual-dropdown";
 
     // visuals
-    private final StackPane root = new StackPane();
+    private final HBox root = new HBox();
+    //private final HBox hidden = new HBox(); // for icon wait
     private final ComboBox<T> combo = new ComboBox<>();
-    private ProgressIndicator progressIndicator = new ProgressIndicator();
-    private Button currentButton = null;
-
     private final List<Button> button = new ArrayList<>();
     // local data
     private final AutosuggestFX<B, T> control;
     // listeners & binds, events
     private final WeakBinder binder = new WeakBinder();
-
+    private Button currentButton = null;
     private int index = 0;
     private DoubleProperty fixedHeight = new SimpleDoubleProperty(150);
     private boolean columnSeparatorVisible = false;
+    //private ImageView iconWait = new ImageView(new Image(getClass().getResourceAsStream("/org/fxpart/combobox/wait16.gif")));
     private ObservableList<T> items = null;
     private String columnSeparator = "|";
     private String keyValueSeparator = " - ";
@@ -119,6 +120,12 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         graphical();
 
         initSkin();
+
+        // init AutosuggestFXSkin without value
+        Platform.runLater(() -> {
+            combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            combo.setPrefWidth(root.getWidth());
+        });
 
         if (control.isRefreshFXML()) {
             refreshSkinWithItem(control.itemProperty());
@@ -324,20 +331,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         control.activityIndicatorProperty().removeListener(loadingIndicatorListener);
         combo.focusedProperty().removeListener(focusListener);
         control.focusedProperty().removeListener(getFocusListener);
-
     }
 
     private void buildBindings() {
         // icone wait displayed on control load indicator value
         //binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
-
-        control.activityIndicatorProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                Platform.runLater(() -> progressIndicator.toFront());
-            } else {
-                Platform.runLater(() -> progressIndicator.toBack());
-            }
-        });
 
         // context menu
         combo.getEditor().contextMenuProperty().bind(getSkinnable().contextMenuProperty());
@@ -502,18 +500,19 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     private void graphical() {
+        // building nodes
+//        hidden.setVisible(true);
+//        hidden.setMaxSize(0, 0);
+//        hidden.setPrefSize(0, 0);
+//        hidden.getChildren().add(iconWait);
+//        iconWait.resize(0, 0);
+        //root.setPadding(new Insets(1, 1, 0, 0));
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
         button.add(ComponentFactory.getNewButton());
         currentButton = button.get(0);
-
-        // set size
-        progressIndicator.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS);
-        progressIndicator.setPrefHeight(15);
-        currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
-        root.getChildren().addAll(currentButton, progressIndicator, combo);
-        getChildren().add(root);
+        exchangeNode(isSelectedItem);
+        root.getChildren().addAll(currentButton, combo);
+        getChildren().addAll(root);
         combo.setPromptText(control.promptTextProperty().getValue());
         combo.setEditable(control.isEditable());
     }
@@ -665,17 +664,31 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     /**
      * Swap between Button and Combo
      */
-    private void exchangeNode() {
-        if (root != null && root.getChildren() != null) {
-            int maxIndex = root.getChildren().size() - 1;
-            if (root.getChildren().get(maxIndex) instanceof Button) {
-                // display combo
-                combo.toFront();
-            } else {
-                // display button
-                currentButton.toFront();
-            }
+    private void exchangeNode(boolean isSelectedItem) {
+        double w = root.getWidth();
+        root.setMinWidth(w);
+        if (!currentButton.isVisible()) {
+            // -- show button
+            combo.setVisible(false);
+            combo.setMinSize(0, 0);
+            combo.setMaxSize(0, 0);
+            currentButton.setVisible(true);
+            currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            currentButton.setPrefWidth(w);
+            //hidden.setVisible(false);
+           // iconWait.resize(0, 0);
+        } else {
+            // -- show combo
+            currentButton.setVisible(false);
+            currentButton.setMinSize(0, 0);
+            currentButton.setMaxSize(0, 0);
+            combo.setVisible(true);
+            combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            combo.setPrefWidth(w);
+           // hidden.setVisible(true);
+            //iconWait.resize(32, 32);
         }
+        root.setMinWidth(-1);
     }
 
     /**************************************************************************
@@ -685,7 +698,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public void showCombo() {
         control.setControlShown(new Boolean(true));
         Platform.runLater(() -> {
-            exchangeNode();
+            exchangeNode(true);
             combo.getEditor().requestFocus();
             combo.getEditor().positionCaret(0);
             combo.getEditor().selectAll();
@@ -695,7 +708,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     public void showButton() {
         control.setControlShown(new Boolean(false));
         Platform.runLater(() -> {
-            exchangeNode();
+            exchangeNode(true);
             currentButton.requestFocus();
         });
         currentButton.textProperty().setValue(userInput);
