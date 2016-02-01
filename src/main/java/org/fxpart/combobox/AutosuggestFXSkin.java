@@ -575,7 +575,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                                  setGraphic(null);
                                              } else {
                                                  HBox styledText = new HBox();
-                                                 String keyString = String.valueOf(item.getKey());
+                                                 String keyString = getSkinnable().getStringTextFormatter().apply(item);
                                                  String valueString = String.valueOf(item.getValue());
                                                  String guess = control.getEditorText();
 
