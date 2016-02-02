@@ -131,6 +131,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return "onShown";
         }
     };
+    private Function<T, String> keyTextFormatter = t -> String.valueOf(t);
 
     /**
      * Creates a new AutosuggestComboBoxList instance with an empty list of choices.
@@ -763,6 +764,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public final void setOnShown(EventHandler<Event> value) {
         onShownProperty().set(value);
+    }
+
+    public Function<T, String> getKeyTextFormatter() {
+        return keyTextFormatter;
+    }
+
+    public void setKeyTextFormatter(Function<T, String> keyTextFormatter) {
+        this.keyTextFormatter = keyTextFormatter;
     }
 
     public enum AUTOSUGGESTFX_MODE {

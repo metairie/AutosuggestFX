@@ -204,6 +204,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                 if (DOWN.match(e)) {
                     if (!combo.isShowing()) {
                         combo.show();
+                        combo.hide();
+                        combo.show();
                     }
                     return;
                 } else if (e.getCode().isModifierKey() || UP.match(e) || RIGHT.match(e) || LEFT.match(e) || HOME.match(e) || END.match(e) || TAB.match(e) || e.getCode().equals(KeyCode.CONTROL) || e.isControlDown()) {
@@ -233,6 +235,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                 if (combo.visibleProperty().getValue() && combo.getEditor().getText().length() >= control.getLimitSearch()) {
                     reScheduleSearch(e);
                     if (!combo.isShowing()) {
+                        combo.show();
+                        combo.hide();
                         combo.show();
                     }
                 }
@@ -522,9 +526,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             @Override
             public String toString(T t) {
                 if (t != null) {
-                    String ret = textFieldFormatter.apply(t);
+                    String ret = getSkinnable().getStringTextFormatter().apply(t);
                 }
-                return t == null ? "" : textFieldFormatter.apply(t);
+                return t == null ? "" : getSkinnable().getStringTextFormatter().apply(t);
             }
 
             @Override
@@ -575,7 +579,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                                  setGraphic(null);
                                              } else {
                                                  HBox styledText = new HBox();
-                                                 String keyString = getSkinnable().getStringTextFormatter().apply(item);
+                                                 String keyString = getSkinnable().getKeyTextFormatter().apply(item);
                                                  String valueString = String.valueOf(item.getValue());
                                                  String guess = control.getEditorText();
 
