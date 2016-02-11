@@ -21,10 +21,7 @@ import org.fxpart.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -47,7 +44,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      **************************************************************************/
 
     // configuration       -----------------------
-    private int delay = 100;                        // delay in ms, max 5000
+    private IntegerProperty delay = new SimpleIntegerProperty(this, "delay", 100);                        // delay in ms, max 5000
     private int visibleRowsCount = 10;              // display only 10 items
     private boolean lazyMode = true;                // load before or not datasource
     private boolean acceptFreeTextValue = false;    // ability to input value not in the datasource list
@@ -76,8 +73,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private ObjectProperty<Supplier<List<T>>> dataSource = new SimpleObjectProperty<>(this, "dataSource", ArrayList::new);
 
     // formatter        -----------------------
-    private ObjectProperty<Function<T, String>> stringTextFormatter = new SimpleObjectProperty<>(this, "stringTextFormatter", item -> String.format("%s", item.getValue()));
-    private ObjectProperty<Function<T, String>> stringItemFormatter = new SimpleObjectProperty<>(this, "stringItemFormatter", item -> String.format("%s - %s", item.getKey(), item.getValue()));
+    private ObjectProperty<Function<T, String>> stringTextFormatter = new SimpleObjectProperty<>(this, "stringTextFormatter", item -> String.format("%s", item == null ? "" : item.getValue()));
+    private ObjectProperty<Function<T, String>> stringItemFormatter = new SimpleObjectProperty<>(this, "stringItemFormatter", item -> String.format("%s - %s", item == null ? "" : item.getKey(), item == null ? "" : item.getValue()));
     private Function<T, Node> nodeItemFormatter = null;
 
     // T B manager      -----------------------
@@ -112,6 +109,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     private AutosuggestFXTimer scheduler = null;//AutosuggestFXTimer.getInstance();
     private FilterTimerTask filterTask = null;
     private SearchTimerTask searchTask = null;
+    private BooleanProperty logDebug = new SimpleBooleanProperty(this, "debug", false);
     /**
      * Called just after the {@link AbstractAutosuggestControl} popup/display is shown.
      */
@@ -131,15 +129,40 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return "onShown";
         }
     };
-    private Function<T, String> keyTextFormatter = t -> String.valueOf(t);
+    private Function<T, String> keyTextFormatter = t -> String.valueOf(t.getKey());
 
     /**
      * Creates a new AutosuggestComboBoxList instance with an empty list of choices.
      */
     public AutosuggestFX() {
         this(null);
+
         setFocusTraversable(false);
         Version.getInstance();
+    }
+    /**
+     * Creates a new AutosuggestComboBoxList instance
+     *
+     * @param items The items to display.
+     */
+    public AutosuggestFX(final ObservableList<T> items) {
+        editable.addListener((observable, oldValue, newValue) -> {
+            if (oldValue) {
+                this.setDisable(true);
+            } else {
+                this.setHasFocus(false);
+                this.setDisable(false);
+            }
+        });
+        this.items = items == null ? FXCollections.<T>observableArrayList() : items;
+    }
+
+    public boolean getLogDebug() {
+        return logDebug.get();
+    }
+
+    public void setLogDebug(boolean logDebug) {
+        this.logDebug.set(logDebug);
     }
 
 
@@ -149,13 +172,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
      *
      **************************************************************************/
 
-    /**
-     * Creates a new AutosuggestComboBoxList instance
-     *
-     * @param items The items to display.
-     */
-    public AutosuggestFX(final ObservableList<T> items) {
-        this.items = items == null ? FXCollections.<T>observableArrayList() : items;
+    public BooleanProperty logDebugProperty() {
+        return logDebug;
     }
 
     /**
@@ -210,16 +228,55 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         }
     }
 
+    public void applyList(String term, List<T> newList) {
+        if (Objects.equals(term, getSkinControl().getCombo().getEditor().getText()) || term.isEmpty()) {
+            applyList(newList);
+        }
+    }
+
     /**
      * Method for doing the update of cells
      *
      * @param newList
      */
     public void applyList(List<T> newList) {
+        if (newList == null) {
+            return;
+        }
         Collection<? extends T> cListCopy = CollectionsUtil.split(newList, determineListItemSize(newList));
         // set the combo item list in one time
+        String searchTerm = getSkinControl().getCombo().getEditor().getText();
+
         items.setAll(cListCopy);
+
+        // prevent bug when a key type when a select item has set the editor text
+        // because the item is refresh when the list is clear or replace by setAll
+        if (!getSkinControl().getCombo().getEditor().getText().equals(searchTerm)) {
+            getSkinControl().getCombo().getEditor().setText(searchTerm);
+            getSkinControl().getCombo().getEditor().selectPositionCaret(searchTerm.length());
+            getSkinControl().getCombo().getEditor().deselect();
+        }
+
+        getSkinControl().show();
     }
+
+    public void appendResult(String finalTerm, List<T> newList) {
+        // prevent loading bad term result
+        String currentSearchTerm = getSkinControl().getCombo().getEditor().getText();
+        if (Objects.equals(finalTerm, currentSearchTerm)) {
+            items.addAll(newList);
+            getSkinControl().show();
+        } else {
+            trace(String.format("APPEND RESULT term not corresponding : ORIG %s != %s ", currentSearchTerm, finalTerm));
+        }
+    }
+
+    protected void trace(String trace) {
+        if (getLogDebug()) {
+            System.out.println(trace);
+        }
+    }
+
 
     /**
      * reSchedule a searching or a filtering task
@@ -231,12 +288,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         scheduler = AutosuggestFXTimer.getInstance();
         if (refresh) {
             // ask a new external Search
-            searchTask = new SearchTimerTask(event);
-            scheduler.schedule(searchTask, this.delay, this.delay);
+            getSearch().apply(getSkinControl().getCombo().getEditor().getText());
+//            searchTask = new SearchTimerTask(event);
+//            scheduler.schedule(searchTask, this.delay.getValue(), this.delay.getValue());
         } else {
             // apply an internal Stream filter
             filterTask = new FilterTimerTask(event);
-            scheduler.schedule(filterTask, this.delay, this.delay);
+            scheduler.schedule(filterTask, this.delay.getValue(), this.delay.getValue());
         }
     }
 
@@ -333,7 +391,14 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     public void refreshBeanCascade(ObjectProperty<B> b) {
         beanProperty().setValue(b.getValue());
         T kv = beanToItemMapping.apply(b);
+
         item.setValue(kv);
+
+        // notify change combo
+        if (getSkinControl() != null) {
+            getSkinControl().getCombo().setValue(kv);
+        }
+
         refreshFXML = true;
     }
 
@@ -357,8 +422,8 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             item.setValue(kv);
             //
             if (n == null && o != null) {
-                clearAll();
-                getSkinControl().showCombo();
+//                clearAll();
+//                getSkinControl().showCombo();
             }
 
         };
@@ -379,7 +444,7 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return list;
         };
 
-        // if a value is set
+        // if a value is set.
         if (beanProperty().getValue() != null) {
             T kv = beanToItemMapping.apply(beanProperty());
             item.setValue(kv);
@@ -470,11 +535,15 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     }
 
     public int getDelay() {
-        return delay;
+        return delay.getValue();
     }
 
     public void setDelay(int delay) {
-        this.delay = Math.max(100, Math.min(5000, delay));
+        if (delay == 0 || delay == -1) {
+            this.delay.setValue(1);
+        } else {
+            this.delay.setValue(Math.max(100, Math.min(5000, delay)));
+        }
     }
 
     public boolean getLazyMode() {
@@ -774,6 +843,19 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         this.keyTextFormatter = keyTextFormatter;
     }
 
+    @Override
+    public void requestFocus() {
+        AutosuggestFXSkin skin = (AutosuggestFXSkin) getSkin();
+        if (skin != null) {
+            skin.requestFocus();
+            setHasFocus(true);
+        }
+    }
+
+    public void setHasFocus(Boolean focus) {
+        setFocused(focus);
+    }
+
     public enum AUTOSUGGESTFX_MODE {
         CACHE_DATA,
         LIVE_DATA,
@@ -914,5 +996,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
             return filter.apply(getEditorText());
         }
     }
+
 
 }
