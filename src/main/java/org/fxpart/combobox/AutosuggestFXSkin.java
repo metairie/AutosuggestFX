@@ -1,9 +1,6 @@
 package org.fxpart.combobox;
 
 import com.google.common.collect.Lists;
-import com.sun.javafx.scene.control.behavior.BehaviorBase;
-import com.sun.javafx.scene.control.behavior.KeyBinding;
-import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
 import com.sun.javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -38,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Created by metairie on 07-Jul-15.
  */
-public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<AutosuggestFX<B, T>, BehaviorBase<AutosuggestFX<B, T>>> {
+public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<AutosuggestFX<B, T>> {
     private final static Logger LOG = LoggerFactory.getLogger(AutosuggestFXSkin.class);
     private static final String DEFAULT_STYLE_CLASS = "autosuggestfx";
 
@@ -71,8 +68,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     //private final HBox hidden = new HBox(); // for icon wait
     private final ComboBox<T> combo = new ComboBox<>();
     private final List<Button> button = new ArrayList<>();
-    // local data
-    private final AutosuggestFX<B, T> control;
+
     // listeners & binds, events
     private final WeakBinder binder = new WeakBinder();
     private Button currentButton = null;
@@ -112,9 +108,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @param control
      */
     public AutosuggestFXSkin(final AutosuggestFX<B, T> control) {
-        super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
-        this.control = control;
-        this.control.getStyleClass().add(DEFAULT_STYLE_CLASS);
+        super(control);
+        this.getSkinnable().getStyleClass().add(DEFAULT_STYLE_CLASS);
 
         // visual aspect
         graphical();
@@ -125,7 +120,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             refreshSkinWithItem(control.itemProperty());
         }
 
-        this.control.focusedProperty().addListener((observable, oldValue, newValue) -> {
+        this.getSkinnable().focusedProperty().addListener((observable, oldValue, newValue) -> {
             getSkinnable().setHasFocus(newValue);
         });
     }
@@ -133,7 +128,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     /**
      * Constructor with an T Item passed
      * </p>
-     * this.control.item is already feeded by developer
+     * this.getSkinnable().item is already feeded by developer
      * Possible usage :
      * - when you want to display an Entity Form with data retrieved from a service
      *
@@ -141,8 +136,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @param item
      */
     public AutosuggestFXSkin(final AutosuggestFX<B, T> control, ObjectProperty<T> item) {
-        super(control, new BehaviorBase<>(control, Collections.<KeyBinding>emptyList()));
-        this.control = control;
+        super(control);
 
         // visual aspect
         graphical();
@@ -157,7 +151,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * This method is called by the constructor
      */
     private void initSkin() {
-        this.items = control.getItems();
+        this.items = this.getSkinnable().getItems();
 
         // events
         buildEvents();
@@ -181,6 +175,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         buildEditorRendered();
 
         // fill combo
+
         combo.setItems(this.items);
 
         // listeners
@@ -228,6 +223,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                     combo.getEditor().selectAll();
                     return;
                 } else if (ENTER.match(e) || TAB.match(e)) {
+                    if (combo.getEditor().getText().length() == 0) {
+                        getSkinnable().setBean(null);
+                    }
+                    valid();
                     // go next
                     Parent parent = ((Control) e.getSource()).getParent();
                     if (parent.getParent() == null) {
@@ -264,13 +263,13 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                     }
                 } else {
                     // TODO bug with isAcceptFreeTextValue
-//                    if (!control.isAcceptFreeTextValue()) {
+//                    if (!this.getSkinnable().isAcceptFreeTextValue()) {
 //                        combo.valueProperty().setValue(null);
 //                    }
                 }
 
                 // search if possible
-                if (combo.visibleProperty().getValue() && combo.getEditor().getText().length() >= control.getLimitSearch()) {
+                if (combo.visibleProperty().getValue() && combo.getEditor().getText().length() >= AutosuggestFXSkin.this.getSkinnable().getLimitSearch()) {
                     getSkinnable().trace("SEARCH " + combo.getEditor().getText() + " " + e.getCode() + " Combo focus" + combo.isFocused() + " Editor focus " + combo.getEditor().isFocused());
                     currentSearchTerm = getCombo().getEditor().getText();
 
@@ -352,11 +351,29 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         // add a sad effect but display is better
         if (!combo.isShowing()) {
             combo.show();
-            combo.hide();
-            combo.show();
-        } else {
-            combo.hide();
-            combo.show();
+        }
+
+        autoRefreshIfContentListIsNotWellDisplayed();
+    }
+
+    private void autoRefreshIfContentListIsNotWellDisplayed() {
+        ComboBoxListViewSkin skin = (ComboBoxListViewSkin) getCombo().getSkin();
+        final double ROW_HEIGHT = 23.3;
+        double heightAll = getCombo().getItems().size() * ROW_HEIGHT;
+        double heightMax = getCombo().getVisibleRowCount() * ROW_HEIGHT;
+        double min = Math.min(heightMax, heightAll);
+        getSkinnable().trace("Actual size " + skin.getListView().getHeight() + " min " + min);
+        if (!Objects.equals(skin.getListView().getHeight(), min)) {
+            getSkinnable().trace("REFRESH - size current " + skin.getListView().getHeight() + " - " + min);
+            if (!combo.isShowing()) {
+                combo.show();
+
+                combo.show();
+                combo.hide();
+            } else {
+                combo.hide();
+                combo.show();
+            }
         }
     }
 
@@ -385,7 +402,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         // item listener
         itemListener = (t, o, n) -> {
 //            isSelectedItem = (((ObjectProperty<T>) t).getValue() != null);
-//            control.refreshOnlyBean((ObservableValue<T>) t);
+//           this.getSkinnable().refreshOnlyBean((ObservableValue<T>) t);
 //            refreshSkin(t);
         };
         // focus lost
@@ -393,6 +410,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             if (old) {
                 getSkinnable().trace("FOCUS LOST RESET EDITOR");
                 resetComboBoxEditor();
+            } else {
+                getSkinnable().setHasFocus(true);
             }
         };
         // managing TAB
@@ -402,14 +421,19 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 
         // Set bindings and listeners ---------------------------------------------------
         // when loading indicator is false. caret is put a the end of the text
-        control.activityIndicatorProperty().addListener(loadingIndicatorListener);
+        this.getSkinnable().activityIndicatorProperty().addListener(loadingIndicatorListener);
         // T item listener
-        control.itemProperty().addListener(itemListener);
+        this.getSkinnable().itemProperty().addListener(itemListener);
 
 
         // lost focus
         combo.focusedProperty().addListener(focusListener);
-//        combo.getEditor().focusedProperty().addListener(focusListener);
+        combo.getEditor().focusedProperty().addListener((observable3, oldValue3, newValue3) -> {
+            if (newValue3) {
+                getSkinnable().trace("EDITOR GAIN FOCUS DETECTED");
+                getSkinnable().setHasFocus(true);
+            }
+        });
 
 
         // validation when the user select value with mouse
@@ -421,7 +445,12 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                 }
             });
             skin.getListView().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-                if (ESCAPE.match(event)) {
+                if (ENTER.match(event) || TAB.match(event)) {
+                    if (combo.getEditor().getText().length() == 0) {
+                        getSkinnable().setBean(null);
+                    }
+                    valid();
+                } else if (ESCAPE.match(event)) {
                     resetComboBoxEditor();
                 }
             });
@@ -489,15 +518,15 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * Unbind all
      */
     private void destroyListeners() {
-        control.itemProperty().removeListener(itemListener);
-        control.activityIndicatorProperty().removeListener(loadingIndicatorListener);
+        this.getSkinnable().itemProperty().removeListener(itemListener);
+        this.getSkinnable().activityIndicatorProperty().removeListener(loadingIndicatorListener);
         combo.focusedProperty().removeListener(focusListener);
-        control.focusedProperty().removeListener(getFocusListener);
+        this.getSkinnable().focusedProperty().removeListener(getFocusListener);
     }
 
     private void buildBindings() {
         // icone wait displayed on control load indicator value
-        //binder.bindInvalidationListener(iconWait.visibleProperty(), control.activityIndicatorProperty());
+        //binder.bindInvalidationListener(iconWait.visibleProperty(),this.getSkinnable().activityIndicatorProperty());
 
         // context menu
         combo.getEditor().contextMenuProperty().bind(getSkinnable().contextMenuProperty());
@@ -511,15 +540,15 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * set factories
      */
     private void buildFactories() {
-        if (control.isGraphicalRendering()) {
-            setNodeCellFactory(control.getNodeItemFormatter());
+        if (this.getSkinnable().isGraphicalRendering()) {
+            setNodeCellFactory(this.getSkinnable().getNodeItemFormatter());
         } else {
-            setStringCellFactory(control.getStringItemFormatter());
+            setStringCellFactory(this.getSkinnable().getStringItemFormatter());
         }
     }
 
     private void buildEditorRendered() {
-        setTextFieldFormatter(control.getStringTextFormatter());
+        setTextFieldFormatter();
     }
 
     /**
@@ -528,7 +557,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private void destroyFactories() {
         setNodeCellFactory(null);
         setStringCellFactory(null);
-        setTextFieldFormatter(null);
+        setTextFieldFormatter();
     }
 
     public void unbindAll() {
@@ -551,7 +580,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     private void refreshSkinWithItem(ObjectProperty<T> item) {
         isSelectedItem = (item.getValue() != null);
         if (item != null && item.getValue() != null) {
-            userInput = control.getStringTextFormatter().apply(item.getValue());
+            userInput = this.getSkinnable().getStringTextFormatter().apply(item.getValue());
             combo.valueProperty().setValue(item.getValue());
             if (!userInput.equalsIgnoreCase("")) {
                 showButton();
@@ -572,7 +601,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         if (item != null) {
             T t = (T) ob.getValue();
             if (t != null && t.getValue() != null) {
-                userInput = control.getStringTextFormatter().apply(t);
+                userInput = this.getSkinnable().getStringTextFormatter().apply(t);
                 currentButton.textProperty().setValue(userInput);
             } else {
                 currentButton.textProperty().setValue(userInput);
@@ -583,7 +612,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             combo.getEditor().setText("");
             currentButton.textProperty().setValue("");
             combo.valueProperty().setValue(null);
-            if (!control.isControlShown()) {
+            if (!this.getSkinnable().isControlShown()) {
                 showCombo();
             }
         }
@@ -599,23 +628,23 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             combo.getEditor().setText("");
             currentButton.textProperty().setValue("");
             combo.valueProperty().setValue(null);
-            control.itemProperty().setValue(null);
+            this.getSkinnable().itemProperty().setValue(null);
             return;
         }
         // search maybe done BUT no result selected in item list (or no item list)
-        if (combo.valueProperty().getValue() == null && !control.isAcceptFreeTextValue() && !control.isAutoselect()) {
+        if (combo.valueProperty().getValue() == null && !this.getSkinnable().isAcceptFreeTextValue() && !this.getSkinnable().isAutoselect()) {
             combo.getEditor().setText("");
             currentButton.textProperty().setValue("");
             combo.valueProperty().setValue(null);
-            control.itemProperty().setValue(null);
+            this.getSkinnable().itemProperty().setValue(null);
             return;
         }
         // autoselect , means K code match exactly with searched word
-        if (control.isAutoselect() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
+        if (this.getSkinnable().isAutoselect() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             if (combo.getItems().size() > 0) {
                 T t = combo.getItems().get(0);
                 if (userInput.equalsIgnoreCase(t.getKey().toString())) {
-                    control.itemProperty().setValue(t);
+                    this.getSkinnable().itemProperty().setValue(t);
                     showButton();
                 } else {
                     combo.getEditor().setText("");
@@ -624,11 +653,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
             return;
         }
         // free text and NO item selected
-        if (control.isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
+        if (this.getSkinnable().isAcceptFreeTextValue() && (combo.getSelectionModel().getSelectedItem() == null || combo.valueProperty().getValue() == null)) {
             // TODO bug t is null
-            T t = control.newInstanceOfT.apply(null);
+            T t = this.getSkinnable().newInstanceOfT.apply(null);
             if (t != null && String.valueOf(t.getValue()).equalsIgnoreCase(combo.getEditor().getText())) {
-                control.itemProperty().setValue(t);
+                this.getSkinnable().itemProperty().setValue(t);
                 showButton();
             } else {
                 combo.getEditor().setText("");
@@ -638,9 +667,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         // selected item
         if (combo.valueProperty().getValue() != null) {
             T t = combo.valueProperty().getValue();
-            userInput = control.getStringTextFormatter().apply(t);
+            userInput = this.getSkinnable().getStringTextFormatter().apply(t);
             if (String.valueOf(userInput).equalsIgnoreCase(combo.getEditor().getText())) {
-                control.itemProperty().setValue(t);
+                this.getSkinnable().itemProperty().setValue(t);
                 combo.getEditor().setText(userInput);
                 showButton();
             } else {
@@ -658,10 +687,12 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      * @param event
      */
     private void reScheduleSearch(Event event) {
-        control.reSchedule(event, control.isAlwaysRefresh());
+        this.getSkinnable().reSchedule(event, this.getSkinnable().isAlwaysRefresh());
     }
 
     private void graphical() {
+
+
         // building nodes
 //        hidden.setVisible(true);
 //        hidden.setMaxSize(0, 0);
@@ -678,20 +709,18 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 //        root.getChildren().addAll(combo);
 
         combo.minWidthProperty().bind(getSkinnable().minWidthProperty());
+        combo.maxHeightProperty().bind(getSkinnable().maxHeightProperty());
         combo.prefWidthProperty().bind(getSkinnable().prefWidthProperty());
 
         getChildren().addAll(combo);
-        combo.promptTextProperty().bind(control.promptTextProperty());
-        combo.editableProperty().bind(control.editableProperty());
+        combo.promptTextProperty().bind(this.getSkinnable().promptTextProperty());
+        combo.editableProperty().bind(this.getSkinnable().editableProperty());
     }
 
-    private void setTextFieldFormatter(Function<T, String> textFieldFormatter) {
+    private void setTextFieldFormatter() {
         combo.setConverter(new StringConverter<T>() {
             @Override
             public String toString(T t) {
-                if (t != null) {
-                    String ret = getSkinnable().getStringTextFormatter().apply(t);
-                }
                 return t == null ? "" : getSkinnable().getStringTextFormatter().apply(t);
             }
 
@@ -706,7 +735,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         Callback<ListView<T>, ListCell<T>> cellFactory = new Callback<ListView<T>, ListCell<T>>() {
             @Override
             public ListCell<T> call(ListView<T> param) {
-//                param.setPrefHeight(getFixedHeight());
                 final ListCell<T> cell = new ListCell<T>() {
                     @Override
                     protected void updateItem(T item, boolean empty) {
@@ -732,8 +760,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
 //                                     param.setPrefHeight(getFixedHeight());
                                      final ListCell<T> cell = new ListCell<T>() {
                                          {
-//                                             super.setPrefWidth(control.getPrefWidth());
-//                                             super.setPrefHeight(control.getPrefHeight());
+//                                             super.setPrefWidth(this.getSkinnable().getPrefWidth());
+//                                             super.setPrefHeight(this.getSkinnable().getPrefHeight());
                                          }
 
                                          @Override
@@ -747,11 +775,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                                  HBox styledText = new HBox();
                                                  String keyString = getSkinnable().getKeyTextFormatter().apply(item);
                                                  String valueString = String.valueOf(item.getValue());
-                                                 String guess = control.getEditorText();
+                                                 String guess = AutosuggestFXSkin.this.getSkinnable().getEditorText();
 
                                                  // key
-                                                 if (control.isFullSearch()) {
-                                                     styledText = createStyledText(keyString, guess, styledText, control.isIgnoreCase());
+                                                 if (AutosuggestFXSkin.this.getSkinnable().isFullSearch()) {
+                                                     styledText = createStyledText(keyString, guess, styledText, AutosuggestFXSkin.this.getSkinnable().isIgnoreCase());
                                                  } else {
                                                      styledText.getChildren().add(new Text(keyString));
                                                  }
@@ -760,10 +788,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
                                                  styledText.getChildren().add(new Text(keyValueSeparator));
 
                                                  // value
-                                                 styledText = createStyledText(valueString, guess, styledText, control.isIgnoreCase());
+                                                 styledText = createStyledText(valueString, guess, styledText, AutosuggestFXSkin.this.getSkinnable().isIgnoreCase());
 
                                                  // render
                                                  setGraphic(styledText);
+//
                                              }
                                          }
                                      };
@@ -866,7 +895,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
      **************************************************************************/
 
     public void showCombo() {
-//        control.setControlShown(new Boolean(true));
+//        this.getSkinnable().setControlShown(new Boolean(true));
 //        Platform.runLater(() -> {
 //            exchangeNode(true);
 //            combo.getEditor().requestFocus();
@@ -876,7 +905,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
     }
 
     public void showButton() {
-//        control.setControlShown(new Boolean(false));
+//        this.getSkinnable().setControlShown(new Boolean(false));
 //        Platform.runLater(() -> {
 //            exchangeNode(true);
 //            currentButton.requestFocus();
@@ -959,10 +988,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         combo.getEditor().textProperty().setValue("");
         //combo.getValue().setValue(null);
         combo.getItems().clear();
-        control.getItems().clear();
+        this.getSkinnable().getItems().clear();
         currentButton.textProperty().setValue("");
-        control.itemProperty().setValue(null);
-        control.beanProperty().setValue(null);
+        this.getSkinnable().itemProperty().setValue(null);
+        this.getSkinnable().beanProperty().setValue(null);
     }
 
     // TODO remove this when version will be 1.0.0
@@ -977,38 +1006,39 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends BehaviorSkinBase<A
         LOG.debug(" ------------------------------------");
         LOG.debug(" --- button text                    : " + currentButton.textProperty().getValue());
         LOG.debug(" ------------------------------------");
-        LOG.debug(" --- control T ITEM                 : " + control.itemProperty().getValue());
-        LOG.debug(" --- control T ITEM getValue        : " + (control.itemProperty().getValue() == null ? "" : control.itemProperty().getValue().getValue()));
-        LOG.debug(" --- control T ITEMS LIST           : " + control.getItems().size());
+        LOG.debug(" --- control T ITEM                 : " + this.getSkinnable().itemProperty().getValue());
+        LOG.debug(" --- control T ITEM getValue        : " + (this.getSkinnable().itemProperty().getValue() == null ? "" : this.getSkinnable().itemProperty().getValue().getValue()));
+        LOG.debug(" --- control T ITEMS LIST           : " + this.getSkinnable().getItems().size());
         LOG.debug(" --- control  isSelected            : " + isSelectedItem);
-        LOG.debug(" --- control T BEAN                 : " + control.beanProperty().getValue());
-        LOG.debug(" --- control T BEAN NOT POSSIBLE    : " + (control.beanProperty().getValue() == null ? "" : control.beanProperty().getValue()));
-        LOG.debug(" --- control  isControlShown        : " + control.isControlShown());
-        LOG.debug(" --- control  isAcceptFreeTextValue : " + control.isAcceptFreeTextValue());
-        LOG.debug(" --- control  isFullSearch          : " + control.isFullSearch());
-        LOG.debug(" --- control  isIgnoreCase          : " + control.isIgnoreCase());
-        LOG.debug(" --- control  isLazyMode            : " + control.isLazyMode());
-        LOG.debug(" --- control  promptText            : " + control.promptTextProperty().getValue());
+        LOG.debug(" --- control T BEAN                 : " + this.getSkinnable().beanProperty().getValue());
+        LOG.debug(" --- control T BEAN NOT POSSIBLE    : " + (this.getSkinnable().beanProperty().getValue() == null ? "" : this.getSkinnable().beanProperty().getValue()));
+        LOG.debug(" --- control  isControlShown        : " + this.getSkinnable().isControlShown());
+        LOG.debug(" --- control  isAcceptFreeTextValue : " + this.getSkinnable().isAcceptFreeTextValue());
+        LOG.debug(" --- control  isFullSearch          : " + this.getSkinnable().isFullSearch());
+        LOG.debug(" --- control  isIgnoreCase          : " + this.getSkinnable().isIgnoreCase());
+        LOG.debug(" --- control  isLazyMode            : " + this.getSkinnable().isLazyMode());
+        LOG.debug(" --- control  promptText            : " + this.getSkinnable().promptTextProperty().getValue());
         LOG.debug(" --- combo  getEditor               : " + combo.getEditor().promptTextProperty().getValue());
 
         LOG.debug(" --- <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ");
     }
 
     public void requestFocus() {
-        getCombo().getEditor().requestFocus();
+
+        getCombo().requestFocus();
 //        ComboBoxListViewSkin skin = (ComboBoxListViewSkin) getCombo().getSkin();
 //        skin.getListView().requestFocus();
     }
 
-
-    @Override
-    protected void handleControlPropertyChanged(String propertyReference) {
-        if ("prefColumnCount".equals(propertyReference)) {
-            this.getSkinnable().requestLayout();
-        } else {
-            super.handleControlPropertyChanged(propertyReference);
-        }
-    }
+//
+//    @Override
+//    protected void handleControlPropertyChanged(String propertyReference) {
+//        if ("prefColumnCount".equals(propertyReference)) {
+//            this.getSkinnable().requestLayout();
+//        } else {
+//            super.handleControlPropertyChanged(propertyReference);
+//        }
+//    }
 
     @Override
     protected double computeMaxWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {

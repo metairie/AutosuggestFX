@@ -137,7 +137,6 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
     public AutosuggestFX() {
         this(null);
 
-        setFocusTraversable(false);
         Version.getInstance();
     }
     /**
@@ -247,7 +246,13 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         // set the combo item list in one time
         String searchTerm = getSkinControl().getCombo().getEditor().getText();
 
+//        getSkinControl().getCombo().setItems(null);
+
         items.setAll(cListCopy);
+
+//        getSkinControl().getCombo().setItems(FXCollections.observableArrayList(cListCopy));
+//        ComboBoxListViewSkin skin = (ComboBoxListViewSkin) getSkinControl().getCombo().getSkin();
+//        skin.getListView().refresh();
 
         // prevent bug when a key type when a select item has set the editor text
         // because the item is refresh when the list is clear or replace by setAll
@@ -264,8 +269,11 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         // prevent loading bad term result
         String currentSearchTerm = getSkinControl().getCombo().getEditor().getText();
         if (Objects.equals(finalTerm, currentSearchTerm)) {
-            items.addAll(newList);
-            getSkinControl().show();
+            if (!newList.isEmpty()) {
+                items.addAll(newList);
+                trace("---- Append result " + newList.size());
+                getSkinControl().show();
+            }
         } else {
             trace(String.format("APPEND RESULT term not corresponding : ORIG %s != %s ", currentSearchTerm, finalTerm));
         }
