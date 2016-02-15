@@ -28,7 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -119,10 +122,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
         if (control.isRefreshFXML()) {
             refreshSkinWithItem(control.itemProperty());
         }
-
-        this.getSkinnable().focusedProperty().addListener((observable, oldValue, newValue) -> {
-            getSkinnable().setHasFocus(newValue);
-        });
     }
 
     /**
@@ -227,14 +226,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                         getSkinnable().setBean(null);
                     }
                     valid();
-                    // go next
-                    Parent parent = ((Control) e.getSource()).getParent();
-                    if (parent.getParent() == null) {
-                        return;
-                    }
-                    int i = parent.getParent().getChildrenUnmodifiable().indexOf(parent);
-                    Optional<Node> first = parent.getParent().getChildrenUnmodifiable().stream().skip(i).filter(Node::isFocusTraversable).findFirst();
-                    first.ifPresent(Node::requestFocus);
 
                     return;
                 } else if (e.getCode().equals(KeyCode.SHIFT) || e.getCode().equals(KeyCode.CONTROL) || ignoredKeyCodeCombinations.stream().anyMatch(keyCodeCombination -> keyCodeCombination.match(e))) {
@@ -411,7 +402,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                 getSkinnable().trace("FOCUS LOST RESET EDITOR");
                 resetComboBoxEditor();
             } else {
-                getSkinnable().setHasFocus(true);
+//                getSkinnable().setHasFocus(true);
             }
         };
         // managing TAB
@@ -428,17 +419,23 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
 
         // lost focus
         combo.focusedProperty().addListener(focusListener);
-        combo.getEditor().focusedProperty().addListener((observable3, oldValue3, newValue3) -> {
-            if (newValue3) {
-                getSkinnable().trace("EDITOR GAIN FOCUS DETECTED");
-                getSkinnable().setHasFocus(true);
-            }
-        });
-
 
         // validation when the user select value with mouse
         combo.skinProperty().addListener((observable2, oldValue2, newValue2) -> {
             ComboBoxListViewSkin skin = (ComboBoxListViewSkin) newValue2;
+
+            ChangeListener<Boolean> detectedFocusChange = (observable1, oldValue1, newValue1) -> {
+                if (!(combo.focusedProperty().get() && combo.getEditor().focusedProperty().get() && skin.getListView().focusedProperty().get())) {
+                    this.getSkinnable().setHasFocus(false);
+                } else {
+                    this.getSkinnable().setHasFocus(true);
+                }
+            };
+            combo.focusedProperty().addListener(detectedFocusChange);
+            combo.getEditor().focusedProperty().addListener(detectedFocusChange);
+            skin.getListView().focusedProperty().addListener(detectedFocusChange);
+
+
             skin.getListView().addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
                 if (combo.getValue() != null) {
                     valid();
@@ -534,6 +531,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
         // basic control properties
         combo.editableProperty().bind(getSkinnable().editableProperty());
         combo.tooltipProperty().bind(getSkinnable().tooltipProperty());
+        combo.onContextMenuRequestedProperty().bind(getSkinnable().onContextMenuRequestedProperty());
+        combo.getEditor().onContextMenuRequestedProperty().bind(getSkinnable().onContextMenuRequestedProperty());
     }
 
     /**
@@ -1024,10 +1023,8 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
     }
 
     public void requestFocus() {
-
+        getSkinnable().trace("Request focus");
         getCombo().requestFocus();
-//        ComboBoxListViewSkin skin = (ComboBoxListViewSkin) getCombo().getSkin();
-//        skin.getListView().requestFocus();
     }
 
 //
