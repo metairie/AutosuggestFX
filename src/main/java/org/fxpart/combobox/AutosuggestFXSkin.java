@@ -540,7 +540,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
      */
     private void buildFactories() {
         if (this.getSkinnable().isGraphicalRendering()) {
-            setNodeCellFactory(this.getSkinnable().getNodeItemFormatter());
+            setNodeCellFactory();
         } else {
             setStringCellFactory(this.getSkinnable().getStringItemFormatter());
         }
@@ -554,7 +554,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
      * Destroy factories
      */
     private void destroyFactories() {
-        setNodeCellFactory(null);
+        setNodeCellFactory();
         setStringCellFactory(null);
         setTextFieldFormatter();
     }
@@ -752,7 +752,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
         combo.setCellFactory(cellFactory);
     }
 
-    private void setNodeCellFactory(Function<T, Node> itemFormatter) {
+    private void setNodeCellFactory() {
         combo.setCellFactory(new Callback<ListView<T>, ListCell<T>>() {
                                  @Override
                                  public ListCell<T> call(ListView<T> param) {
@@ -773,22 +773,15 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                                              } else {
                                                  HBox styledText = new HBox();
                                                  String keyString = getSkinnable().getKeyTextFormatter().apply(item);
-                                                 String valueString = String.valueOf(item.getValue());
-                                                 String guess = AutosuggestFXSkin.this.getSkinnable().getEditorText();
+                                                 String valueString = AutosuggestFXSkin.this.getSkinnable().getStringItemFormatter().apply(item);
+                                                 String guess = currentSearchTerm;
 
                                                  // key
                                                  if (AutosuggestFXSkin.this.getSkinnable().isFullSearch()) {
-                                                     styledText = createStyledText(keyString, guess, styledText, AutosuggestFXSkin.this.getSkinnable().isIgnoreCase());
+                                                     styledText = createStyledText(valueString, guess, styledText, AutosuggestFXSkin.this.getSkinnable().isIgnoreCase());
                                                  } else {
                                                      styledText.getChildren().add(new Text(keyString));
                                                  }
-
-                                                 // kv separator
-                                                 styledText.getChildren().add(new Text(keyValueSeparator));
-
-                                                 // value
-                                                 styledText = createStyledText(valueString, guess, styledText, AutosuggestFXSkin.this.getSkinnable().isIgnoreCase());
-
                                                  // render
                                                  setGraphic(styledText);
 //
@@ -981,16 +974,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
 
     public void setIsSelectedItem(boolean isSelectedItem) {
         this.isSelectedItem = isSelectedItem;
-    }
-
-    public void clearAll() {
-        combo.getEditor().textProperty().setValue("");
-        //combo.getValue().setValue(null);
-        combo.getItems().clear();
-        this.getSkinnable().getItems().clear();
-        currentButton.textProperty().setValue("");
-        this.getSkinnable().itemProperty().setValue(null);
-        this.getSkinnable().beanProperty().setValue(null);
     }
 
     // TODO remove this when version will be 1.0.0
