@@ -61,6 +61,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
     private static final KeyCodeCombination PASTE = new KeyCodeCombination(KeyCode.V, KeyCodeCombination.CONTROL_DOWN);
     private static final KeyCodeCombination SELECT_ALL = new KeyCodeCombination(KeyCode.A, KeyCodeCombination.CONTROL_DOWN);
     private static final KeyCodeCombination COPY = new KeyCodeCombination(KeyCode.C, KeyCodeCombination.CONTROL_DOWN);
+    private static final KeyCodeCombination SHIFT_TAB = new KeyCodeCombination(KeyCode.TAB, KeyCodeCombination.SHIFT_DOWN);
 
     // apply style
     private static final String HIGHLIGHTED_DROPDOWN_CLASS = "highlighted-dropdown";
@@ -216,7 +217,11 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                                 new KeyCodeCombination(keyCombination, KeyCodeCombination.SHIFT_DOWN),
                                 new KeyCodeCombination(keyCombination, KeyCodeCombination.CONTROL_DOWN)).stream()).collect(Collectors.toList());
 
-                if (DOWN.match(e)) {
+                ignoredKeyCodeCombinations.add(SHIFT_TAB);
+
+                if (e.getCode().equals(KeyCode.SHIFT) || e.getCode().equals(KeyCode.CONTROL) || ignoredKeyCodeCombinations.stream().anyMatch(keyCodeCombination -> keyCodeCombination.match(e))) {
+                    return;
+                } else if (DOWN.match(e)) {
                     return;
                 } else if (SELECT_ALL.match(e)) {
                     combo.getEditor().selectAll();
@@ -227,8 +232,6 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                     }
                     valid();
 
-                    return;
-                } else if (e.getCode().equals(KeyCode.SHIFT) || e.getCode().equals(KeyCode.CONTROL) || ignoredKeyCodeCombinations.stream().anyMatch(keyCodeCombination -> keyCodeCombination.match(e))) {
                     return;
                 } else if (PASTE.match(e)) {
                     reScheduleSearch(e);
@@ -300,7 +303,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
         // add ENTER + clear - reset value
         combo.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             // validation by ENTER
-            if (ENTER.match(event) || TAB.match(event)) {
+            if (SHIFT_TAB.match(event)) {
+                getSkinnable().trace("SHIFT TAB in COMBO");
+                // do nothing
+            } else if (ENTER.match(event) || TAB.match(event)) {
                 if (combo.getEditor().getText().length() == 0) {
                     getSkinnable().setBean(null);
                 }
@@ -442,7 +448,10 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                 }
             });
             skin.getListView().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-                if (ENTER.match(event) || TAB.match(event)) {
+                if (SHIFT_TAB.match(event)) {
+                    getSkinnable().trace("SHIFT TAB in LIST");
+                    // do nothing
+                } else if (ENTER.match(event) || TAB.match(event)) {
                     if (combo.getEditor().getText().length() == 0) {
                         getSkinnable().setBean(null);
                     }
