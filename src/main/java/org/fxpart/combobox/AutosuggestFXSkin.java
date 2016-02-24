@@ -712,13 +712,9 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
         combo.getStylesheets().add("org/fxpart/combobox/autosuggestfx.css");
         button.add(ComponentFactory.getNewButton());
         currentButton = button.get(0);
-//        exchangeNode(isSelectedItem);
-//        root.getChildren().addAll(currentButton, combo);
-//        root.getChildren().addAll(combo);
 
-        combo.minWidthProperty().bind(getSkinnable().minWidthProperty());
-        combo.maxHeightProperty().bind(getSkinnable().maxHeightProperty());
-        combo.prefWidthProperty().bind(getSkinnable().prefWidthProperty());
+        combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        combo.setMinSize(Double.MIN_VALUE, Double.MIN_VALUE);
 
         getChildren().addAll(combo);
         combo.promptTextProperty().bind(this.getSkinnable().promptTextProperty());
@@ -1028,42 +1024,5 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
 //            super.handleControlPropertyChanged(propertyReference);
 //        }
 //    }
-
-    @Override
-    protected double computeMaxWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {
-        return combo.maxWidth(height);
-    }
-
-    @Override
-    protected double computeMinWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {
-        return combo.minWidth(height);
-    }
-
-    @Override
-    protected double computePrefWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {
-        return combo.prefWidth(height);
-    }
-
-    @Override
-    protected double computeMinHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
-        return combo.minHeight(width);
-    }
-
-    @Override
-    protected double computePrefHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
-        return combo.prefHeight(width);
-    }
-
-    @Override
-    protected double computeMaxHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
-        return combo.maxHeight(width);
-    }
-
-    @Override
-    public double computeBaselineOffset(double topInset, double rightInset, double bottomInset, double leftInset) {
-        return topInset + combo.getBaselineOffset();
-    }
-
-
 }
 
