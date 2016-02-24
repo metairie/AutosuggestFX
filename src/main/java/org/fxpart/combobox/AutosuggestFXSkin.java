@@ -195,7 +195,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
                 if (!combo.getEditor().isFocused()) {
                     List<T> result = getSkinnable().getSearch().apply("");
                     if (result != null) {
-                        getSkinnable().applyList(result);
+                        forceSearchAll();
                     }
                 } else {
                     combo.getEditor().selectAll();
@@ -431,7 +431,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
             ComboBoxListViewSkin skin = (ComboBoxListViewSkin) newValue2;
 
             ChangeListener<Boolean> detectedFocusChange = (observable1, oldValue1, newValue1) -> {
-                if (!(combo.focusedProperty().get() && combo.getEditor().focusedProperty().get() && skin.getListView().focusedProperty().get())) {
+                if (!combo.focusedProperty().get() && !combo.getEditor().focusedProperty().get() && !skin.getListView().focusedProperty().get()) {
                     this.getSkinnable().setHasFocus(false);
                 } else {
                     this.getSkinnable().setHasFocus(true);
