@@ -13,7 +13,7 @@ public class Autosuggest<T> extends AutosuggestFX<T, ValueString<T>> {
     public AutoSuggest() {
     }
 
-    public AutoSuggest(List<ValueString<T>> items) {
+    public Autosuggest(List<ValueString<T>> items) {
         super(FXCollections.observableArrayList(items));
     }
 }
