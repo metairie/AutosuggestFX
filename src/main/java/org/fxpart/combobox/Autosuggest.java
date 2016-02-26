@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @param <T>
  */
-public class AutoSuggest<T> extends AutosuggestFX<T, ValueString<T>> {
+public class Autosuggest<T> extends AutosuggestFX<T, ValueString<T>> {
     public AutoSuggest() {
     }
 
