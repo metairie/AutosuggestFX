@@ -718,7 +718,16 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
         return item;
     }
 
+    /**
+     * Use valueProperty()
+     * @return
+     */
+    @Deprecated
     public ObjectProperty<B> beanProperty() {
+        return bean;
+    }
+
+    public ObjectProperty<B> valueProperty() {
         return bean;
     }
 
@@ -862,6 +871,10 @@ public class AutosuggestFX<B, T extends KeyValue> extends AbstractAutosuggestCon
 
     public void setHasFocus(Boolean focus) {
         setFocused(focus);
+    }
+
+    public ObservableList<String> getEditorStyleClass() {
+        return this.getStyleClass();
     }
 
     public enum AUTOSUGGESTFX_MODE {

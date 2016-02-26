@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.sun.javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -719,6 +720,7 @@ public class AutosuggestFXSkin<B, T extends KeyValue> extends SkinBase<Autosugge
         getChildren().addAll(combo);
         combo.promptTextProperty().bind(this.getSkinnable().promptTextProperty());
         combo.editableProperty().bind(this.getSkinnable().editableProperty());
+        Bindings.bindContent(combo.getStyleClass(), this.getSkinnable().getStyleClass());
     }
 
     private void setTextFieldFormatter() {
