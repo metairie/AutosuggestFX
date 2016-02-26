@@ -9,11 +9,11 @@ import java.util.List;
  *
  * @param <T>
  */
-public class Autosuggest<T> extends AutosuggestFX<T, ValueString<T>> {
-    public Autosuggest() {
+public class AutoSuggest1<T> extends AutosuggestFX<T, ValueString<T>> {
+    public AutoSuggest1() {
     }
 
-    public Autosuggest(List<ValueString<T>> items) {
+    public AutoSuggest1(List<ValueString<T>> items) {
         super(FXCollections.observableArrayList(items));
     }
 }
