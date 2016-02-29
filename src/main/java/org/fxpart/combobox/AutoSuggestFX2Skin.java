@@ -5,8 +5,6 @@ import com.sun.javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.event.Event;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -19,9 +17,6 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -297,7 +292,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
     }
 
     private void resetComboBoxEditor() {
-        if (getSkinnable().getBean() != null) {
+        if (getSkinnable().getValue() != null) {
             // reset the default text
             getCombo().getEditor().setText(getSkinnable().getStringTextFormatter().apply(getSkinnable().getValue()));
         } else {
@@ -306,8 +301,6 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
     }
 
     private void buildListeners() {
-
-
         // validation when the user select value with mouse
         combo.skinProperty().addListener((observable2, oldValue2, newValue2) -> {
             ComboBoxListViewSkin skin = (ComboBoxListViewSkin) newValue2;
@@ -315,6 +308,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
             ChangeListener<Boolean> detectedFocusChange = (observable1, oldValue1, newValue1) -> {
                 if (!combo.focusedProperty().get() && !combo.getEditor().focusedProperty().get() && !skin.getListView().focusedProperty().get()) {
                     this.getSkinnable().setHasFocus(false);
+                    this.resetComboBoxEditor();
                 } else {
                     this.getSkinnable().setHasFocus(true);
                 }
@@ -399,10 +393,14 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
     }
 
     private void buildBindings() {
-        // icone wait displayed on control load indicator value
-        //binder.bindInvalidationListener(iconWait.visibleProperty(),this.getSkinnable().activityIndicatorProperty());
-
         this.getSkinnable().selectedItem.bind(combo.valueProperty());
+
+        // init the control value in the combo
+        combo.setValue(getSkinnable().getValue());
+        this.getSkinnable().value.addListener((observable, oldValue, newValue) -> {
+            // on value change, reset combo value
+            combo.setValue(newValue);
+        });
 
         // context menu
         combo.getEditor().contextMenuProperty().bind(getSkinnable().contextMenuProperty());
@@ -460,6 +458,12 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
             while (c.next()){
                 c.getAddedSubList().stream().forEach(combo.getStyleClass()::add);
                 c.getRemoved().stream().forEach(combo.getStyleClass()::remove);
+            }
+        });
+
+        this.getSkinnable().focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (oldValue) {
+                System.out.println();
             }
         });
     }
@@ -533,86 +537,6 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
         return styledText;
     }
 
-    /**
-     * Method for Swapping belonging to a Node
-     *
-     * @param item
-     * @param newParent
-     */
-    private void changeParent(Node item, Parent newParent) {
-        Parent oldParent = item.getParent();
-        try {
-            Method oldNode = oldParent.getClass().getMethod("getChildren");
-            Object ob = oldNode.invoke(oldParent);
-            Collection<Node> cnOld = ((Collection<Node>) ob);
-            cnOld.remove(item);
-            Method newNode = newParent.getClass().getMethod("getChildren");
-            Object nb = newNode.invoke(newParent);
-            Collection<Node> cnNew = ((Collection<Node>) nb);
-            cnNew.add(item);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Swap between Button and Combo
-     */
-    private void exchangeNode(boolean isSelectedItem) {
-//        double w = root.getWidth();
-//        root.setMinWidth(w);
-//        if (!currentButton.isVisible()) {
-//            // -- show button
-//            combo.setVisible(false);
-//            combo.setMinSize(0, 0);
-//            combo.setMaxSize(0, 0);
-//            currentButton.setVisible(true);
-//            currentButton.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-//            currentButton.setPrefWidth(w);
-//            //hidden.setVisible(false);
-//           // iconWait.resize(0, 0);
-//        } else {
-//            // -- show combo
-//            currentButton.setVisible(false);
-//            currentButton.setMinSize(0, 0);
-//            currentButton.setMaxSize(0, 0);
-//            combo.setVisible(true);
-//            combo.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-//            combo.setPrefWidth(w);
-//           // hidden.setVisible(true);
-//            //iconWait.resize(32, 32);
-//        }
-//        root.setMinWidth(-1);
-    }
-
-    /**************************************************************************
-     * Public API
-     **************************************************************************/
-
-    public void showCombo() {
-//        this.getSkinnable().setControlShown(new Boolean(true));
-//        Platform.runLater(() -> {
-//            exchangeNode(true);
-//            combo.getEditor().requestFocus();
-//            combo.getEditor().positionCaret(0);
-//            combo.getEditor().selectAll();
-//        });
-    }
-
-    public void showButton() {
-//        this.getSkinnable().setControlShown(new Boolean(false));
-//        Platform.runLater(() -> {
-//            exchangeNode(true);
-//            currentButton.requestFocus();
-//        });
-//        currentButton.textProperty().setValue(userInput);
-    }
-
-
     @Override
     public void dispose() {
         super.dispose();
@@ -662,7 +586,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
     public void requestFocus() {
         getSkinnable().trace("Request focus");
-        getCombo().requestFocus();
+        getCombo().getEditor().requestFocus();
     }
 
 //

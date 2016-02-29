@@ -44,17 +44,13 @@ public class AutoSuggestFX2<B> extends Control {
     protected ObjectProperty<Function<B, String>> stringTextFormatter = new SimpleObjectProperty<>(this, "stringTextFormatter");
     protected ObjectProperty<Function<B, String>> stringItemFormatter = new SimpleObjectProperty<>(this, "stringItemFormatter");
 
-    protected ObjectProperty<B> bean = new SimpleObjectProperty<>(this, "value");
+    protected ObjectProperty<B> value = new SimpleObjectProperty<>(this, "value");
 
     protected BooleanProperty logDebug = new SimpleBooleanProperty(this, "debug", false);
     protected Function<B, String> keyTextFormatter;
     protected ListProperty<B> items = new SimpleListProperty<>(this, "items", FXCollections.observableArrayList());
-
-    public B getSelectedItem() {
-        return selectedItem.get();
-    }
-
     protected ObjectProperty<B> selectedItem = new SimpleObjectProperty<>(this, "selectedItem");
+    SearchTimerTask searchTask = null;
     /**************************************************************************
      * Private Properties
      **************************************************************************/
@@ -76,6 +72,10 @@ public class AutoSuggestFX2<B> extends Control {
             }
         });
         Version.getInstance();
+    }
+
+    public B getSelectedItem() {
+        return selectedItem.get();
     }
 
     public boolean getLogDebug() {
@@ -130,7 +130,6 @@ public class AutoSuggestFX2<B> extends Control {
         getSkinControl().show();
     }
 
-
     public void appendResult(String finalTerm, List<B> newList) {
         // prevent loading bad term result
         String currentSearchTerm = getSkinControl().getCombo().getEditor().getText();
@@ -145,14 +144,12 @@ public class AutoSuggestFX2<B> extends Control {
         }
     }
 
-
     protected void trace(String trace) {
         if (getLogDebug()) {
             System.out.println(trace);
         }
     }
 
-    SearchTimerTask searchTask= null;
     /**
      * reSchedule a searching or a filtering task
      */
@@ -223,7 +220,6 @@ public class AutoSuggestFX2<B> extends Control {
         setValue(null);
     }
 
-
     /**************************************************************************
      * Public Properties
      **************************************************************************/
@@ -256,7 +252,6 @@ public class AutoSuggestFX2<B> extends Control {
         }
     }
 
-
     public boolean isEditable() {
         return editable.getValue();
     }
@@ -267,14 +262,6 @@ public class AutoSuggestFX2<B> extends Control {
 
     public BooleanProperty editableProperty() {
         return editable;
-    }
-
-    public final B getValue() {
-        return getSkinControl().getCombo().getValue();
-    }
-
-    public final void setValue(B b) {
-        beanProperty().set(b);
     }
 
     public Function<B, String> getStringTextFormatter() {
@@ -317,26 +304,20 @@ public class AutoSuggestFX2<B> extends Control {
         getSkinControl().setKeyValueSeparator(keyValueSeparator);
     }
 
-    /**
-     * Use valueProperty()
-     *
-     * @return
-     */
-    @Deprecated
-    public ObjectProperty<B> beanProperty() {
-        return bean;
-    }
-
     public ObjectProperty<Function<String, List<B>>> searchProperty() {
         return search;
     }
 
     public ObjectProperty<B> valueProperty() {
-        return bean;
+        return value;
     }
 
-    public final B getBean() {
-        return beanProperty().get();
+    public final B getValue() {
+        return valueProperty().get();
+    }
+
+    public void setValue(B value) {
+        this.value.set(value);
     }
 
     public int getVisibleRowsCount() {
