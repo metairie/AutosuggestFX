@@ -64,7 +64,9 @@ public class AutoSuggestFX2<B> extends Control {
      * Creates a new AutoSuggest2
      */
     public AutoSuggestFX2() {
-        setFocusTraversable(false);
+
+//        setFocusTraversable(false);
+
         editable.addListener((observable, oldValue, newValue) -> {
             if (oldValue) {
                 this.setDisable(true);
