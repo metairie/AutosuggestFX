@@ -460,12 +460,6 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
                 c.getRemoved().stream().forEach(combo.getStyleClass()::remove);
             }
         });
-
-        this.getSkinnable().focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if (oldValue) {
-                System.out.println();
-            }
-        });
     }
 
     private void initCellFactory() {
