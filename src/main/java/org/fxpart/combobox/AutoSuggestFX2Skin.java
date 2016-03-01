@@ -2,6 +2,7 @@ package org.fxpart.combobox;
 
 import com.google.common.collect.Lists;
 import com.sun.javafx.scene.control.skin.ComboBoxListViewSkin;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.event.Event;
@@ -136,12 +137,9 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
 
                 if (!combo.getEditor().isFocused()) {
-                    List<B> result = getSkinnable().getSearch().apply("");
-                    if (result != null) {
-                        getSkinnable().searchAll();
-                    }
+                    this.getSkinnable().searchAll();
                 } else {
-                    combo.getEditor().selectAll();
+//                    combo.getEditor().selectAll();
                 }
             }
         });
@@ -173,6 +171,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
         combo.getEditor().addEventFilter(KeyEvent.KEY_RELEASED, e -> {
             e.consume();
+
             // define ignored key
             List<KeyCode> ignoredKeyCombinations = Lists.newArrayList(KeyCode.UP, KeyCode.RIGHT, KeyCode.LEFT, KeyCode.HOME, KeyCode.END, KeyCode.TAB, KeyCode.PAGE_UP, KeyCode.PAGE_DOWN);
 
@@ -183,6 +182,11 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
                             new KeyCodeCombination(keyCombination, KeyCodeCombination.CONTROL_DOWN)).stream()).collect(Collectors.toList());
 
             ignoredKeyCodeCombinations.add(SHIFT_TAB);
+//            if (SHIFT_TAB.match(e)) {
+//                if (getSkinnable().getParent() != null && getSkinnable().getParent().getOnKeyReleased() != null) {
+//                    getSkinnable().getParent().getOnKeyReleased().handle(e);
+//                }
+//            }
 
             if (e.getCode().equals(KeyCode.SHIFT) || e.getCode().equals(KeyCode.CONTROL) || ignoredKeyCodeCombinations.stream().anyMatch(keyCodeCombination -> keyCodeCombination.match(e))) {
                 return;
@@ -301,6 +305,12 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
     }
 
     private void buildListeners() {
+        this.getSkinnable().value.addListener((observable, oldValue, newValue) -> {
+            // on value change, reset combo value
+            combo.setValue(newValue);
+            combo.getEditor().selectAll();
+        });
+
         // validation when the user select value with mouse
         combo.skinProperty().addListener((observable2, oldValue2, newValue2) -> {
             ComboBoxListViewSkin skin = (ComboBoxListViewSkin) newValue2;
@@ -311,6 +321,9 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
                     this.resetComboBoxEditor();
                 } else {
                     this.getSkinnable().setHasFocus(true);
+
+                    // select all on gain focus
+                    Platform.runLater(() -> getCombo().getEditor().selectAll());
                 }
             };
             combo.focusedProperty().addListener(detectedFocusChange);
@@ -397,10 +410,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
         // init the control value in the combo
         combo.setValue(getSkinnable().getValue());
-        this.getSkinnable().value.addListener((observable, oldValue, newValue) -> {
-            // on value change, reset combo value
-            combo.setValue(newValue);
-        });
+
 
         // context menu
         combo.getEditor().contextMenuProperty().bind(getSkinnable().contextMenuProperty());
@@ -440,7 +450,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
      * @param event
      */
     private void reScheduleSearch(Event event) {
-        this.getSkinnable().reSchedule();
+        this.getSkinnable().reSchedule(null);
     }
 
     private void graphical() {
@@ -455,7 +465,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
         this.getSkinnable().getStyleClass().addListener((ListChangeListener<String>) c -> {
             // propagate
-            while (c.next()){
+            while (c.next()) {
                 c.getAddedSubList().stream().forEach(combo.getStyleClass()::add);
                 c.getRemoved().stream().forEach(combo.getStyleClass()::remove);
             }

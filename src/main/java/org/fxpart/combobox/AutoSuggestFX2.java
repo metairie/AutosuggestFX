@@ -1,5 +1,6 @@
 package org.fxpart.combobox;
 
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -63,6 +64,7 @@ public class AutoSuggestFX2<B> extends Control {
      * Creates a new AutoSuggest2
      */
     public AutoSuggestFX2() {
+        setFocusTraversable(false);
         editable.addListener((observable, oldValue, newValue) -> {
             if (oldValue) {
                 this.setDisable(true);
@@ -95,7 +97,7 @@ public class AutoSuggestFX2<B> extends Control {
      */
     public void start() {
         if (!(selectedItem.getValue() == null && valueProperty().getValue() == null)) {
-            reSchedule();
+            reSchedule(null);
         }
     }
 
@@ -153,27 +155,31 @@ public class AutoSuggestFX2<B> extends Control {
     /**
      * reSchedule a searching or a filtering task
      */
-    protected void reSchedule() {
-        scheduler = AutosuggestFXTimer.getInstance();
+    protected void reSchedule(String termForce) {
+        initScheduler();
 
-        if (searchTask != null){
+        if (searchTask != null) {
             searchTask.cancel();
         }
 
-        searchTask = new SearchTimerTask(getEditorText());
+        searchTask = new SearchTimerTask(termForce != null ? termForce : getEditorText());
 
-        if (getEditorText().length() < 2){
+        if (getEditorText().length() < 2) {
             scheduler.schedule(searchTask, 200);
-        }else {
+        } else {
             scheduler.schedule(searchTask, this.delay.getValue());
         }
+    }
+
+    private void initScheduler() {
+        scheduler = AutosuggestFXTimer.getInstance();
     }
 
     /**
      * reSchedule a searching or a filtering task
      */
     protected void searchAll() {
-        scheduler = AutosuggestFXTimer.getInstance();
+        initScheduler();
 
         SearchTimerTask searchTask = new SearchTimerTask("");
         scheduler.schedule(searchTask, this.delay.getValue());
@@ -381,6 +387,11 @@ public class AutoSuggestFX2<B> extends Control {
         return search.getValue();
     }
 
+    /**
+     * Execute search code
+     *
+     * @param search
+     */
     public void setSearch(Function<String, List<B>> search) {
         this.search.set(search);
     }
@@ -433,6 +444,8 @@ public class AutoSuggestFX2<B> extends Control {
                 LOG.debug(String.valueOf(getException()));
             });
             setOnSucceeded(t -> {
+                Platform.runLater(() -> applyList(this.getValue()));
+
                 searchTask = null;
             });
             setOnFailed(t -> {
