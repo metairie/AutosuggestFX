@@ -386,6 +386,18 @@ public class AutoSuggestFX2<B> extends Control {
     }
 
     /**
+     * If no items loaded - search all
+     * otherwise show last result
+     */
+    public void show() {
+        if (items.isEmpty()) {
+            searchAll();
+        } else {
+            getSkinControl().getCombo().show();
+        }
+    }
+
+    /**
      * inner Class for external search
      */
     public class SearchTimerTask extends TimerTask {
