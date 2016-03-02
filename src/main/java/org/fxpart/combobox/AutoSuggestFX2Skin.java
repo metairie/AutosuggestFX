@@ -317,17 +317,22 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
             ChangeListener<Boolean> detectedFocusChange = (observable1, oldValue1, newValue1) -> {
                 if (!combo.focusedProperty().get() && !combo.getEditor().focusedProperty().get() && !skin.getListView().focusedProperty().get()) {
-                    this.getSkinnable().setHasFocus(false);
-                    this.resetComboBoxEditor();
+                    if (!getCombo().isShowing()) {
+                        this.getSkinnable().setHasFocus(false);
+                        this.resetComboBoxEditor();
+                    }
                 } else {
+                    boolean focused = this.getSkinnable().isFocused();
                     this.getSkinnable().setHasFocus(true);
 
-                    // select all on gain focus
-                    Platform.runLater(() -> {
-                        if (!getCombo().isShowing()) {
-                            getCombo().getEditor().selectAll();
-                        }
-                    });
+                    if (!focused && !getCombo().isShowing() && !getSkinnable().isSchedule()) {
+                        // select all on gain focus
+                        Platform.runLater(() -> {
+                            if (!getCombo().isShowing() && !getSkinnable().isSchedule()) {
+                                getCombo().getEditor().selectAll();
+                            }
+                        });
+                    }
                 }
             };
             combo.focusedProperty().addListener(detectedFocusChange);

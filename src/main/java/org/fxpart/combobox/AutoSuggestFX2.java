@@ -410,6 +410,10 @@ public class AutoSuggestFX2<B> extends Control {
         }
     }
 
+    public boolean isSchedule() {
+        return searchTask != null;
+    }
+
     /**
      * inner Class for external search
      */
