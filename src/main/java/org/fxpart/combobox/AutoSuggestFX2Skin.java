@@ -323,7 +323,11 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
                     this.getSkinnable().setHasFocus(true);
 
                     // select all on gain focus
-                    Platform.runLater(() -> getCombo().getEditor().selectAll());
+                    Platform.runLater(() -> {
+                        if (!getCombo().isShowing()) {
+                            getCombo().getEditor().selectAll();
+                        }
+                    });
                 }
             };
             combo.focusedProperty().addListener(detectedFocusChange);
