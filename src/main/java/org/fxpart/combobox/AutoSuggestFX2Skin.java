@@ -127,6 +127,8 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
         // bindings
         buildBindings();
+
+        this.getSkinnable().onSkinReady.getValue().accept(getCombo());
     }
 
     /**
@@ -146,7 +148,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
         // key pressed event
         combo.getEditor().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            List<KeyCode> ignoredKeyCombinations = Lists.newArrayList(KeyCode.UP, KeyCode.RIGHT, KeyCode.LEFT, KeyCode.HOME, KeyCode.END, KeyCode.TAB, KeyCode.PAGE_UP, KeyCode.PAGE_DOWN);
+            List<KeyCode> ignoredKeyCombinations = Lists.newArrayList(KeyCode.UP, KeyCode.DOWN, KeyCode.RIGHT, KeyCode.LEFT, KeyCode.HOME, KeyCode.END, KeyCode.TAB, KeyCode.PAGE_UP, KeyCode.PAGE_DOWN);
 
             List<KeyCodeCombination> ignoredKeyCodeCombinations = ignoredKeyCombinations.stream().flatMap(keyCombination ->
                     Lists.newArrayList(new KeyCodeCombination(keyCombination),
@@ -191,6 +193,17 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
             if (e.getCode().equals(KeyCode.SHIFT) || e.getCode().equals(KeyCode.CONTROL) || ignoredKeyCodeCombinations.stream().anyMatch(keyCodeCombination -> keyCodeCombination.match(e))) {
                 return;
             } else if (DOWN.match(e)) {
+                if (DOWN.match(e)) {
+                    if (!combo.isShowing()) {
+                        if (combo.getItems().isEmpty()) {
+                            // launch a new search
+                            reScheduleSearch(e);
+                        } else {
+                            // show already loaded result
+                            show();
+                        }
+                    }
+                }
                 return;
             } else if (SELECT_ALL.match(e)) {
                 combo.getEditor().selectAll();
@@ -212,7 +225,7 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
                         Objects.equals(getCombo().getEditor().getText(), getSkinnable().getStringTextFormatter().apply(getSkinnable().getValue()))) {
 
                     // ignore copy override if the user select a specific text
-                    if (!Objects.equals(getCombo().getEditor().getSelectedText(),getCombo().getEditor().getText())) {
+                    if (!Objects.equals(getCombo().getEditor().getSelectedText(), getCombo().getEditor().getText())) {
                         final ClipboardContent content = new ClipboardContent();
                         content.putString(getSkinnable().getKeyTextFormatter().apply(getSkinnable().getValue()));
                         Clipboard.getSystemClipboard().setContent(content);
@@ -322,8 +335,8 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
             ChangeListener<Boolean> detectedFocusChange = (observable1, oldValue1, newValue1) -> {
                 if (!combo.focusedProperty().get() && !combo.getEditor().focusedProperty().get() && !skin.getListView().focusedProperty().get()) {
                     if (!getCombo().isShowing()) {
-                        this.getSkinnable().setHasFocus(false);
                         this.resetComboBoxEditor();
+                        this.getSkinnable().setHasFocus(false);
                     }
                 } else {
                     boolean focused = this.getSkinnable().isFocused();
@@ -374,19 +387,20 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
 
         // when user press DOWN on the editor to show the list
-        combo.getEditor().addEventFilter(KeyEvent.KEY_RELEASED, e -> {
-            if (DOWN.match(e)) {
-                if (!combo.isShowing()) {
-                    if (combo.getItems().isEmpty()) {
-                        // launch a new search
-                        reScheduleSearch(e);
-                    } else {
-                        // show already loaded result
-                        show();
-                    }
-                }
-            }
-        });
+//        this.getSkinnable().addEventFilter(KeyEvent.KEY_RELEASED, e -> {
+//            if (DOWN.match(e)) {
+//                if (!combo.isShowing()) {
+//                    if (combo.getItems().isEmpty()) {
+//                        // launch a new search
+//                        reScheduleSearch(e);
+//                    } else {
+//                        // show already loaded result
+//                        show();
+//                    }
+//                }
+//            }
+//
+//        });
 
         /**
          * TRACE listener

@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 import org.fxpart.common.util.AutosuggestFXTimer;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.TimerTask;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -51,6 +53,8 @@ public class AutoSuggestFX2<B> extends Control {
     protected Function<B, String> keyTextFormatter;
     protected ListProperty<B> items = new SimpleListProperty<>(this, "items", FXCollections.observableArrayList());
     protected ObjectProperty<B> selectedItem = new SimpleObjectProperty<>(this, "selectedItem");
+    protected ObjectProperty<Consumer<ComboBox<B>>> onSkinReady = new SimpleObjectProperty<>(bComboBox -> {
+    });
     SearchTimerTask searchTask = null;
     /**************************************************************************
      * Private Properties
@@ -65,7 +69,7 @@ public class AutoSuggestFX2<B> extends Control {
      */
     public AutoSuggestFX2() {
 
-//        setFocusTraversable(false);
+        setFocusTraversable(false);
 
         editable.addListener((observable, oldValue, newValue) -> {
             if (oldValue) {
@@ -373,7 +377,6 @@ public class AutoSuggestFX2<B> extends Control {
         AutoSuggestFX2Skin skin = (AutoSuggestFX2Skin) getSkin();
         if (skin != null) {
             skin.requestFocus();
-            setHasFocus(true);
         }
     }
 
@@ -414,6 +417,9 @@ public class AutoSuggestFX2<B> extends Control {
         return searchTask != null;
     }
 
+    public void setOnSkinReady(Consumer<ComboBox<B>> onSkinReady) {
+        this.onSkinReady.setValue(onSkinReady);
+    }
     /**
      * inner Class for external search
      */
