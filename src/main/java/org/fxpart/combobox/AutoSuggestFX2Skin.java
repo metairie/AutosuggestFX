@@ -203,15 +203,20 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
 
                 return;
             } else if (PASTE.match(e)) {
+                currentSearchTerm = getCombo().getEditor().getText();
                 reScheduleSearch(e);
                 return;
             } else if (COPY.match(e)) {
                 // copy to clipboard the key and not the formatter text to prevent bad search after a copy/paste
                 if (getSkinnable().getValue() != null &&
                         Objects.equals(getCombo().getEditor().getText(), getSkinnable().getStringTextFormatter().apply(getSkinnable().getValue()))) {
-                    final ClipboardContent content = new ClipboardContent();
-                    content.putString(getSkinnable().getKeyTextFormatter().apply(getSkinnable().getValue()));
-                    Clipboard.getSystemClipboard().setContent(content);
+
+                    // ignore copy override if the user select a specific text
+                    if (!Objects.equals(getCombo().getEditor().getSelectedText(),getCombo().getEditor().getText())) {
+                        final ClipboardContent content = new ClipboardContent();
+                        content.putString(getSkinnable().getKeyTextFormatter().apply(getSkinnable().getValue()));
+                        Clipboard.getSystemClipboard().setContent(content);
+                    }
                 }
                 return;
             } else if (ESCAPE.match(e)) {
@@ -285,9 +290,8 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
             getSkinnable().trace("REFRESH - size current " + skin.getListView().getHeight() + " - " + min);
             if (!combo.isShowing()) {
                 combo.show();
-
-                combo.show();
                 combo.hide();
+                combo.show();
             } else {
                 combo.hide();
                 combo.show();
