@@ -134,8 +134,9 @@ public class AutoSuggestFX2<B> extends Control {
             getSkinControl().getCombo().getEditor().selectPositionCaret(searchTerm.length());
             getSkinControl().getCombo().getEditor().deselect();
         }
-
-        getSkinControl().show();
+        if (getSkinControl().getCombo().isVisible()) {
+            getSkinControl().show();
+        }
     }
 
     public void appendResult(String finalTerm, List<B> newList) {
@@ -184,7 +185,7 @@ public class AutoSuggestFX2<B> extends Control {
     /**
      * reSchedule a searching or a filtering task
      */
-    protected void searchAll() {
+    public void searchAll() {
         initScheduler();
 
         SearchTimerTask searchTask = new SearchTimerTask("");

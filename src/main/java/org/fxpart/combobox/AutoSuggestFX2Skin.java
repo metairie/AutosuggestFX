@@ -135,16 +135,16 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
      * build event for internal controls
      */
     private void buildEvents() {
-        combo.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
-            if (event.getButton().equals(MouseButton.PRIMARY)) {
-
-                if (!combo.getEditor().isFocused()) {
-                    this.getSkinnable().searchAll();
-                } else {
-//                    combo.getEditor().selectAll();
-                }
-            }
-        });
+//        combo.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+//            if (event.getButton().equals(MouseButton.PRIMARY)) {
+//
+//                if (!combo.getEditor().isFocused()) {
+//                    this.getSkinnable().searchAll();
+//                } else {
+////                    combo.getEditor().selectAll();
+//                }
+//            }
+//        });
 
         // key pressed event
         combo.getEditor().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
