@@ -325,6 +325,11 @@ public class AutoSuggestFX2Skin<B> extends SkinBase<AutoSuggestFX2<B>> {
         this.getSkinnable().value.addListener((observable, oldValue, newValue) -> {
             // on value change, reset combo value
             combo.setValue(newValue);
+            if (newValue != null) {
+                combo.getEditor().setText(getSkinnable().getStringTextFormatter().apply(newValue));
+            } else {
+                combo.getEditor().setText("");
+            }
             combo.getEditor().selectAll();
         });
 
